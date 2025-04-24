@@ -1,0 +1,102 @@
+import Link from "next/link";
+import { MapIcon } from "lucide-react";
+
+export default function Footer() {
+  return (
+    <footer className="bg-neutral-800 text-white py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between">
+          <div className="mb-8 md:mb-0">
+            <div className="flex items-center">
+              <MapIcon className="h-6 w-6 mr-2 text-primary-400" />
+              <span className="text-lg font-medium">ココイコ</span>
+            </div>
+            <p className="mt-2 text-neutral-400 max-w-md">
+              カップルや友人グループで「行きたい場所」を共有できるサービスです。
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
+                サービス
+              </h3>
+              <div className="mt-4 space-y-2">
+                <Link
+                  href="/"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  ホーム
+                </Link>
+                <Link
+                  href="/map"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  マイマップ
+                </Link>
+                <Link
+                  href="/places/add"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  場所を追加
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
+                サポート
+              </h3>
+              <div className="mt-4 space-y-2">
+                <Link
+                  href="/help"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  ヘルプ
+                </Link>
+                <Link
+                  href="/contact"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  お問い合わせ
+                </Link>
+                <Link
+                  href="/terms"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  利用規約
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
+                法的情報
+              </h3>
+              <div className="mt-4 space-y-2">
+                <Link
+                  href="/privacy"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  プライバシーポリシー
+                </Link>
+                <Link
+                  href="/cookies"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  Cookie ポリシー
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 border-t border-neutral-700 pt-8">
+          <p className="text-center text-neutral-400 text-sm">
+            &copy; {new Date().getFullYear()} ココイコ. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
