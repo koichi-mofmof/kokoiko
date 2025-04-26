@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X, MapPinHouse, User, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LogOut, MapPinHouse, Menu, User, X } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 interface HeaderProps {
   currentUser?: { name: string; id: string } | null;
@@ -30,42 +31,42 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex space-x-8">
-          <Link
-            href="/map"
-            className="text-neutral-600 hover:text-primary-600 transition-colors"
-          >
-            マイマップ
-          </Link>
-          <Link
-            href="/places/add"
-            className="text-neutral-600 hover:text-primary-600 transition-colors"
-          >
-            場所を追加
-          </Link>
-          <Link
-            href="/groups"
-            className="text-neutral-600 hover:text-primary-600 transition-colors"
-          >
-            グループ
-          </Link>
+        <nav className="hidden md:flex items-center space-x-8">
           {currentUser ? (
-            <div className="flex items-center space-x-4">
-              <span className="text-neutral-600">{currentUser.name}</span>
-              <button
-                onClick={onLogout}
-                className="text-neutral-600 hover:text-primary-600"
+            <>
+              <Link
+                href="/map"
+                className="text-neutral-600 hover:text-primary-600 transition-colors"
               >
-                <LogOut className="h-5 w-5" />
-              </button>
-            </div>
+                マイマップ
+              </Link>
+              <Link
+                href="/places/add"
+                className="text-neutral-600 hover:text-primary-600 transition-colors"
+              >
+                場所を追加
+              </Link>
+              <Link
+                href="/groups"
+                className="text-neutral-600 hover:text-primary-600 transition-colors"
+              >
+                グループ
+              </Link>
+              <div className="flex items-center space-x-4">
+                <span className="text-neutral-600">{currentUser.name}</span>
+                <button
+                  onClick={onLogout}
+                  className="text-neutral-600 hover:text-primary-600"
+                  aria-label="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
+            </>
           ) : (
-            <Link
-              href="/login"
-              className="text-neutral-600 hover:text-primary-600 transition-colors"
-            >
-              ログイン
-            </Link>
+            <Button asChild>
+              <Link href="/login">ログイン</Link>
+            </Button>
           )}
         </nav>
 
@@ -78,51 +79,52 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
       {/* Mobile Navigation */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-neutral-100 px-6 sm:px-8 py-3 space-y-3 shadow-md animate-fadeIn">
-          <Link
-            href="/map"
-            className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
-            onClick={() => setMenuOpen(false)}
-          >
-            マイマップ
-          </Link>
-          <Link
-            href="/places/add"
-            className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
-            onClick={() => setMenuOpen(false)}
-          >
-            場所を追加
-          </Link>
-          <Link
-            href="/groups"
-            className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
-            onClick={() => setMenuOpen(false)}
-          >
-            グループ
-          </Link>
           {currentUser ? (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center">
-                <User className="h-5 w-5 mr-2 text-neutral-600" />
-                <span className="text-neutral-600">{currentUser.name}</span>
-              </div>
-              <button
-                onClick={() => {
-                  onLogout?.();
-                  setMenuOpen(false);
-                }}
-                className="text-neutral-600 hover:text-red-500"
+            <>
+              <Link
+                href="/map"
+                className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
+                onClick={() => setMenuOpen(false)}
               >
-                <LogOut className="h-5 w-5" />
-              </button>
-            </div>
+                マイマップ
+              </Link>
+              <Link
+                href="/places/add"
+                className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                場所を追加
+              </Link>
+              <Link
+                href="/groups"
+                className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                グループ
+              </Link>
+              <div className="flex items-center justify-between py-2 border-t border-neutral-100 pt-4 mt-2">
+                <div className="flex items-center">
+                  <User className="h-5 w-5 mr-2 text-neutral-600" />
+                  <span className="text-neutral-600">{currentUser.name}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    onLogout?.();
+                    setMenuOpen(false);
+                  }}
+                  className="text-neutral-600 hover:text-red-500"
+                  aria-label="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
+            </>
           ) : (
-            <Link
-              href="/login"
-              className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              ログイン
-            </Link>
+            <div className="flex items-center space-x-2">
+              <Button asChild>
+                <Link href="/login">ログイン</Link>
+              </Button>
+            </div>
           )}
         </div>
       )}

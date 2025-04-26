@@ -5,22 +5,68 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
+  // 背景画像のリスト
+  const backgroundImages = [
+    "https://images.pexels.com/photos/1482193/pexels-photo-1482193.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    "https://images.pexels.com/photos/1322184/pexels-photo-1322184.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    "https://images.pexels.com/photos/1383775/pexels-photo-1383775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    "https://images.pexels.com/photos/581344/pexels-photo-581344.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    "https://images.pexels.com/photos/10511496/pexels-photo-10511496.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+  ];
+
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isChanging, setIsChanging] = useState(false);
+  const featuresRef = useRef<HTMLElement>(null);
+
+  // 「詳細を見る」ボタンクリック時の処理
+  const scrollToFeatures = () => {
+    featuresRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    // 6秒ごとに画像を切り替え
+    const interval = setInterval(() => {
+      setIsChanging(true);
+      setTimeout(() => {
+        setCurrentImageIndex(
+          (prevIndex) => (prevIndex + 1) % backgroundImages.length
+        );
+        setIsChanging(false);
+      }, 500); // フェードアウト後に画像を切り替え
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [backgroundImages.length]);
+
   return (
-    <main className="pt-16">
+    <main>
       {/* Hero Section with Background Image */}
-      <section className="relative px-4 py-24 sm:px-6 sm:py-36 lg:px-8 overflow-hidden min-h-[80vh] flex items-center">
+      <section className="relative px-4 pb-24 pt-16 sm:px-6 sm:pt-20 sm:pb-36 lg:px-8 overflow-hidden min-h-[100vh] flex items-center">
         {/* Background Image with Gradient Overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://images.pexels.com/photos/1482193/pexels-photo-1482193.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-            alt="背景"
-            fill
-            style={{ objectFit: "cover" }}
-            className="brightness-[0.8]"
-            priority
-          />
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          {backgroundImages.map((src, index) => (
+            <div
+              key={src}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                currentImageIndex === index ? "opacity-100" : "opacity-0"
+              } ${
+                isChanging && currentImageIndex === index ? "opacity-30" : ""
+              }`}
+            >
+              <Image
+                src={src}
+                alt={`背景 ${index + 1}`}
+                fill
+                style={{ objectFit: "cover" }}
+                className="brightness-[0.8]"
+                priority={index === 0}
+              />
+            </div>
+          ))}
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/50 mix-blend-multiply" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30" />
         </div>
@@ -39,9 +85,9 @@ export default function Home() {
               </span>
             </h1>
             <p className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto md:mx-0">
-              カフェ、レストラン、古着屋、サウナ...
+              カフェ、レストラン、ホテル、観光スポット...
               <br />
-              気になる場所をカンタンに保存して、大切な人と共有できます。
+              気になる場所を保存して、大切な人と共有できます。
             </p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -55,8 +101,11 @@ export default function Home() {
                 size="lg"
                 className="shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
               >
-                <Link href="/map">
-                  マイマップを作る
+                <Link
+                  href="/login"
+                  className="inline-flex items-center text-lg px-10 py-6"
+                >
+                  ログインしてマイマップを作る
                   <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -66,25 +115,34 @@ export default function Home() {
                 size="lg"
                 className="bg-white/10 backdrop-blur-sm text-white border-white/20 shadow-lg hover:bg-white/20 hover:text-white hover:scale-105 transition-all duration-300"
               >
-                <Link href="/login">ログイン</Link>
+                <Link
+                  href="/sample"
+                  className="inline-flex items-center text-lg px-10 py-6"
+                >
+                  サンプルを見る
+                </Link>
               </Button>
             </motion.div>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.8 }}
-            transition={{ delay: 1.2, duration: 1 }}
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden md:flex flex-col items-center mt-20"
-          >
-            <span className="text-white/80 text-sm mb-2">詳細を見る</span>
-            <ArrowDown className="h-5 w-5 text-white/80 animate-bounce" />
-          </motion.div>
         </div>
+
+        {/* 詳細を見るボタン - 背景画像の下部に配置 */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.9 }}
+          transition={{ delay: 1.2, duration: 1 }}
+          className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center z-20 cursor-pointer"
+          onClick={scrollToFeatures}
+        >
+          <span className="text-white/90 text-sm mb-2 drop-shadow-md font-medium">
+            詳細を見る
+          </span>
+          <ArrowDown className="h-6 w-6 text-white/90 animate-bounce drop-shadow-md" />
+        </motion.div>
       </section>
 
       {/* Feature Section */}
-      <section className="py-24 bg-white relative">
+      <section ref={featuresRef} className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -97,10 +155,13 @@ export default function Home() {
               特徴
             </h2>
             <p className="mt-2 text-3xl leading-8 font-bold text-neutral-900 sm:text-4xl md:text-5xl">
-              もっと簡単に、もっと楽しく
+              気になる場所を、
+              <br />
+              地図と一緒に共有
             </p>
             <p className="mt-6 max-w-2xl text-lg text-neutral-500 lg:mx-auto">
-              カンタン操作で気になる場所を記録し、共有できます。
+              カンタン操作で、お店やスポットをピンして、
+              すぐにリストを共有できます。
             </p>
           </motion.div>
 
@@ -290,7 +351,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 bg-gradient-to-br from-neutral-100 to-neutral-200 relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-neutral-100 to-neutral-200 relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <Image
             src="https://images.pexels.com/photos/4429428/pexels-photo-4429428.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
@@ -307,31 +368,43 @@ export default function Home() {
           transition={{ duration: 0.7 }}
           className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
         >
-          <h2 className="text-4xl font-bold text-neutral-900 md:text-5xl">
-            さあ、行きたい場所をマップに残してみましょう
+          <h2 className="text-3xl font-bold text-neutral-900 md:text-5xl">
+            さあ、行きたい場所を
+            <br />
+            マップに残してみましょう
           </h2>
-          <p className="mt-6 text-xl text-neutral-600">
-            完全無料でご利用いただけます。
-          </p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3, duration: 0.7 }}
-            className="mt-10"
+            className="mt-10 flex justify-center gap-4"
           >
             <Button
               asChild
               variant="default"
               size="lg"
-              className="shadow-xl hover:shadow-2xl group hover:scale-105 transition-all duration-300"
+              className="shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
             >
               <Link
-                href="/map"
+                href="/login"
                 className="inline-flex items-center text-lg px-10 py-6"
               >
-                今すぐ始める
-                <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                ログインしてマイマップを作る
+                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="bg-white/10 backdrop-blur-sm text-neutral-900 border-white/20 shadow-lg hover:bg-white/20 hover:text-neutral-900 hover:scale-105 transition-all duration-300"
+            >
+              <Link
+                href="/sample"
+                className="inline-flex items-center text-lg px-10 py-6"
+              >
+                サンプルを見る
               </Link>
             </Button>
           </motion.div>

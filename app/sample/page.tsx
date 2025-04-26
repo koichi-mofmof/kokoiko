@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Map as MapIcon } from "lucide-react";
-import Link from "next/link";
-import Header from "@/app/components/ui/Header";
-import FilterBar from "@/app/components/ui/FilterBar";
-import ViewToggle from "@/app/components/ui/ViewToggle";
+import MapView from "@/app/components/map/MapView";
 import PlaceCard from "@/app/components/places/PlaceCard";
 import PlaceList from "@/app/components/places/PlaceList";
-import MapView from "@/app/components/map/MapView";
-import { FilterOptions, Place, ViewMode } from "@/types";
+import FilterBar from "@/app/components/ui/FilterBar";
+import Header from "@/app/components/ui/Header";
+import ViewToggle from "@/app/components/ui/ViewToggle";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { mockPlaces, mockUsers } from "@/lib/mockData";
+import { FilterOptions, Place, ViewMode } from "@/types";
+import { LogIn, Map as MapIcon, Plus } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function MapPage() {
   const [places] = useState<Place[]>(mockPlaces);
@@ -58,6 +59,17 @@ export default function MapPage() {
 
       <main className="pt-16 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <Alert className="mb-4">
+            <LogIn className="h-4 w-4" />
+            <AlertTitle>サンプルデータを表示しています</AlertTitle>
+            <AlertDescription className="text-neutral-900 items-center gap-1">
+              自分の場所を登録・管理するには
+              <Link href="/login" className="underline font-medium px-1">
+                ログイン
+              </Link>
+              が必要です。
+            </AlertDescription>
+          </Alert>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
             <h1 className="text-2xl font-medium text-neutral-900 mb-4 sm:mb-0 flex items-center">
               <MapIcon className="h-6 w-6 text-primary-600 mr-2" />

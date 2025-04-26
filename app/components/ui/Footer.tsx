@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { MapIcon } from "lucide-react";
 
-export default function Footer() {
+interface FooterProps {
+  currentUser?: { id: string } | null;
+}
+
+export default function Footer({ currentUser }: FooterProps) {
   return (
     <footer className="bg-neutral-800 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,18 +32,22 @@ export default function Footer() {
                 >
                   ホーム
                 </Link>
-                <Link
-                  href="/map"
-                  className="text-neutral-400 hover:text-white block"
-                >
-                  マイマップ
-                </Link>
-                <Link
-                  href="/places/add"
-                  className="text-neutral-400 hover:text-white block"
-                >
-                  場所を追加
-                </Link>
+                {currentUser && (
+                  <>
+                    <Link
+                      href="/map"
+                      className="text-neutral-400 hover:text-white block"
+                    >
+                      マイマップ
+                    </Link>
+                    <Link
+                      href="/places/add"
+                      className="text-neutral-400 hover:text-white block"
+                    >
+                      場所を追加
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
