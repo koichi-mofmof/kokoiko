@@ -50,23 +50,23 @@ export default function FilterBar({
     <div className="relative">
       <button
         onClick={toggleFilter}
-        className={`inline-flex items-center px-3 py-2 border ${
+        className={`inline-flex items-center justify-center h-9 w-9 sm:w-auto sm:px-3 py-2 border ${
           filters.tags.length > 0 || filters.visited !== null
             ? "border-primary-300 text-primary-700 bg-primary-50"
             : "border-neutral-200 text-neutral-700 bg-white"
         } rounded-soft shadow-soft text-sm hover:bg-neutral-50 transition-colors`}
       >
-        <Filter className="h-4 w-4 mr-2" />
-        フィルター
+        <Filter className="h-4 w-4 sm:mr-2" />
+        <span className="hidden sm:inline">フィルター</span>
         {(filters.tags.length > 0 || filters.visited !== null) && (
-          <span className="ml-1.5 bg-primary-100 text-primary-800 px-1.5 py-0.5 rounded-full text-xs">
+          <span className="ml-1.5 bg-primary-100 text-primary-800 px-1.5 py-0.5 rounded-full text-xs hidden sm:inline">
             {filters.tags.length + (filters.visited !== null ? 1 : 0)}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-soft shadow-medium p-4 z-10 border border-neutral-200 animate-fadeIn">
+        <div className="absolute left-0 mt-2 w-64 bg-white rounded-soft shadow-medium p-4 z-10 border border-neutral-200 animate-fadeIn">
           <div className="mb-4">
             <h4 className="text-sm font-medium text-neutral-800 mb-2">タグ</h4>
             <div className="flex flex-wrap gap-2">

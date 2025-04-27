@@ -1,98 +1,196 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import PlaceCard from "@/app/components/places/PlaceCard";
 import { Place } from "@/types";
+import {
+  AdvancedMarker,
+  APIProvider,
+  Map,
+  Pin,
+  useMap,
+} from "@vis.gl/react-google-maps";
+import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
 interface MapViewProps {
   places: Place[];
-  selectedPlaceId?: string;
-  onPlaceSelect: (place: Place) => void;
+  onPlaceSelect?: (place: Place) => void;
+  initialCenter?: { lat: number; lng: number };
+  initialZoom?: number;
+}
+
+// デフォルトの地図中心（例：東京駅）
+const DEFAULT_CENTER = { lat: 35.681236, lng: 139.767125 };
+const DEFAULT_ZOOM = 12;
+
+// マップの状態を保持するためのモジュールスコープの変数
+let savedCenter = DEFAULT_CENTER;
+let savedZoom = DEFAULT_ZOOM;
+
+// APIリクエストの回数をカウント
+let apiRequestCount = 0;
+
+// ログ追加関数
+const logMessage = (message: string) => {
+  console.log(`[GoogleMapsAPI] ${message}`);
+};
+
+// マップロードの監視コンポーネント
+function MapLoadMonitor() {
+  const map = useMap();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (map && !isLoaded) {
+      logMessage(`Googleマップが正常にロードされました`);
+      setIsLoaded(true);
+
+      // マップの移動監視
+      map.addListener("idle", () => {
+        const center = map.getCenter();
+        if (center) {
+          const lat = center.lat();
+          const lng = center.lng();
+          const zoom = map.getZoom() || 0;
+          logMessage(
+            `マップの表示位置が変更されました [${lat.toFixed(4)}, ${lng.toFixed(
+              4
+            )}, zoom: ${zoom}]`
+          );
+        }
+      });
+    }
+
+    return () => {
+      // クリーンアップ
+    };
+  }, [map, isLoaded]);
+
+  return null;
 }
 
 const MapView: React.FC<MapViewProps> = ({
   places,
-  selectedPlaceId,
   onPlaceSelect,
+  initialCenter = DEFAULT_CENTER,
+  initialZoom = DEFAULT_ZOOM,
 }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
 
-  // This is a mock implementation for visualization
-  // In a real implementation, we would use the Google Maps API
+  // コンポーネントマウント時のログ
   useEffect(() => {
-    if (!mapRef.current) return;
+    apiRequestCount++;
+    logMessage(
+      `MapViewコンポーネントがマウントされました (${apiRequestCount}回目)`
+    );
+    logMessage(`Google Maps APIの初期化を開始します...`);
 
-    const mapElement = mapRef.current;
+    // DOMにmapIdを持つ要素が表示されるまで待つ
+    const mapTimerRef = setTimeout(() => {
+      const mapElement = document.getElementById("kokoiko-map");
+      if (mapElement) {
+        logMessage(`マップ要素がDOMに追加されました`);
+      }
+    }, 500);
 
-    // Create a simple visual representation of pins
-    mapElement.innerHTML = "";
+    return () => {
+      clearTimeout(mapTimerRef);
+      logMessage(`MapViewコンポーネントがアンマウントされました`);
+    };
+  }, []);
 
-    const mapContainer = document.createElement("div");
-    mapContainer.className =
-      "relative w-full h-full bg-neutral-100 rounded-lg overflow-hidden";
+  if (!apiKey) {
+    console.error("Google Maps API Key is not configured.");
+    return (
+      <div className="w-full h-full min-h-[300px] rounded-lg bg-neutral-100 flex items-center justify-center text-red-500">
+        Google Maps APIキーが設定されていません。
+      </div>
+    );
+  }
 
-    // For the prototype, we'll just show a background image
-    const mapImage = document.createElement("img");
-    mapImage.src =
-      "https://images.pexels.com/photos/4429428/pexels-photo-4429428.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
-    mapImage.className =
-      "absolute inset-0 w-full h-full object-cover opacity-50";
-    mapContainer.appendChild(mapImage);
+  const handleMarkerClick = (place: Place) => {
+    setSelectedPlace(place);
+    if (onPlaceSelect) {
+      onPlaceSelect(place);
+    }
+    logMessage(`マーカーがクリックされました: ${place.name}`);
+  };
 
-    // Add pins for each place
-    places.forEach((place) => {
-      const pin = document.createElement("div");
+  const handleMapClick = () => {
+    setSelectedPlace(null);
+  };
 
-      // Calculate position based on lat/long (this is just for visualization)
-      // In a real app, this would use the Google Maps API
-      const left = ((place.longitude - 139.6) / 0.5) * 100;
-      const top = (1 - (place.latitude - 35.5) / 0.5) * 100;
-
-      pin.className = `absolute transform -translate-x-1/2 -translate-y-1/2 animate-pulse`;
-      pin.style.left = `${Math.min(Math.max(left, 5), 95)}%`;
-      pin.style.top = `${Math.min(Math.max(top, 10), 90)}%`;
-
-      // Create pin element
-      const pinInner = document.createElement("div");
-      pinInner.className = `h-5 w-5 bg-primary-500 rounded-full flex items-center justify-center
-                            border-2 border-white shadow-md
-                            ${
-                              selectedPlaceId === place.id
-                                ? "ring-4 ring-primary-300 scale-125"
-                                : ""
-                            }`;
-
-      // Add a tooltip with place name
-      const tooltip = document.createElement("div");
-      tooltip.className =
-        "absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-neutral-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10";
-      tooltip.textContent = place.name;
-
-      // Wrap pin and tooltip
-      const wrapper = document.createElement("div");
-      wrapper.className = "group cursor-pointer";
-      wrapper.onclick = () => onPlaceSelect(place);
-
-      wrapper.appendChild(pinInner);
-      wrapper.appendChild(tooltip);
-      pin.appendChild(wrapper);
-      mapContainer.appendChild(pin);
-    });
-
-    mapElement.appendChild(mapContainer);
-
-    // Add a notice that this is a mock implementation
-    const notice = document.createElement("div");
-    notice.className =
-      "absolute bottom-2 right-2 bg-white bg-opacity-75 text-xs text-neutral-600 px-2 py-1 rounded";
-    notice.textContent = "サンプルマップ表示 (実装時はGoogle Maps APIを使用)";
-    mapContainer.appendChild(notice);
-  }, [places, selectedPlaceId, onPlaceSelect]);
+  // マップの位置が変更されたときに状態を保存
+  const handleCameraChanged = (e: any) => {
+    if (e.detail && e.detail.center) {
+      savedCenter = {
+        lat: e.detail.center.lat,
+        lng: e.detail.center.lng,
+      };
+      if (e.detail.zoom) {
+        savedZoom = e.detail.zoom;
+      }
+    }
+  };
 
   return (
-    <div
-      ref={mapRef}
-      className="w-full h-full min-h-[300px] rounded-lg bg-neutral-100"
-    ></div>
+    <APIProvider apiKey={apiKey}>
+      <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden">
+        <Map
+          mapId={"kokoiko-map"}
+          style={{ width: "100%", height: "100%" }}
+          defaultCenter={savedCenter}
+          defaultZoom={savedZoom}
+          gestureHandling={"greedy"}
+          disableDefaultUI={true}
+          onClick={handleMapClick}
+          onCameraChanged={handleCameraChanged}
+        >
+          <MapLoadMonitor />
+
+          {places.map((place) => (
+            <AdvancedMarker
+              key={place.id}
+              position={{ lat: place.latitude, lng: place.longitude }}
+              onClick={(e) => {
+                e.domEvent.stopPropagation();
+                handleMarkerClick(place);
+              }}
+              title={place.name}
+              zIndex={selectedPlace?.id === place.id ? 1 : undefined}
+            >
+              <Pin
+                background={
+                  selectedPlace?.id === place.id ? "#EA4335" : "#4285F4"
+                }
+                borderColor={
+                  selectedPlace?.id === place.id ? "#FFFFFF" : "#FFFFFF"
+                }
+                glyphColor={
+                  selectedPlace?.id === place.id ? "#FFFFFF" : "#FFFFFF"
+                }
+              />
+            </AdvancedMarker>
+          ))}
+        </Map>
+
+        {selectedPlace && (
+          <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-10">
+            <div className="relative">
+              <button
+                onClick={() => setSelectedPlace(null)}
+                className="absolute top-2 right-2 z-20 bg-white rounded-full p-1 shadow-md hover:bg-neutral-100 transition-colors"
+                aria-label="閉じる"
+              >
+                <X className="h-4 w-4 text-neutral-600" />
+              </button>
+              <PlaceCard place={selectedPlace} />
+            </div>
+          </div>
+        )}
+      </div>
+    </APIProvider>
   );
 };
 

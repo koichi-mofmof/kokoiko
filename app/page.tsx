@@ -93,7 +93,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.7 }}
-              className="mt-10 flex justify-center md:justify-start gap-4 flex-wrap"
+              className="mt-10 flex flex-col md:flex-row justify-center md:justify-start items-center md:items-stretch gap-4 flex-wrap"
             >
               <Button
                 asChild
@@ -103,25 +103,33 @@ export default function Home() {
               >
                 <Link
                   href="/login"
-                  className="inline-flex items-center text-lg px-10 py-6"
+                  className="inline-flex items-center justify-center text-lg px-10 py-6"
                 >
                   ログインしてマイマップを作る
                   <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
+              {/* PC 用ボタン */}
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="bg-white/10 backdrop-blur-sm text-white border-white/20 shadow-lg hover:bg-white/20 hover:text-white hover:scale-105 transition-all duration-300"
+                className="bg-white/10 backdrop-blur-sm text-white border-white/20 shadow-lg hover:bg-white/20 hover:text-white hover:scale-105 transition-all duration-300 hidden md:inline-flex w-full md:w-auto"
               >
                 <Link
                   href="/sample"
-                  className="inline-flex items-center text-lg px-10 py-6"
+                  className="inline-flex items-center justify-center text-lg px-10 py-6"
                 >
                   サンプルを見る
                 </Link>
               </Button>
+              {/* SP 用リンク */}
+              <Link
+                href="/sample"
+                className="md:hidden mt-4 text-center text-white underline hover:text-primary-300 transition-colors"
+              >
+                サンプルを見る
+              </Link>
             </motion.div>
           </motion.div>
         </div>
@@ -378,7 +386,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3, duration: 0.7 }}
-            className="mt-10 flex justify-center gap-4"
+            className="mt-10 flex flex-col md:flex-row justify-center items-center gap-4"
           >
             <Button
               asChild
@@ -388,25 +396,33 @@ export default function Home() {
             >
               <Link
                 href="/login"
-                className="inline-flex items-center text-lg px-10 py-6"
+                className="inline-flex items-center justify-center text-lg px-10 py-6"
               >
                 ログインしてマイマップを作る
                 <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
+            {/* PC 用ボタン */}
             <Button
               asChild
               variant="outline"
               size="lg"
-              className="bg-white/10 backdrop-blur-sm text-neutral-900 border-white/20 shadow-lg hover:bg-white/20 hover:text-neutral-900 hover:scale-105 transition-all duration-300"
+              className="bg-white/10 backdrop-blur-sm text-neutral-900 border-white/20 shadow-lg hover:bg-white/20 hover:text-neutral-900 hover:scale-105 transition-all duration-300 hidden md:inline-flex w-full md:w-auto"
             >
               <Link
                 href="/sample"
-                className="inline-flex items-center text-lg px-10 py-6"
+                className="inline-flex items-center justify-center text-lg px-10 py-6"
               >
                 サンプルを見る
               </Link>
             </Button>
+            {/* SP 用リンク */}
+            <Link
+              href="/sample"
+              className="md:hidden mt-4 text-center text-neutral-700 underline hover:text-primary-600 transition-colors"
+            >
+              サンプルを見る
+            </Link>
           </motion.div>
         </motion.div>
       </section>
