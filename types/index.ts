@@ -8,16 +8,20 @@ export interface Place {
   notes: string;
   tags: string[];
   createdAt: Date;
+  updatedAt?: Date;
   visitPlanned?: Date;
   visited: boolean;
   createdBy: string;
   imageUrl?: string;
+  rating?: number;
+  googlePlaceId?: string;
 }
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string;
 }
 
 export interface Group {
@@ -37,4 +41,4 @@ export interface FilterOptions {
   } | null;
 }
 
-export type ViewMode = "map" | "list" | "cards";
+export type ViewMode = "map" | "list";

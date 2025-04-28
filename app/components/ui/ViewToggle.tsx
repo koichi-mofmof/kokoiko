@@ -22,17 +22,6 @@ export default function ViewToggle({
   return (
     <div className="inline-flex rounded-soft shadow-soft border border-neutral-200 overflow-hidden">
       <button
-        onClick={() => onViewChange("cards")}
-        className={`${buttonBaseClass} ${
-          currentView === "cards"
-            ? `${activeClass} ${activeBorderClass}`
-            : `${inactiveClass} ${borderClass}`
-        }`}
-      >
-        <Grid className="h-4 w-4 sm:mr-2" />
-        <span className="hidden sm:inline">カード</span>
-      </button>
-      <button
         onClick={() => onViewChange("list")}
         className={`${buttonBaseClass} ${
           currentView === "list"
