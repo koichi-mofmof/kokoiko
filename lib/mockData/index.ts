@@ -4,29 +4,33 @@ import { Place, User } from "@/types"; // Assuming types are defined in @/types
 export const mockUsers: User[] = [
   {
     id: "user-1",
-    name: "鈴木花子",
+    name: "Alice Smith",
     email: "test@example.com",
+    avatarUrl: "https://i.pravatar.cc/150?u=user-1",
   },
   {
     id: "user-2",
-    name: "山田 太郎",
+    name: "Bob Johnson",
     email: "yamada@example.com",
-    // avatarUrl for user-2 can remain undefined or be added
+    avatarUrl: "https://i.pravatar.cc/150?u=user-2",
   },
   {
     id: "user-3",
-    name: "佐藤 次郎",
+    name: "Charlie Brown",
     email: "sato@example.com",
+    avatarUrl: "https://i.pravatar.cc/150?u=user-3",
   },
   {
     id: "user-4",
-    name: "伊藤 三郎",
+    name: "David Williams",
     email: "ito@example.com",
+    avatarUrl: "https://i.pravatar.cc/150?u=user-4",
   },
   {
     id: "user-5",
-    name: "渡辺 四郎",
+    name: "Evan Davis",
     email: "watanabe@example.com",
+    avatarUrl: "https://i.pravatar.cc/150?u=user-5",
   },
 ];
 
@@ -38,26 +42,26 @@ export const mockPlaces: Place[] = [
     id: "ramen-001",
     name: "SOBA HOUSE 金色不如帰 新宿御苑本店",
     address: "東京都新宿区新宿1-11-7",
-    googleMapsUrl: "https://maps.app.goo.gl/3UueK3T26CVN7VdT6", // Example URL
+    googleMapsUrl: "https://maps.app.goo.gl/3UueK3T26CVN7VdT6",
     latitude: 35.6871,
     longitude: 139.7143,
-    notes: "蛤と豚骨のWスープが絶品。", // Changed from memo
+    notes: "蛤と豚骨のWスープが絶品。",
     tags: ["ラーメン", "ミシュラン", "醤油", "塩"],
     createdAt: new Date("2023-10-26T10:00:00Z"),
     updatedAt: new Date("2023-10-26T10:00:00Z"),
     visited: false,
-    createdBy: mockUsers[0].id, // Added createdBy
+    createdBy: mockUsers[0].id,
     rating: 5,
     googlePlaceId: "ChIJL0QZu6mMGGARw4rzop6e9SM",
   },
   {
     id: "ramen-002",
     name: "Japanese Soba Noodles 蔦",
-    address: "東京都渋谷区西原3-2-4", // Moved location example
+    address: "東京都渋谷区西原3-2-4",
     googleMapsUrl: "https://maps.app.goo.gl/Vrbbndqmo8gD2Ujr6",
     latitude: 35.6721,
     longitude: 139.6808,
-    notes: "トリュフオイル香る醤油そば。", // Changed from memo
+    notes: "トリュフオイル香る醤油そば。",
     tags: ["ラーメン", "ミシュラン", "醤油", "塩", "トリュフ"],
     createdAt: new Date("2023-11-01T11:00:00Z"),
     updatedAt: new Date("2023-11-01T11:00:00Z"),
@@ -69,12 +73,12 @@ export const mockPlaces: Place[] = [
   {
     id: "ramen-003",
     name: "饗 くろ㐂",
-    address: "東京都千代田区神田和泉町2-15", // Note: This address might be outdated as the store moved.
-    googleMapsUrl: "https://maps.app.goo.gl/MagprcLyXwEFa9Yd8", // Placeholder -> Actual URL (Asakusabashi)
+    address: "東京都千代田区神田和泉町2-15",
+    googleMapsUrl: "https://maps.app.goo.gl/MagprcLyXwEFa9Yd8",
     latitude: 35.7008,
     longitude: 139.7768,
-    notes: "季節ごとの限定麺も人気。", // Changed from memo
-    tags: ["ラーメン", "塩", "味噌", "限定"],
+    notes: "季節ごとの限定麺も人気。",
+    tags: ["ラーメン", "塩", "味噌"],
     createdAt: new Date("2023-09-15T12:30:00Z"),
     updatedAt: new Date("2024-01-20T14:00:00Z"),
     visited: true,
@@ -86,11 +90,11 @@ export const mockPlaces: Place[] = [
     id: "ramen-004",
     name: "麺屋 一燈",
     address: "東京都葛飾区東新小岩1-4-17",
-    googleMapsUrl: "https://maps.app.goo.gl/5s2Lb1xpUbAdSmyq6", // Placeholder -> Actual URL
+    googleMapsUrl: "https://maps.app.goo.gl/5s2Lb1xpUbAdSmyq6",
     latitude: 35.7287,
     longitude: 139.8481,
-    notes: "濃厚魚介つけ麺が看板メニュー。", // Changed from memo
-    tags: ["ラーメン", "つけ麺", "濃厚", "行列"],
+    notes: "濃厚魚介つけ麺が看板メニュー。",
+    tags: ["ラーメン", "つけ麺", "濃厚"],
     createdAt: new Date("2023-12-05T19:00:00Z"),
     updatedAt: new Date("2023-12-05T19:00:00Z"),
     visited: false,
@@ -102,11 +106,11 @@ export const mockPlaces: Place[] = [
     id: "ramen-005",
     name: "らぁ麺 はやし田 新宿本店",
     address: "東京都新宿区新宿3-31-5",
-    googleMapsUrl: "https://maps.app.goo.gl/EmH9mwZkGMoNtuEf8", // Placeholder -> Actual URL
+    googleMapsUrl: "https://maps.app.goo.gl/EmH9mwZkGMoNtuEf8",
     latitude: 35.6915,
     longitude: 139.7049,
-    notes: "鴨と大山鶏の丸鶏スープ。", // Changed from memo
-    tags: ["ラーメン", "醤油", "鶏清湯", "人気"],
+    notes: "鴨と大山鶏の丸鶏スープ。",
+    tags: ["ラーメン", "醤油", "鶏清湯"],
     createdAt: new Date("2023-08-10T13:00:00Z"),
     updatedAt: new Date("2024-02-10T18:30:00Z"),
     visited: true,
@@ -119,10 +123,10 @@ export const mockPlaces: Place[] = [
     id: "cafe-001",
     name: "ブルーボトルコーヒー 清澄白河フラッグシップカフェ",
     address: "東京都江東区平野1-4-8",
-    googleMapsUrl: "https://maps.app.goo.gl/hVRXsaaZCjRbhYbx5", // Placeholder -> Actual URL
+    googleMapsUrl: "https://maps.app.goo.gl/hVRXsaaZCjRbhYbx5",
     latitude: 35.6801,
     longitude: 139.8005,
-    notes: "倉庫をリノベーションした開放的な空間。", // Changed from memo
+    notes: "倉庫をリノベーションした開放的な空間。",
     tags: ["カフェ", "コーヒー", "おしゃれ", "サードウェーブ"],
     createdAt: new Date("2023-07-20T15:00:00Z"),
     updatedAt: new Date("2024-03-01T16:00:00Z"),
@@ -135,10 +139,10 @@ export const mockPlaces: Place[] = [
     id: "cafe-002",
     name: "フグレン トウキョウ",
     address: "東京都渋谷区富ヶ谷1-16-11",
-    googleMapsUrl: "https://maps.app.goo.gl/eK3aTFybjfF21x5u7", // Placeholder -> Actual URL
+    googleMapsUrl: "https://maps.app.goo.gl/eK3aTFybjfF21x5u7",
     latitude: 35.6669,
     longitude: 139.6902,
-    notes: "ノルウェー発。夜はカクテルバーにも。", // Changed from memo
+    notes: "ノルウェー発。夜はカクテルバーにも。",
     tags: ["カフェ", "コーヒー", "おしゃれ", "北欧", "夜カフェ"],
     createdAt: new Date("2023-11-15T09:30:00Z"),
     updatedAt: new Date("2023-11-15T09:30:00Z"),
@@ -151,10 +155,10 @@ export const mockPlaces: Place[] = [
     id: "cafe-003",
     name: "茶亭 羽當 渋谷",
     address: "東京都渋谷区渋谷1-15-19",
-    googleMapsUrl: "https://maps.app.goo.gl/gjkGtJuBQYXoxb5m7", // Placeholder -> Actual URL
+    googleMapsUrl: "https://maps.app.goo.gl/gjkGtJuBQYXoxb5m7",
     latitude: 35.6606,
     longitude: 139.7032,
-    notes: "渋谷の喧騒を忘れられる老舗喫茶。", // Changed from memo
+    notes: "渋谷の喧騒を忘れられる老舗喫茶。",
     tags: ["カフェ", "純喫茶", "コーヒー", "静か", "隠れ家"],
     createdAt: new Date("2024-02-28T14:00:00Z"),
     updatedAt: new Date("2024-02-28T14:00:00Z"),
@@ -167,10 +171,10 @@ export const mockPlaces: Place[] = [
     id: "cafe-004",
     name: "カフェLATTEST TOKYO",
     address: "東京都渋谷区神宮前3-5-2",
-    googleMapsUrl: "https://maps.app.goo.gl/4fqu1eUWLD9ghEhWA", // Placeholder -> No URL found
+    googleMapsUrl: "https://maps.app.goo.gl/4fqu1eUWLD9ghEhWA",
     latitude: 35.669,
     longitude: 139.7099,
-    notes: "女性バリスタが淹れるラテが人気。", // Changed from memo
+    notes: "女性バリスタが淹れるラテが人気。",
     tags: [
       "カフェ",
       "エスプレッソ",
@@ -189,10 +193,10 @@ export const mockPlaces: Place[] = [
     id: "cafe-005",
     name: "Cafe Kitsuné Aoyama",
     address: "東京都港区南青山3-15-9",
-    googleMapsUrl: "https://maps.app.goo.gl/qHtxrSPbGRmuyCbe6", // Placeholder -> Actual URL
+    googleMapsUrl: "https://maps.app.goo.gl/qHtxrSPbGRmuyCbe6",
     latitude: 35.667,
     longitude: 139.7144,
-    notes: "メゾンキツネ併設のカフェ。", // Changed from memo
+    notes: "メゾンキツネ併設のカフェ。",
     tags: ["カフェ", "おしゃれ", "ファッションブランド", "テラス"],
     createdAt: new Date("2024-01-05T16:30:00Z"),
     updatedAt: new Date("2024-01-05T16:30:00Z"),
@@ -214,7 +218,7 @@ export const mockPlaces: Place[] = [
     createdAt: new Date("2024-04-01T10:00:00Z"),
     updatedAt: new Date("2024-04-01T10:00:00Z"),
     visited: false,
-    createdBy: mockUsers[0].id, // Example assignment
+    createdBy: mockUsers[0].id,
     rating: 5,
     googlePlaceId: "ChIJ9ZI1kZJ8GGARiT4eW9f0x3o",
   },
@@ -230,9 +234,9 @@ export const mockPlaces: Place[] = [
     createdAt: new Date("2024-05-10T12:00:00Z"),
     updatedAt: new Date("2024-05-10T12:00:00Z"),
     visited: false,
-    createdBy: mockUsers[1].id, // Example assignment
+    createdBy: mockUsers[1].id,
     rating: 4,
-    googlePlaceId: "ChIJN8zS-kGWGGARn5lIbmoV80Q", // General area Place ID
+    googlePlaceId: "ChIJN8zS-kGWGGARn5lIbmoV80Q",
   },
   // Additional Date Spots (Indices 12-19)
   {
@@ -249,7 +253,7 @@ export const mockPlaces: Place[] = [
     visited: false,
     createdBy: mockUsers[0].id,
     rating: 4,
-    googlePlaceId: "ChIJcQfQ3kKFGGAREk8y3mI-B9k", // General Area
+    googlePlaceId: "ChIJcQfQ3kKFGGAREk8y3mI-B9k",
   },
   {
     id: "date-spot-004",
@@ -450,7 +454,7 @@ export const mockPlaces: Place[] = [
     visited: false,
     createdBy: mockUsers[2].id,
     rating: 4,
-    googlePlaceId: "ChIJ4-Rk_kLnAGAR4pY6q_X8L6o", // General Area
+    googlePlaceId: "ChIJ4-Rk_kLnAGAR4pY6q_X8L6o",
   },
   {
     id: "osaka-spot-006",
@@ -500,7 +504,7 @@ export const mockPlaceLists: PlaceListGroup[] = [
     name: "関東デートリスト",
     description: "週末に行きたい関東のデートスポット",
     places: mockPlaces.slice(10, 20), // Get spots from index 10 up to (but not including) 20
-    sharedUserIds: [mockUsers[0].id, mockUsers[1].id],
+    sharedUserIds: [mockUsers[0].id, mockUsers[2].id],
   },
   {
     id: "osaka-trip",

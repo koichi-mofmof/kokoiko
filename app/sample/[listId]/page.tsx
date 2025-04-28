@@ -3,7 +3,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getPlaceListDetails } from "@/lib/mockData";
+import { getPlaceListDetails, mockUsers } from "@/lib/mockData";
+import { ParticipantAvatars } from "../_components/participant-avatars";
 
 // Removed local definitions of PlaceListGroup, mockPlaceLists, and getPlaceListDetails
 
@@ -24,6 +25,11 @@ export default async function SampleListDetailPage({
     notFound(); // Show 404 if list not found
   }
 
+  // Filter participants based on sharedUserIds
+  const participants = listDetails.sharedUserIds
+    ? mockUsers.filter((user) => listDetails.sharedUserIds?.includes(user.id))
+    : []; // If no sharedUserIds, show no participants for now
+
   return (
     <>
       {/* Static parts rendered on the server */}
@@ -37,16 +43,17 @@ export default async function SampleListDetailPage({
         </Link>
       </div>
       <div className="mb-6">
-        <div>
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-medium text-neutral-900 flex items-center">
             {listDetails.name}
           </h1>
-          {listDetails.description && (
-            <p className="mt-1 text-sm text-neutral-500">
-              {listDetails.description}
-            </p>
-          )}
+          <ParticipantAvatars participants={participants} />
         </div>
+        {listDetails.description && (
+          <p className="mt-1 text-sm text-neutral-500">
+            {listDetails.description}
+          </p>
+        )}
       </div>
 
       {/* Interactive part rendered on the client, wrapped in Suspense */}

@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Place, ViewMode, FilterOptions } from "@/types";
-import FilterBar from "@/app/components/ui/FilterBar";
-import ViewToggle from "@/app/components/ui/ViewToggle";
 import MapView from "@/app/components/map/MapView";
 import PlaceList from "@/app/components/places/PlaceList";
-import Link from "next/link";
-import { Plus } from "lucide-react";
+import FilterBar from "@/app/components/ui/FilterBar";
+import ViewToggle from "@/app/components/ui/ViewToggle";
+import { FilterOptions, Place, ViewMode } from "@/types";
+import { useEffect, useState } from "react";
 
 interface ListDetailViewProps {
   places: Place[];
@@ -80,16 +78,7 @@ export default function ListDetailView({
         <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
           <p className="text-neutral-600 mb-4">
             フィルター条件に一致する場所がありません。
-            <br />
-            （または、このリストにはまだ場所が登録されていません）
           </p>
-          <Link
-            href={`/places/add?listId=${listId}`}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm rounded-soft shadow-soft text-white bg-primary-600 hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            場所を追加する
-          </Link>
         </div>
       ) : (
         <>

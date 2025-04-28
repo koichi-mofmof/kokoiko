@@ -32,6 +32,12 @@ export default function Footer({ currentUser }: FooterProps) {
                 >
                   ホーム
                 </Link>
+                <Link
+                  href="/sample"
+                  className="text-neutral-400 hover:text-white block"
+                >
+                  サンプル
+                </Link>
                 {currentUser && (
                   <>
                     <Link

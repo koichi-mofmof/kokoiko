@@ -64,7 +64,7 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
               </div>
             </>
           ) : (
-            <Button asChild>
+            <Button asChild variant="secondary">
               <Link href="/login">ログイン</Link>
             </Button>
           )}
@@ -121,7 +121,7 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
             </>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button asChild>
+              <Button asChild variant="default">
                 <Link href="/login">ログイン</Link>
               </Button>
             </div>

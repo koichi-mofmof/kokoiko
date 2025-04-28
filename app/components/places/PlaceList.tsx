@@ -84,18 +84,19 @@ const PlaceList: React.FC<PlaceListProps> = ({
                     </span>
                   ))}
                 </div>
-              </div>
 
-              <div className="ml-2 flex-shrink-0">
-                <Link
-                  href={place.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-neutral-400 hover:text-primary-500"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
+                <div className="mt-2">
+                  <Link
+                    href={place.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary-600 hover:text-primary-800 flex items-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    マップで開く
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
