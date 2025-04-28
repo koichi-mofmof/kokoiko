@@ -1,4 +1,4 @@
-import { Place, User } from "@/types"; // Assuming types are defined in @/types
+import { Place, User } from "@/types";
 
 // --- Mock Users --- (Define users first to use their IDs)
 export const mockUsers: User[] = [
@@ -37,174 +37,6 @@ export const mockUsers: User[] = [
 // --- Mock Places Data ---
 // (Using realistic place names and approximate locations in Tokyo)
 export const mockPlaces: Place[] = [
-  // Ramen Shops
-  {
-    id: "ramen-001",
-    name: "SOBA HOUSE 金色不如帰 新宿御苑本店",
-    address: "東京都新宿区新宿1-11-7",
-    googleMapsUrl: "https://maps.app.goo.gl/3UueK3T26CVN7VdT6",
-    latitude: 35.6871,
-    longitude: 139.7143,
-    notes: "蛤と豚骨のWスープが絶品。",
-    tags: ["ラーメン", "ミシュラン", "醤油", "塩"],
-    createdAt: new Date("2023-10-26T10:00:00Z"),
-    updatedAt: new Date("2023-10-26T10:00:00Z"),
-    visited: false,
-    createdBy: mockUsers[0].id,
-    rating: 5,
-    googlePlaceId: "ChIJL0QZu6mMGGARw4rzop6e9SM",
-  },
-  {
-    id: "ramen-002",
-    name: "Japanese Soba Noodles 蔦",
-    address: "東京都渋谷区西原3-2-4",
-    googleMapsUrl: "https://maps.app.goo.gl/Vrbbndqmo8gD2Ujr6",
-    latitude: 35.6721,
-    longitude: 139.6808,
-    notes: "トリュフオイル香る醤油そば。",
-    tags: ["ラーメン", "ミシュラン", "醤油", "塩", "トリュフ"],
-    createdAt: new Date("2023-11-01T11:00:00Z"),
-    updatedAt: new Date("2023-11-01T11:00:00Z"),
-    visited: false,
-    createdBy: mockUsers[1].id,
-    rating: 5,
-    googlePlaceId: "ChIJQanBq9mMGGARws-T8s28Qxw",
-  },
-  {
-    id: "ramen-003",
-    name: "饗 くろ㐂",
-    address: "東京都千代田区神田和泉町2-15",
-    googleMapsUrl: "https://maps.app.goo.gl/MagprcLyXwEFa9Yd8",
-    latitude: 35.7008,
-    longitude: 139.7768,
-    notes: "季節ごとの限定麺も人気。",
-    tags: ["ラーメン", "塩", "味噌"],
-    createdAt: new Date("2023-09-15T12:30:00Z"),
-    updatedAt: new Date("2024-01-20T14:00:00Z"),
-    visited: true,
-    createdBy: mockUsers[0].id,
-    rating: 4,
-    googlePlaceId: "ChIJ_fU0wPOMGGAR07vW6kQ3d8g",
-  },
-  {
-    id: "ramen-004",
-    name: "麺屋 一燈",
-    address: "東京都葛飾区東新小岩1-4-17",
-    googleMapsUrl: "https://maps.app.goo.gl/5s2Lb1xpUbAdSmyq6",
-    latitude: 35.7287,
-    longitude: 139.8481,
-    notes: "濃厚魚介つけ麺が看板メニュー。",
-    tags: ["ラーメン", "つけ麺", "濃厚"],
-    createdAt: new Date("2023-12-05T19:00:00Z"),
-    updatedAt: new Date("2023-12-05T19:00:00Z"),
-    visited: false,
-    createdBy: mockUsers[1].id,
-    rating: 4,
-    googlePlaceId: "ChIJKR-jKxWDGGARc9L91wN5o3k",
-  },
-  {
-    id: "ramen-005",
-    name: "らぁ麺 はやし田 新宿本店",
-    address: "東京都新宿区新宿3-31-5",
-    googleMapsUrl: "https://maps.app.goo.gl/EmH9mwZkGMoNtuEf8",
-    latitude: 35.6915,
-    longitude: 139.7049,
-    notes: "鴨と大山鶏の丸鶏スープ。",
-    tags: ["ラーメン", "醤油", "鶏清湯"],
-    createdAt: new Date("2023-08-10T13:00:00Z"),
-    updatedAt: new Date("2024-02-10T18:30:00Z"),
-    visited: true,
-    createdBy: mockUsers[0].id,
-    rating: 4,
-    googlePlaceId: "ChIJv_z-06mMGGARk6b-V0a5o4I",
-  },
-  // Cafes
-  {
-    id: "cafe-001",
-    name: "ブルーボトルコーヒー 清澄白河フラッグシップカフェ",
-    address: "東京都江東区平野1-4-8",
-    googleMapsUrl: "https://maps.app.goo.gl/hVRXsaaZCjRbhYbx5",
-    latitude: 35.6801,
-    longitude: 139.8005,
-    notes: "倉庫をリノベーションした開放的な空間。",
-    tags: ["カフェ", "コーヒー", "おしゃれ", "サードウェーブ"],
-    createdAt: new Date("2023-07-20T15:00:00Z"),
-    updatedAt: new Date("2024-03-01T16:00:00Z"),
-    visited: true,
-    createdBy: mockUsers[1].id,
-    rating: 4,
-    googlePlaceId: "ChIJ88fQ0vyLGGARs74fVTa6uIw",
-  },
-  {
-    id: "cafe-002",
-    name: "フグレン トウキョウ",
-    address: "東京都渋谷区富ヶ谷1-16-11",
-    googleMapsUrl: "https://maps.app.goo.gl/eK3aTFybjfF21x5u7",
-    latitude: 35.6669,
-    longitude: 139.6902,
-    notes: "ノルウェー発。夜はカクテルバーにも。",
-    tags: ["カフェ", "コーヒー", "おしゃれ", "北欧", "夜カフェ"],
-    createdAt: new Date("2023-11-15T09:30:00Z"),
-    updatedAt: new Date("2023-11-15T09:30:00Z"),
-    visited: false,
-    createdBy: mockUsers[0].id,
-    rating: 5,
-    googlePlaceId: "ChIJs7a5F6OMGGARKM9x36A2rVc",
-  },
-  {
-    id: "cafe-003",
-    name: "茶亭 羽當 渋谷",
-    address: "東京都渋谷区渋谷1-15-19",
-    googleMapsUrl: "https://maps.app.goo.gl/gjkGtJuBQYXoxb5m7",
-    latitude: 35.6606,
-    longitude: 139.7032,
-    notes: "渋谷の喧騒を忘れられる老舗喫茶。",
-    tags: ["カフェ", "純喫茶", "コーヒー", "静か", "隠れ家"],
-    createdAt: new Date("2024-02-28T14:00:00Z"),
-    updatedAt: new Date("2024-02-28T14:00:00Z"),
-    visited: false,
-    createdBy: mockUsers[1].id,
-    rating: 4,
-    googlePlaceId: "ChIJf_8kwaOMGGARvH7N3x11vH8",
-  },
-  {
-    id: "cafe-004",
-    name: "カフェLATTEST TOKYO",
-    address: "東京都渋谷区神宮前3-5-2",
-    googleMapsUrl: "https://maps.app.goo.gl/4fqu1eUWLD9ghEhWA",
-    latitude: 35.669,
-    longitude: 139.7099,
-    notes: "女性バリスタが淹れるラテが人気。",
-    tags: [
-      "カフェ",
-      "エスプレッソ",
-      "おしゃれ",
-      "ラテアート",
-      "コーヒースタンド",
-    ],
-    createdAt: new Date("2023-06-10T11:00:00Z"),
-    updatedAt: new Date("2023-12-15T13:00:00Z"),
-    visited: true,
-    createdBy: mockUsers[0].id,
-    rating: 4,
-    googlePlaceId: "ChIJYyY6m6OLGGAR9dsu8Nlo1XQ",
-  },
-  {
-    id: "cafe-005",
-    name: "Cafe Kitsuné Aoyama",
-    address: "東京都港区南青山3-15-9",
-    googleMapsUrl: "https://maps.app.goo.gl/qHtxrSPbGRmuyCbe6",
-    latitude: 35.667,
-    longitude: 139.7144,
-    notes: "メゾンキツネ併設のカフェ。",
-    tags: ["カフェ", "おしゃれ", "ファッションブランド", "テラス"],
-    createdAt: new Date("2024-01-05T16:30:00Z"),
-    updatedAt: new Date("2024-01-05T16:30:00Z"),
-    visited: false,
-    createdBy: mockUsers[1].id,
-    rating: 4,
-    googlePlaceId: "ChIJW9Q-VqSLGGAR4Y7C61150Yk",
-  },
   // Existing Date Spots (Indices 10-11)
   {
     id: "date-spot-001",
@@ -214,7 +46,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.2482,
     longitude: 139.0484,
     notes: "自然の中でアートを楽しめる。ピカソ館も必見。",
-    tags: ["美術館", "アート", "自然", "デート", "箱根", "神奈川"],
+    tags: ["美術館", "アート", "自然"],
     createdAt: new Date("2024-04-01T10:00:00Z"),
     updatedAt: new Date("2024-04-01T10:00:00Z"),
     visited: false,
@@ -230,7 +62,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.4437,
     longitude: 139.6444,
     notes: "食べ歩きや中華料理が楽しい。異国情緒あふれる街並み。",
-    tags: ["中華街", "グルメ", "食べ歩き", "デート", "横浜", "神奈川"],
+    tags: ["中華街", "グルメ", "食べ歩き"],
     createdAt: new Date("2024-05-10T12:00:00Z"),
     updatedAt: new Date("2024-05-10T12:00:00Z"),
     visited: false,
@@ -247,7 +79,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.3014,
     longitude: 139.4817,
     notes: "シーキャンドルからの眺めが最高。水族館や岩屋も楽しめる。",
-    tags: ["観光地", "海", "展望台", "水族館", "デート", "江ノ島", "神奈川"],
+    tags: ["観光地", "海", "展望台", "水族館"],
     createdAt: new Date("2024-06-01T11:00:00Z"),
     updatedAt: new Date("2024-06-01T11:00:00Z"),
     visited: false,
@@ -263,7 +95,7 @@ export const mockPlaces: Place[] = [
     latitude: 36.4047,
     longitude: 140.5916,
     notes: "ネモフィラやコキアの絶景が有名。季節の花々が楽しめる。",
-    tags: ["公園", "花畑", "絶景", "デート", "ひたちなか", "茨城"],
+    tags: ["公園", "花畑", "絶景"],
     createdAt: new Date("2024-06-10T10:30:00Z"),
     updatedAt: new Date("2024-06-10T10:30:00Z"),
     visited: false,
@@ -279,7 +111,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.1895,
     longitude: 139.9487,
     notes: "動物とのふれあいや味覚狩り、花畑など一日中楽しめる。",
-    tags: ["牧場", "動物", "自然", "味覚狩り", "デート", "富津", "千葉"],
+    tags: ["牧場", "動物", "自然", "味覚狩り"],
     createdAt: new Date("2024-07-01T09:00:00Z"),
     updatedAt: new Date("2024-07-01T09:00:00Z"),
     visited: false,
@@ -295,14 +127,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.4483,
     longitude: 139.9952,
     notes: "広大な敷地で遊べる。冬のイルミネーションが特に有名。",
-    tags: [
-      "テーマパーク",
-      "イルミネーション",
-      "自然",
-      "デート",
-      "袖ケ浦",
-      "千葉",
-    ],
+    tags: ["テーマパーク", "イルミネーション", "自然"],
     createdAt: new Date("2024-07-15T15:00:00Z"),
     updatedAt: new Date("2024-07-15T15:00:00Z"),
     visited: false,
@@ -318,7 +143,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.6963,
     longitude: 139.5703,
     notes: "ジブリの世界観に浸れる。完全予約制なので注意。",
-    tags: ["美術館", "ジブリ", "アニメ", "デート", "三鷹", "東京"],
+    tags: ["美術館", "ジブリ", "アニメ"],
     createdAt: new Date("2024-08-01T14:00:00Z"),
     updatedAt: new Date("2024-08-01T14:00:00Z"),
     visited: false,
@@ -334,7 +159,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.6354,
     longitude: 139.5199,
     notes: "アトラクションやプール、冬はジュエルミネーションが楽しめる。",
-    tags: ["遊園地", "イルミネーション", "プール", "デート", "稲城", "東京"],
+    tags: ["遊園地", "イルミネーション", "プール"],
     createdAt: new Date("2024-08-15T10:00:00Z"),
     updatedAt: new Date("2024-08-15T10:00:00Z"),
     visited: false,
@@ -351,7 +176,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.7293,
     longitude: 139.719,
     notes: "天空のペンギンが人気。都会のオアシス。",
-    tags: ["水族館", "動物", "デート", "池袋", "東京"],
+    tags: ["水族館", "動物"],
     createdAt: new Date("2024-09-01T13:00:00Z"),
     updatedAt: new Date("2024-09-01T13:00:00Z"),
     visited: false,
@@ -367,7 +192,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.9242,
     longitude: 139.4868,
     notes: "縁結びのパワースポットとして有名。風鈴祭りも人気。",
-    tags: ["神社", "縁結び", "パワースポット", "デート", "川越", "埼玉"],
+    tags: ["神社", "縁結び", "パワースポット"],
     createdAt: new Date("2024-09-15T11:00:00Z"),
     updatedAt: new Date("2024-09-15T11:00:00Z"),
     visited: false,
@@ -384,7 +209,7 @@ export const mockPlaces: Place[] = [
     latitude: 34.6873,
     longitude: 135.5262,
     notes: "豊臣秀吉が築いた城。天守閣からの眺めが良い。",
-    tags: ["城", "歴史", "観光地", "ランドマーク", "大阪"],
+    tags: ["城", "歴史", "観光地", "ランドマーク"],
     createdAt: new Date("2024-10-02T10:00:00Z"),
     updatedAt: new Date("2024-10-02T10:00:00Z"),
     visited: false,
@@ -400,7 +225,7 @@ export const mockPlaces: Place[] = [
     latitude: 34.6656,
     longitude: 135.4326,
     notes: "ハリウッド映画の世界観を楽しめるテーマパーク。",
-    tags: ["テーマパーク", "遊園地", "アトラクション", "デート", "大阪"],
+    tags: ["テーマパーク", "遊園地", "アトラクション"],
     createdAt: new Date("2024-10-03T09:00:00Z"),
     updatedAt: new Date("2024-10-03T09:00:00Z"),
     visited: false,
@@ -416,7 +241,7 @@ export const mockPlaces: Place[] = [
     latitude: 34.6525,
     longitude: 135.5063,
     notes: "新世界のシンボルタワー。ビリケンさんが有名。",
-    tags: ["展望台", "タワー", "観光地", "ランドマーク", "大阪"],
+    tags: ["展望台", "タワー", "観光地", "ランドマーク"],
     createdAt: new Date("2024-10-04T14:00:00Z"),
     updatedAt: new Date("2024-10-04T14:00:00Z"),
     visited: false,
@@ -432,7 +257,7 @@ export const mockPlaces: Place[] = [
     latitude: 34.6549,
     longitude: 135.4289,
     notes: "世界最大級の水族館。ジンベエザメが人気。",
-    tags: ["水族館", "動物", "デート", "観光地", "大阪"],
+    tags: ["水族館", "動物", "観光地"],
     createdAt: new Date("2024-10-05T11:00:00Z"),
     updatedAt: new Date("2024-10-05T11:00:00Z"),
     visited: false,
@@ -448,7 +273,7 @@ export const mockPlaces: Place[] = [
     latitude: 34.6647,
     longitude: 135.506,
     notes: "「大阪の台所」と呼ばれる市場。食べ歩きが楽しい。",
-    tags: ["市場", "グルメ", "食べ歩き", "商店街", "大阪"],
+    tags: ["市場", "グルメ", "食べ歩き", "商店街"],
     createdAt: new Date("2024-10-06T12:00:00Z"),
     updatedAt: new Date("2024-10-06T12:00:00Z"),
     visited: false,
@@ -456,21 +281,103 @@ export const mockPlaces: Place[] = [
     rating: 4,
     googlePlaceId: "ChIJ4-Rk_kLnAGAR4pY6q_X8L6o",
   },
+  // Tokyo Entertainment Restaurants (Indices 27-32)
   {
-    id: "osaka-spot-006",
-    name: "なんばグランド花月",
-    address: "大阪府大阪市中央区難波千日前１１−６",
-    googleMapsUrl: "https://maps.app.goo.gl/XCqwHEsWJ8DNzKdA8",
-    latitude: 34.6648,
-    longitude: 135.504,
-    notes: "吉本新喜劇やお笑いライブの聖地。",
-    tags: ["劇場", "お笑い", "ライブ", "観光地", "大阪"],
-    createdAt: new Date("2024-10-07T15:00:00Z"),
-    updatedAt: new Date("2024-10-07T15:00:00Z"),
+    id: "entertainment-restaurant-001",
+    name: "鮨さいとう",
+    address: "東京都港区六本木1-4-5 アークヒルズサウスタワー1F",
+    googleMapsUrl: "https://maps.app.goo.gl/example1", // ダミーURL
+    latitude: 35.6668,
+    longitude: 139.7418,
+    notes: "予約困難なことで有名な最高級寿司店。特別な接待に。",
+    tags: ["寿司", "高級", "個室"],
+    createdAt: new Date("2024-11-01T19:00:00Z"),
+    updatedAt: new Date("2024-11-01T19:00:00Z"),
     visited: false,
     createdBy: mockUsers[3].id,
-    rating: 4,
-    googlePlaceId: "ChIJmZ7jB0TnAGAR_V55x1K6Y8o",
+    rating: 5,
+    googlePlaceId: "ChIJEXAMPLE_Saito", // ダミーID
+  },
+  {
+    id: "entertainment-restaurant-002",
+    name: "NARISAWA",
+    address: "東京都港区南青山2-6-15 南青山ガーデンコート",
+    googleMapsUrl: "https://maps.app.goo.gl/HBHw9p2FMPnAa1c47",
+    latitude: 35.6705,
+    longitude: 139.7191,
+    notes: "イノベーティブ里山キュイジーヌ。自然を感じる独創的な料理。",
+    tags: ["フレンチ", "イノベーティブ", "個室"],
+    createdAt: new Date("2024-11-05T19:30:00Z"),
+    updatedAt: new Date("2024-11-05T19:30:00Z"),
+    visited: false,
+    createdBy: mockUsers[4].id,
+    rating: 5,
+    googlePlaceId: "ChIJEXAMPLE_Narisawa", // ダミーID
+  },
+  {
+    id: "entertainment-restaurant-003",
+    name: "龍吟",
+    address: "東京都千代田区有楽町1-1-2 ミッドタウン日比谷 7F",
+    googleMapsUrl: "https://maps.app.goo.gl/BcQR2eqSvihPZH587",
+    latitude: 35.6749,
+    longitude: 139.759,
+    notes: "日本の豊かさを表現するモダン懐石。海外からのゲストにも。",
+    tags: ["日本料理", "懐石", "モダン", "夜景"],
+    createdAt: new Date("2024-11-10T18:30:00Z"),
+    updatedAt: new Date("2024-11-10T18:30:00Z"),
+    visited: false,
+    createdBy: mockUsers[0].id,
+    rating: 5,
+    googlePlaceId: "ChIJEXAMPLE_Ryugin", // ダミーID
+  },
+  {
+    id: "entertainment-restaurant-004",
+    name: "カンテサンス",
+    address: "東京都品川区北品川6-7-29 ガーデンシティ品川御殿山 1F",
+    googleMapsUrl: "https://maps.app.goo.gl/3YvZghLCHWpAxPLd8",
+    latitude: 35.631,
+    longitude: 139.7294,
+    notes:
+      "素材の持ち味を最大限に活かすモダンフレンチ。メニューはおまかせのみ。",
+    tags: ["フレンチ", "モダン"],
+    createdAt: new Date("2024-11-15T20:00:00Z"),
+    updatedAt: new Date("2024-11-15T20:00:00Z"),
+    visited: false,
+    createdBy: mockUsers[1].id,
+    rating: 5,
+    googlePlaceId: "ChIJEXAMPLE_Quintessence", // ダミーID
+  },
+  {
+    id: "entertainment-restaurant-005",
+    name: "茶禅華",
+    address: "東京都港区南麻布4-7-5",
+    googleMapsUrl: "https://maps.app.goo.gl/nS1wJSoQsNB7q2d39",
+    latitude: 35.6504,
+    longitude: 139.7284,
+    notes: "和魂漢才をテーマにした中華料理。落ち着いた空間。",
+    tags: ["中華", "イノベーティブ", "個室"],
+    createdAt: new Date("2024-11-20T19:00:00Z"),
+    updatedAt: new Date("2024-11-20T19:00:00Z"),
+    visited: false,
+    createdBy: mockUsers[2].id,
+    rating: 5,
+    googlePlaceId: "ChIJEXAMPLE_Sazenka", // ダミーID
+  },
+  {
+    id: "entertainment-restaurant-006",
+    name: "うかい亭 表参道",
+    address: "東京都渋谷区神宮前5-10-1 表参道 ジャイル 5F",
+    googleMapsUrl: "https://maps.app.goo.gl/vAZMjNiujdr2c3Ma6",
+    latitude: 35.667,
+    longitude: 139.7077,
+    notes: "最高級の鉄板焼き。華やかな雰囲気で会話も弾む。",
+    tags: ["鉄板焼", "ステーキ", "高級", "夜景"],
+    createdAt: new Date("2024-11-25T18:00:00Z"),
+    updatedAt: new Date("2024-11-25T18:00:00Z"),
+    visited: false,
+    createdBy: mockUsers[3].id,
+    rating: 5,
+    googlePlaceId: "ChIJEXAMPLE_Ukai", // ダミーID
   },
 ];
 
@@ -484,34 +391,69 @@ export interface PlaceListGroup {
   sharedUserIds?: string[];
 }
 
+// Filter indoor places from mockPlaces
+const indoorDatePlaces = mockPlaces.filter((place) =>
+  [
+    "date-spot-001", // 彫刻の森美術館
+    "date-spot-007", // 三鷹の森ジブリ美術館
+    "date-spot-009", // サンシャイン水族館
+  ].includes(place.id)
+);
+
+// Filter sunny day places from mockPlaces
+const sunnyDayPlaces = mockPlaces.filter((place) =>
+  [
+    "date-spot-003", // 江の島
+    "date-spot-004", // 国営ひたち海浜公園
+    "date-spot-005", // マザー牧場
+    "date-spot-006", // 東京ドイツ村
+    "date-spot-008", // よみうりランド
+  ].includes(place.id)
+);
+
+// Filter sunny day places from mockPlaces
+const osakaTripPlaces = mockPlaces.filter((place) =>
+  [
+    "osaka-spot-001", // 大阪城
+    "osaka-spot-002", // ユニバーサル・スタジオ・ジャパン
+    "osaka-spot-003", // 通天閣
+    "osaka-spot-004", // 海遊館
+    "osaka-spot-005", // 黒門市場
+  ].includes(place.id)
+);
+
+// Filter entertainment restaurants from mockPlaces
+const entertainmentRestaurants = mockPlaces.filter((place) =>
+  [
+    "entertainment-restaurant-001",
+    "entertainment-restaurant-002",
+    "entertainment-restaurant-003",
+    "entertainment-restaurant-004",
+    "entertainment-restaurant-005",
+    "entertainment-restaurant-006",
+  ].includes(place.id)
+);
+
 export const mockPlaceLists: PlaceListGroup[] = [
   {
-    id: "ramen-tokyo",
-    name: "都内の人気ラーメン屋",
-    description: "一度は行ってみたい東京のラーメン名店",
-    places: mockPlaces.filter((p) => p.tags.includes("ラーメン")),
-    sharedUserIds: [mockUsers[0].id],
+    id: "indoor-date",
+    name: "デートスポット（雨の日用）",
+    description: "雨の日でも楽しめる屋内デートスポット",
+    places: indoorDatePlaces,
+    sharedUserIds: [mockUsers[0].id, mockUsers[2].id],
   },
   {
-    id: "cafe-tokyo",
-    name: "都内のおしゃれカフェ",
-    description: "雰囲気の良い東京のカフェ巡り",
-    places: mockPlaces.filter((p) => p.tags.includes("カフェ")),
-    sharedUserIds: [mockUsers[0].id],
-  },
-  {
-    id: "kanto-date",
-    name: "関東デートリスト",
-    description: "週末に行きたい関東のデートスポット",
-    places: mockPlaces.slice(10, 20), // Get spots from index 10 up to (but not including) 20
+    id: "sunny-day",
+    name: "デートスポット（晴れた日用）",
+    description: "天気の良い日に行きたい屋外デートスポット",
+    places: sunnyDayPlaces,
     sharedUserIds: [mockUsers[0].id, mockUsers[2].id],
   },
   {
     id: "osaka-trip",
     name: "大阪旅行",
-    description: "食い倒れ！大阪満喫プラン",
-    // Get the 7 Osaka spots (indices 20-26)
-    places: mockPlaces.slice(20, 27),
+    description: "大阪満喫プラン",
+    places: osakaTripPlaces,
     // Share with all 5 users
     sharedUserIds: [
       mockUsers[0].id,
@@ -520,6 +462,13 @@ export const mockPlaceLists: PlaceListGroup[] = [
       mockUsers[3].id,
       mockUsers[4].id,
     ],
+  },
+  {
+    id: "entertainment-restaurants",
+    name: "接待リスト",
+    description: "大切な接待で使える東京都内の高級レストラン",
+    places: entertainmentRestaurants,
+    sharedUserIds: [mockUsers[0].id],
   },
 ];
 

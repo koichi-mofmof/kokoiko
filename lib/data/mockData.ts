@@ -87,21 +87,3 @@ export const mockPlaces: Place[] = [
       "https://images.pexels.com/photos/1370295/pexels-photo-1370295.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
 ];
-
-// Available tags for filtering
-export const availableTags = [
-  "カフェ",
-  "本屋",
-  "美術館",
-  "レストラン",
-  "ショップ",
-  "アート",
-  "渋谷",
-  "新宿",
-  "表参道",
-  "代官山",
-  "江東区",
-  "コーヒー",
-  "建築",
-  "写真",
-];

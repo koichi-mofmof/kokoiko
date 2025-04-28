@@ -1,16 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import AddPlaceForm from "@/app/components/places/AddPlaceForm";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
-import AddPlaceForm from "@/app/components/places/AddPlaceForm";
-import { mockUsers } from "@/lib/mockData";
+import { useState } from "react";
 
 export default function AddPlacePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  // Current user mock
-  const currentUser = mockUsers[0];
 
   const handlePlaceSubmit = (placeData: {
     googleMapsUrl: string;

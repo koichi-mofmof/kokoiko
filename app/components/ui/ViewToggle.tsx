@@ -1,7 +1,7 @@
 "use client";
 
-import { Grid, List, Map } from "lucide-react";
 import { ViewMode } from "@/types";
+import { List, Map } from "lucide-react";
 
 interface ViewToggleProps {
   currentView: ViewMode;
@@ -23,6 +23,7 @@ export default function ViewToggle({
     <div className="inline-flex rounded-soft shadow-soft border border-neutral-200 overflow-hidden">
       <button
         onClick={() => onViewChange("list")}
+        type="button"
         className={`${buttonBaseClass} ${
           currentView === "list"
             ? `${activeClass} ${activeBorderClass}`

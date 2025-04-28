@@ -35,6 +35,7 @@ export interface FilterOptions {
   tags: string[];
   visited: boolean | null;
   groupId: string | null;
+  prefecture: string[];
   dateRange: {
     start: Date | null;
     end: Date | null;

@@ -1,30 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { Filter } from "lucide-react";
+import { sortPrefectures } from "@/lib/utils/geography";
 import { FilterOptions } from "@/types";
+import { Filter } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface FilterBarProps {
   onFilterChange: (filters: FilterOptions) => void;
   initialFilters: FilterOptions;
+  availableTags: string[];
+  availablePrefectures: string[];
 }
 
 export default function FilterBar({
   onFilterChange,
   initialFilters,
+  availableTags,
+  availablePrefectures,
 }: FilterBarProps) {
+  const filterRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterOptions>(initialFilters);
-
-  // 利用可能なタグのリスト（実際のアプリではデータから動的に生成される）
-  const availableTags = [
-    "レストラン",
-    "カフェ",
-    "公園",
-    "ショップ",
-    "美術館",
-    "観光地",
-  ];
+  const [filters, setFilters] = useState<FilterOptions>(() => ({
+    ...initialFilters,
+    prefecture: initialFilters.prefecture || [],
+  }));
+  const [popupTop, setPopupTop] = useState<number | null>(null);
 
   const toggleFilter = () => {
     setIsOpen(!isOpen);
@@ -46,30 +47,75 @@ export default function FilterBar({
     onFilterChange(newFilters);
   };
 
+  const handlePrefectureToggle = (prefecture: string) => {
+    const newPrefectures = filters.prefecture.includes(prefecture)
+      ? filters.prefecture.filter((p) => p !== prefecture)
+      : [...filters.prefecture, prefecture];
+    const newFilters = { ...filters, prefecture: newPrefectures };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
+  };
+
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      setPopupTop(buttonRect.bottom + 8);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={filterRef}>
       <button
+        ref={buttonRef}
         onClick={toggleFilter}
         className={`inline-flex items-center justify-center h-9 w-9 sm:w-auto sm:px-3 py-2 border ${
-          filters.tags.length > 0 || filters.visited !== null
+          filters.tags.length > 0 ||
+          filters.visited !== null ||
+          filters.prefecture.length > 0
             ? "border-primary-300 text-primary-700 bg-primary-50"
             : "border-neutral-200 text-neutral-700 bg-white"
         } rounded-soft shadow-soft text-sm hover:bg-neutral-50 transition-colors`}
       >
         <Filter className="h-4 w-4 sm:mr-2" />
         <span className="hidden sm:inline">フィルター</span>
-        {(filters.tags.length > 0 || filters.visited !== null) && (
+        {(filters.tags.length > 0 ||
+          filters.visited !== null ||
+          filters.prefecture.length > 0) && (
           <span className="ml-1.5 bg-primary-100 text-primary-800 px-1.5 py-0.5 rounded-full text-xs hidden sm:inline">
-            {filters.tags.length + (filters.visited !== null ? 1 : 0)}
+            {filters.tags.length +
+              (filters.visited !== null ? 1 : 0) +
+              filters.prefecture.length}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-64 bg-white rounded-soft shadow-medium p-4 z-10 border border-neutral-200 animate-fadeIn">
+        <div
+          className="fixed sm:absolute inset-x-4 sm:inset-x-auto sm:left-0 sm:right-auto sm:top-auto sm:mt-2 sm:w-80 max-h-[70vh] overflow-y-auto bg-white rounded-soft shadow-medium p-4 z-10 border border-neutral-200 animate-fadeIn"
+          style={{ top: popupTop !== null ? `${popupTop}px` : undefined }}
+        >
           <div className="mb-4">
             <h4 className="text-sm font-medium text-neutral-800 mb-2">タグ</h4>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
               {availableTags.map((tag) => (
                 <button
                   key={tag}
@@ -81,6 +127,27 @@ export default function FilterBar({
                   } transition-colors`}
                 >
                   {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-neutral-800 mb-2">
+              都道府県
+            </h4>
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+              {sortPrefectures(availablePrefectures).map((pref) => (
+                <button
+                  key={pref}
+                  onClick={() => handlePrefectureToggle(pref)}
+                  className={`px-2.5 py-1.5 rounded-full text-xs ${
+                    filters.prefecture.includes(pref)
+                      ? "bg-primary-100 text-primary-800 border border-primary-200"
+                      : "bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200"
+                  } transition-colors`}
+                >
+                  {pref}
                 </button>
               ))}
             </div>

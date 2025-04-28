@@ -65,7 +65,9 @@ const PlaceList: React.FC<PlaceListProps> = ({
 
                 <div className="mt-1 flex items-center text-xs text-neutral-500">
                   <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                  <span className="truncate">{place.address}</span>
+                  <span className="line-clamp-1 break-all">
+                    {place.address}
+                  </span>
                 </div>
 
                 {place.notes && (
@@ -94,7 +96,7 @@ const PlaceList: React.FC<PlaceListProps> = ({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <ExternalLink className="h-3 w-3 mr-1" />
-                    マップで開く
+                    Googleマップで開く
                   </Link>
                 </div>
               </div>

@@ -6,11 +6,10 @@ import {
   AdvancedMarker,
   APIProvider,
   Map,
-  Pin,
   useMap,
 } from "@vis.gl/react-google-maps";
-import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface MapViewProps {
   places: Place[];
@@ -34,6 +33,16 @@ let apiRequestCount = 0;
 const logMessage = (message: string) => {
   console.log(`[GoogleMapsAPI] ${message}`);
 };
+
+interface MapCameraChangedEvent {
+  detail: {
+    center: { lat: number; lng: number };
+    zoom: number;
+    bounds: google.maps.LatLngBoundsLiteral;
+    heading: number;
+    tilt: number;
+  };
+}
 
 // マップロードの監視コンポーネント
 function MapLoadMonitor() {
@@ -69,12 +78,75 @@ function MapLoadMonitor() {
   return null;
 }
 
-const MapView: React.FC<MapViewProps> = ({
-  places,
-  onPlaceSelect,
-  initialCenter = DEFAULT_CENTER,
-  initialZoom = DEFAULT_ZOOM,
-}) => {
+// 新しい内部コンポーネント: 地図の表示範囲を制御
+interface MapBoundsControllerProps {
+  places: Place[];
+}
+
+function MapBoundsController({ places }: MapBoundsControllerProps) {
+  const map = useMap();
+  const initialBoundsFitted = useRef(false);
+
+  useEffect(() => {
+    if (!map || !places || places.length === 0) {
+      return;
+    }
+
+    // 初回マウント時のみ地図の表示範囲を調整する
+    if (!initialBoundsFitted.current) {
+      if (places.length === 1) {
+        const place = places[0];
+        map.setCenter({ lat: place.latitude, lng: place.longitude });
+        map.setZoom(15);
+        logMessage(`地図の中心を ${place.name} に設定 (Zoom: 15)`);
+      } else {
+        const bounds = new google.maps.LatLngBounds();
+        places.forEach((place) => {
+          bounds.extend({ lat: place.latitude, lng: place.longitude });
+        });
+        map.fitBounds(bounds, 50);
+        logMessage(`地図の表示範囲を ${places.length} 個の場所に合わせて調整`);
+      }
+      initialBoundsFitted.current = true;
+    }
+  }, [map, places]);
+
+  return null; // このコンポーネントは何もレンダリングしない
+}
+
+// カスタムマーカーコンポーネント
+interface CustomMarkerProps {
+  isSelected: boolean;
+}
+
+const CustomMarker: React.FC<CustomMarkerProps> = ({ isSelected }) => {
+  return (
+    <div
+      className={`transition-all duration-150 ease-in-out cursor-pointer ${
+        isSelected
+          ? "scale-115 z-10 drop-shadow-lg"
+          : "scale-100 z-0 drop-shadow-md"
+      }`}
+      style={{ transformOrigin: "bottom center" }}
+    >
+      {/* ピン本体 */}
+      <div
+        className={`rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm bg-primary-600`}
+      >
+        <span className="text-primary-foreground">ココイコ</span>
+      </div>
+      {/* 下向きの三角形 */}
+      <div
+        className="w-0 h-0 mx-auto 
+        border-l-[8px] border-l-transparent 
+        border-r-[8px] border-r-transparent 
+        border-t-[10px] border-t-primary-600"
+      ></div>
+    </div>
+  );
+};
+
+const MapView: React.FC<MapViewProps> = ({ places, onPlaceSelect }) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
 
@@ -121,8 +193,10 @@ const MapView: React.FC<MapViewProps> = ({
     setSelectedPlace(null);
   };
 
-  // マップの位置が変更されたときに状態を保存
-  const handleCameraChanged = (e: any) => {
+  // マップの位置が変更されたときに状態を保存 (ユーザー操作時)
+  // fitBoundsによる変更と区別するため、少し待ってから保存するなどの工夫も可能だが、
+  // 今回はシンプルに、カメラが変わったら常に保存する。
+  const handleCameraChanged = (e: MapCameraChangedEvent) => {
     if (e.detail && e.detail.center) {
       savedCenter = {
         lat: e.detail.center.lat,
@@ -137,8 +211,11 @@ const MapView: React.FC<MapViewProps> = ({
   return (
     <APIProvider apiKey={apiKey}>
       <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden">
+        <MapBoundsController places={places} />
+        <MapLoadMonitor />
+
         <Map
-          mapId={"kokoiko-map"}
+          mapId={"2e9f8abfc83a4ea"}
           style={{ width: "100%", height: "100%" }}
           defaultCenter={savedCenter}
           defaultZoom={savedZoom}
@@ -147,8 +224,6 @@ const MapView: React.FC<MapViewProps> = ({
           onClick={handleMapClick}
           onCameraChanged={handleCameraChanged}
         >
-          <MapLoadMonitor />
-
           {places.map((place) => (
             <AdvancedMarker
               key={place.id}
@@ -158,19 +233,8 @@ const MapView: React.FC<MapViewProps> = ({
                 handleMarkerClick(place);
               }}
               title={place.name}
-              zIndex={selectedPlace?.id === place.id ? 1 : undefined}
             >
-              <Pin
-                background={
-                  selectedPlace?.id === place.id ? "#EA4335" : "#4285F4"
-                }
-                borderColor={
-                  selectedPlace?.id === place.id ? "#FFFFFF" : "#FFFFFF"
-                }
-                glyphColor={
-                  selectedPlace?.id === place.id ? "#FFFFFF" : "#FFFFFF"
-                }
-              />
+              <CustomMarker isSelected={selectedPlace?.id === place.id} />
             </AdvancedMarker>
           ))}
         </Map>

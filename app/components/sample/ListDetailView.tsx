@@ -5,17 +5,13 @@ import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/app/components/ui/FilterBar";
 import ViewToggle from "@/app/components/ui/ViewToggle";
 import { FilterOptions, Place, ViewMode } from "@/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 interface ListDetailViewProps {
   places: Place[];
-  listId: string; // For "Add Place" link
 }
 
-export default function ListDetailView({
-  places,
-  listId,
-}: ListDetailViewProps) {
+export default function ListDetailView({ places }: ListDetailViewProps) {
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>(places);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   // Set default view to list
@@ -26,7 +22,28 @@ export default function ListDetailView({
     visited: null,
     groupId: null, // groupId might be relevant here if filtering within the list
     dateRange: null,
+    prefecture: [],
   });
+
+  // Derive unique available tags from the places data
+  const availableTags = useMemo(() => {
+    const allTags = places.flatMap((place) => place.tags || []);
+    return Array.from(new Set(allTags));
+  }, [places]);
+
+  // Derive unique available prefectures from the places data
+  const availablePrefectures = useMemo(() => {
+    const prefectures = places
+      .map((place) => {
+        // Simple extraction: Assumes prefecture is at the beginning and ends with 都, 道, 府, or 県
+        const match = place.address?.match(
+          /^(東京都|北海道|(?:京都|大阪)府|.{2,3}県)/
+        );
+        return match ? match[0] : null;
+      })
+      .filter((pref): pref is string => pref !== null);
+    return Array.from(new Set(prefectures));
+  }, [places]);
 
   // Apply filters when filters state or initial places change
   useEffect(() => {
@@ -42,6 +59,13 @@ export default function ListDetailView({
     // Filter by visited status
     if (filters.visited !== null) {
       result = result.filter((place) => place.visited === filters.visited);
+    }
+
+    // Filter by prefecture
+    if (filters.prefecture.length > 0) {
+      result = result.filter((place) =>
+        filters.prefecture.some((pref) => place.address?.startsWith(pref))
+      );
     }
 
     // TODO: Implement other filters like dateRange if needed
@@ -69,7 +93,12 @@ export default function ListDetailView({
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <FilterBar onFilterChange={setFilters} initialFilters={filters} />
+        <FilterBar
+          onFilterChange={setFilters}
+          initialFilters={filters}
+          availableTags={availableTags}
+          availablePrefectures={availablePrefectures}
+        />
         {/* Pass the updated view modes if ViewToggle needs them */}
         <ViewToggle currentView={viewMode} onViewChange={handleViewChange} />
       </div>
@@ -91,12 +120,8 @@ export default function ListDetailView({
           >
             {(hasMapBeenViewed || viewMode === "map") && (
               <MapView
-                // Use a key that changes with places to force re-render if needed, or manage map updates internally
-                key={`map-${listId}-${filteredPlaces.length}`}
                 places={filteredPlaces}
                 onPlaceSelect={handlePlaceSelect}
-                // Pass selectedPlace if MapView uses it to highlight
-                // selectedPlaceId={selectedPlace?.id} // Removed due to Linter error
               />
             )}
           </div>
