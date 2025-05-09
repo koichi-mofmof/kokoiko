@@ -1,7 +1,14 @@
 "use client";
 
 import { Place } from "@/types";
-import { Calendar, Check, Circle, ExternalLink, MapPin } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  Circle,
+  ExternalLink,
+  MapPin,
+  Tag,
+} from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -68,12 +75,13 @@ const PlaceList: React.FC<PlaceListProps> = ({
                   </p>
                 )}
 
-                <div className="mt-3 flex flex-wrap gap-1">
+                <div className="mt-3 flex flex-wrap gap-1.5">
                   {place.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-block px-2 py-0.5 text-xs bg-neutral-100 text-neutral-600 rounded-full"
+                      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
                     >
+                      <Tag className="h-3 w-3 mr-1 opacity-80" />
                       {tag}
                     </span>
                   ))}

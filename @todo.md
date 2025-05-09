@@ -39,6 +39,14 @@
   - [ ] Server Action での更新処理実装
   - [ ] フォームバリデーション (Zod)
   - [ ] フォームと Server Action の接続 (useFormState, useFormStatus)
+- [~] 行きたい場所リストのランキング機能実装 # 新規追加・進行中
+  - [x] ランキングデータ構造の定義 (PlaceListGroup, RankedPlace)
+  - [x] ランキング表示 UI コンポーネント作成 (RankingView, RankingDisplay, RankingCard)
+  - [x] ランキング編集モーダル UI コンポーネント作成 (RankingEditModal)
+  - [x] ランキング更新用 Server Action 作成 (updateRankingAction)
+  - [ ] ランキング編集モーダルでのドラッグ＆ドロップによる順位変更機能
+  - [ ] Supabase とのデータ連携 (ランキング情報の永続化)
+  - [x] リスト詳細ページへのランキングビュータブ/切り替え UI の追加
 
 ## 🟢 通常タスク
 
@@ -46,8 +54,12 @@
   - [x] MapPage / SampleMapPage のビュー切り替え機能実装 # 追加
   - [x] MapPage / SampleMapPage の FilterBar 実装とレイアウト調整 # 追加
   - [x] リスト詳細ページに参加者アバターを表示 (sharedUserIds 使用) # タスク名修正
+  - [x] スマートフォン表示でマップピン選択時のカードの閉じるボタンが隠れる問題を修正
+  - [x] スマートフォン表示でマップピン選択時の PlaceCard のサイズを調整
   - [ ] モバイル対応 (継続的な改善) # 詳細化
   - [ ] ダークモード対応
+  - [ ] ランキング表示 (RankingCard) のデザイン調整 (SNS 映えなど) # 新規追加
+  - [ ] エラーメッセージのトースト通知化 (ランキング編集モーダルなど) # 新規追加
 - [ ] グループ共有機能
   - [ ] グループ作成
   - [ ] 招待機能

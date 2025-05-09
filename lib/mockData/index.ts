@@ -308,7 +308,7 @@ export const mockPlaces: Place[] = [
     latitude: 34.9507331,
     longitude: 138.4140179,
     notes: "サウナの聖地。天然水かけ流しの水風呂が最高。",
-    tags: ["サウナ", "聖地", "天然水", "水風呂"],
+    tags: ["聖地", "天然水", "水風呂"],
     createdAt: new Date("2024-12-01T10:00:00Z"),
     updatedAt: new Date("2024-12-01T10:00:00Z"),
     visited: true,
@@ -324,7 +324,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.8410448,
     longitude: 139.7809065,
     notes: "爆風ロウリュと薬湯が名物。食事も美味しい。",
-    tags: ["サウナ", "健康センター", "ロウリュ", "薬湯"],
+    tags: ["健康センター", "ロウリュ", "薬湯"],
     createdAt: new Date("2024-12-05T11:00:00Z"),
     updatedAt: new Date("2024-12-05T11:00:00Z"),
     visited: true,
@@ -340,7 +340,7 @@ export const mockPlaces: Place[] = [
     latitude: 32.785262,
     longitude: 130.702207,
     notes: "MADMAXボタンと深水風呂が有名。アウフグースも人気。",
-    tags: ["サウナ", "温泉", "MADMAX", "アウフグース"],
+    tags: ["温泉", "MADMAX", "アウフグース"],
     createdAt: new Date("2024-12-10T12:00:00Z"),
     updatedAt: new Date("2024-12-10T12:00:00Z"),
     visited: true,
@@ -356,7 +356,7 @@ export const mockPlaces: Place[] = [
     latitude: 33.182544,
     longitude: 130.016065,
     notes: "チームラボとのコラボが美しい。自然と一体になれるサウナ。",
-    tags: ["サウナ", "ホテル", "アート", "自然"],
+    tags: ["ホテル", "アート", "自然"],
     createdAt: new Date("2024-12-15T13:00:00Z"),
     updatedAt: new Date("2024-12-15T13:00:00Z"),
     visited: true,
@@ -374,7 +374,7 @@ export const mockPlaces: Place[] = [
     latitude: 35.873133,
     longitude: 139.922832,
     notes: "ドラゴンロウリュが人気。多種多様なお風呂とサウナ。",
-    tags: ["サウナ", "スーパー銭湯", "ドラゴンロウリュ"],
+    tags: ["スーパー銭湯", "ドラゴンロウリュ"],
     createdAt: new Date("2024-12-20T14:00:00Z"),
     updatedAt: new Date("2024-12-20T14:00:00Z"),
     visited: true,
@@ -392,6 +392,16 @@ export interface PlaceListGroup {
   description?: string;
   places: Place[];
   sharedUserIds?: string[];
+  ranking?: RankedPlace[]; // ランキング情報 (オプショナル)
+  rankingTitle?: string; // ランキングのタイトル
+  rankingDescription?: string; // ランキングの説明 (オプショナル)
+}
+
+// Define RankedPlace interface
+export interface RankedPlace {
+  placeId: string; // mockPlaces の id
+  rank: number;
+  comment?: string; // ユーザーが追加できる短いコメント
 }
 
 // Filter indoor places from mockPlaces
@@ -440,6 +450,26 @@ export const mockPlaceLists: PlaceListGroup[] = [
     description: "雨の日でも楽しめる屋内デートスポット",
     places: indoorDatePlaces,
     sharedUserIds: [mockUsers[0].id, mockUsers[2].id],
+    rankingTitle: "雨の日でも安心！まったりデートランキング",
+    rankingDescription:
+      "急な雨でも大丈夫！インドアで楽しめる、二人のおすすめスポットを集めました。",
+    ranking: [
+      {
+        placeId: "date-spot-001",
+        rank: 1,
+        comment: "アートに触れる静かな時間。ピカソ作品は必見！",
+      },
+      {
+        placeId: "date-spot-009",
+        rank: 2,
+        comment: "天空のペンギンに癒される。意外と広い！",
+      },
+      {
+        placeId: "date-spot-007",
+        rank: 3,
+        comment: "ジブリの世界にどっぷり浸れる。予約頑張った甲斐あり！",
+      },
+    ],
   },
   {
     id: "sunny-day",
@@ -447,13 +477,47 @@ export const mockPlaceLists: PlaceListGroup[] = [
     description: "天気の良い日に行きたい屋外デートスポット",
     places: sunnyDayPlaces,
     sharedUserIds: [mockUsers[0].id, mockUsers[2].id],
+    rankingTitle: "青空と楽しむ！アクティブデートランキング",
+    rankingDescription: "太陽の下で思いっきり遊べる、おすすめデートスポット！",
+    ranking: [
+      {
+        placeId: "date-spot-004",
+        rank: 1,
+        comment: "ネモフィラ畑は圧巻！春は絶対行くべき。",
+      },
+      {
+        placeId: "date-spot-003",
+        rank: 2,
+        comment: "シーキャンドルからの眺めが最高！食べ歩きも楽しい。",
+      },
+      {
+        placeId: "date-spot-005",
+        rank: 3,
+        comment:
+          "動物と触れ合えて子供も大人も楽しめる！ソフトクリームが美味しい。",
+      },
+      {
+        placeId: "date-spot-008",
+        rank: 4,
+        comment: "イルミネーションの時期は特にロマンチック。",
+      },
+      {
+        placeId: "date-spot-002",
+        rank: 5,
+        comment: "",
+      },
+      {
+        placeId: "date-spot-006",
+        rank: 6,
+        comment: "",
+      },
+    ],
   },
   {
     id: "osaka-trip",
     name: "大阪旅行",
     description: "大阪満喫プラン",
     places: osakaTripPlaces,
-    // Share with all 5 users
     sharedUserIds: [
       mockUsers[0].id,
       mockUsers[1].id,
@@ -461,13 +525,73 @@ export const mockPlaceLists: PlaceListGroup[] = [
       mockUsers[3].id,
       mockUsers[4].id,
     ],
+    rankingTitle: "食い倒れ＆観光！大阪満喫ランキング TOP5",
+    rankingDescription:
+      "大阪の魅力をギュッと凝縮！絶対外せないスポットはここ！",
+    ranking: [
+      {
+        placeId: "osaka-spot-002",
+        rank: 1,
+        comment: "一日中遊べる！アトラクションもショーも最高！",
+      },
+      {
+        placeId: "osaka-spot-001",
+        rank: 2,
+        comment: "大阪城はやっぱり迫力満点。歴史を感じる。",
+      },
+      {
+        placeId: "osaka-spot-004",
+        rank: 3,
+        comment: "ジンベイザメに感動！展示も見応えあり。",
+      },
+      {
+        placeId: "osaka-spot-005",
+        rank: 4,
+        comment: "食べ歩き天国！新鮮な魚介類が安くて美味しい。",
+      },
+      {
+        placeId: "osaka-spot-003",
+        rank: 5,
+        comment: "ザ・大阪な雰囲気が面白い。ビリケンさんの足の裏も触った！",
+      },
+    ],
   },
   {
     id: "favorite-saunas",
     name: "お気に入りサウナ",
     description: "至福のととのいを提供する厳選サウナリスト",
     places: favoriteSaunaPlaces,
-    sharedUserIds: [mockUsers[0].id], // Example: Shared with Alice
+    sharedUserIds: [mockUsers[0].id],
+    rankingTitle: "ととのいの聖地巡礼！至高のサウナランキング",
+    rankingDescription:
+      "サウナーなら一度は行きたい、究極のリラックス体験ができる名店たち。",
+    ranking: [
+      {
+        placeId: "sauna-001",
+        rank: 1,
+        comment: "水風呂が神。間違いなく日本一のサウナの一つ。",
+      },
+      {
+        placeId: "sauna-003",
+        rank: 2,
+        comment: "MADMAXボタンは必須！アウフグースも最高。",
+      },
+      {
+        placeId: "sauna-002",
+        rank: 3,
+        comment: "爆風ロウリュと薬湯のコンボがたまらない。ご飯も美味しい。",
+      },
+      {
+        placeId: "sauna-005",
+        rank: 4,
+        comment: "ドラゴンロウリュは圧巻。お風呂の種類も豊富。",
+      },
+      {
+        placeId: "sauna-004",
+        rank: 5,
+        comment: "アートと自然に囲まれてととのう贅沢体験。",
+      },
+    ],
   },
 ];
 

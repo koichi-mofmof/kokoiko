@@ -46,7 +46,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
         onClick={() => onClick?.(place)}
       >
         {place.imageUrl && (
-          <div className="h-40 overflow-hidden relative">
+          <div className="h-32 sm:h-40 overflow-hidden relative">
             <Image
               src={place.imageUrl}
               alt={place.name}
@@ -56,9 +56,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
             />
           </div>
         )}
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           <div className="flex items-start justify-between mb-2">
-            <h3 className="text-lg font-medium text-neutral-800 line-clamp-1">
+            <h3 className="text-base sm:text-lg font-medium text-neutral-800 line-clamp-1">
               {place.name}
             </h3>
           </div>

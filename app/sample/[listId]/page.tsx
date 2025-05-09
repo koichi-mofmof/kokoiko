@@ -62,7 +62,7 @@ export default async function SampleListDetailPage({
           <div className="text-center p-8">リスト詳細を読み込み中...</div>
         }
       >
-        <ListDetailView places={listDetails.places} />
+        <ListDetailView places={listDetails.places} listId={listId} />
       </Suspense>
     </>
   );

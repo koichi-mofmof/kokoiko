@@ -244,7 +244,7 @@ const MapView: React.FC<MapViewProps> = ({ places, onPlaceSelect }) => {
             <div className="relative">
               <button
                 onClick={() => setSelectedPlace(null)}
-                className="absolute top-2 right-2 z-20 bg-white rounded-full p-1 shadow-md hover:bg-neutral-100 transition-colors"
+                className="absolute top-3 right-3 z-20 bg-white rounded-full p-1 shadow-md hover:bg-neutral-100 transition-colors"
                 aria-label="閉じる"
               >
                 <X className="h-4 w-4 text-neutral-600" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { ViewMode } from "@/types";
-import { List, Map } from "lucide-react";
+import { BarChartBig, List, Map } from "lucide-react";
 
 interface ViewToggleProps {
   currentView: ViewMode;
@@ -34,7 +34,20 @@ export default function ViewToggle({
         <span className="hidden sm:inline">リスト</span>
       </button>
       <button
+        onClick={() => onViewChange("ranking")}
+        type="button"
+        className={`${buttonBaseClass} ${
+          currentView === "ranking"
+            ? `${activeClass} ${activeBorderClass}`
+            : `${inactiveClass} ${borderClass}`
+        }`}
+      >
+        <BarChartBig className="h-4 w-4 sm:mr-2" />
+        <span className="hidden sm:inline">ランキング</span>
+      </button>
+      <button
         onClick={() => onViewChange("map")}
+        type="button"
         className={`${buttonBaseClass} ${
           currentView === "map" ? activeClass : inactiveClass
         }`}

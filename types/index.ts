@@ -42,4 +42,4 @@ export interface FilterOptions {
   } | null;
 }
 
-export type ViewMode = "map" | "list";
+export type ViewMode = "map" | "list" | "ranking";

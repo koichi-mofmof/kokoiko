@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronRight, MapPin, Tag, Users, ArrowDown } from "lucide-react";
+import { CtaButton } from "@/app/components/common/CtaButton";
+import { motion } from "framer-motion";
+import { ArrowDown, MapPin, Tag, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
   // 背景画像のリスト
@@ -95,38 +95,13 @@ export default function Home() {
               transition={{ delay: 0.3, duration: 0.7 }}
               className="mt-10 flex flex-col md:flex-row justify-center md:justify-start items-center md:items-stretch gap-4 flex-wrap"
             >
-              <Button
-                asChild
-                variant="default"
-                size="lg"
-                className="shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
-              >
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center text-lg px-10 py-6"
-                >
-                  ログインしてマイマップを作る
-                  <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
+              <CtaButton type="login" />
               {/* PC 用ボタン */}
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="bg-white/10 backdrop-blur-sm text-white border-white/20 shadow-lg hover:bg-white/20 hover:text-white hover:scale-105 transition-all duration-300 hidden md:inline-flex w-full md:w-auto"
-              >
-                <Link
-                  href="/sample"
-                  className="inline-flex items-center justify-center text-lg px-10 py-6"
-                >
-                  サンプルを見る
-                </Link>
-              </Button>
+              <CtaButton type="sampleHero" />
               {/* SP 用リンク */}
               <Link
                 href="/sample"
-                className="md:hidden mt-4 text-center text-white underline hover:text-primary-300 transition-colors"
+                className="md:hidden mt-2 text-center text-primary-400 underline"
               >
                 サンプルを見る
               </Link>
@@ -150,7 +125,7 @@ export default function Home() {
       </section>
 
       {/* Feature Section */}
-      <section ref={featuresRef} className="py-24 bg-white relative">
+      <section ref={featuresRef} className="py-16 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -182,7 +157,7 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="pt-8 h-full"
               >
-                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full hover:shadow-lg transition-all duration-300 border border-neutral-100">
+                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
                   <div className="-mt-8">
                     <div>
                       <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
@@ -194,7 +169,7 @@ export default function Home() {
                     </h3>
                     <p className="mt-4 text-base text-neutral-600 leading-relaxed">
                       Google
-                      MapsのURLを貼るだけで場所情報を自動取得。タグやメモを追加して整理できます。
+                      Map上で地点を検索するだけで行きたい場所をかんたん登録。タグやメモを追加して整理できます。
                     </p>
                   </div>
                 </div>
@@ -207,7 +182,7 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="pt-8 h-full"
               >
-                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full hover:shadow-lg transition-all duration-300 border border-neutral-100">
+                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
                   <div className="-mt-8">
                     <div>
                       <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
@@ -231,7 +206,7 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="pt-8 h-full"
               >
-                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full hover:shadow-lg transition-all duration-300 border border-neutral-100">
+                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
                   <div className="-mt-8">
                     <div>
                       <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
@@ -242,7 +217,7 @@ export default function Home() {
                       柔軟なフィルター
                     </h3>
                     <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                      ジャンル、エリア、訪問予定日などで絞り込み可能。行きたい場所をすぐに見つけられます。
+                      ジャンル、エリア、タグなどで絞り込み可能。行きたい場所をすぐに見つけられます。
                     </p>
                   </div>
                 </div>
@@ -253,7 +228,7 @@ export default function Home() {
       </section>
 
       {/* Example Section */}
-      <section className="py-24 bg-gradient-to-b from-neutral-50 to-neutral-100 relative overflow-hidden">
+      <section className="py-16 bg-gradient-to-b from-neutral-50 to-neutral-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -276,7 +251,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-neutral-200"
+              className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 transform border border-neutral-200"
             >
               <div className="h-60 bg-primary-100 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0">
@@ -304,7 +279,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-neutral-200"
+              className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 transform border border-neutral-200"
             >
               <div className="h-60 bg-primary-100 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0">
@@ -332,7 +307,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-neutral-200"
+              className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 transform border border-neutral-200"
             >
               <div className="h-60 bg-primary-100 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0">
@@ -359,7 +334,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-neutral-100 to-neutral-200 relative overflow-hidden">
+      <section className="py-16 bg-gradient-to-br from-neutral-100 to-neutral-200 relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <Image
             src="https://images.pexels.com/photos/4429428/pexels-photo-4429428.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
@@ -377,49 +352,24 @@ export default function Home() {
           className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
         >
           <h2 className="text-3xl font-bold text-neutral-900 md:text-5xl">
-            さあ、行きたい場所を
+            さあ、<span className="text-primary-600">行きたい場所</span>を
             <br />
-            マップに残してみましょう
+            リスト化してみましょう
           </h2>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3, duration: 0.7 }}
-            className="mt-10 flex flex-col md:flex-row justify-center items-center gap-4"
+            className="mt-10 flex flex-col md:flex-row justify-center items-center md:items-stretch gap-4 flex-wrap"
           >
-            <Button
-              asChild
-              variant="default"
-              size="lg"
-              className="shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
-            >
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center text-lg px-10 py-6"
-              >
-                ログインしてマイマップを作る
-                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+            <CtaButton type="login" />
             {/* PC 用ボタン */}
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="bg-white/10 backdrop-blur-sm text-neutral-900 border-white/20 shadow-lg hover:bg-white/20 hover:text-neutral-900 hover:scale-105 transition-all duration-300 hidden md:inline-flex w-full md:w-auto"
-            >
-              <Link
-                href="/sample"
-                className="inline-flex items-center justify-center text-lg px-10 py-6"
-              >
-                サンプルを見る
-              </Link>
-            </Button>
+            <CtaButton type="sampleCta" />
             {/* SP 用リンク */}
             <Link
               href="/sample"
-              className="md:hidden mt-4 text-center text-neutral-700 underline hover:text-primary-600 transition-colors"
+              className="md:hidden mt-2 text-center underline"
             >
               サンプルを見る
             </Link>
