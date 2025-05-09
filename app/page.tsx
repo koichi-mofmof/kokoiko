@@ -11,9 +11,9 @@ export default function Home() {
   // 背景画像のリスト
   const backgroundImages = [
     "https://images.pexels.com/photos/1322184/pexels-photo-1322184.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    "https://images.pexels.com/photos/15829427/pexels-photo-15829427.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     "https://images.pexels.com/photos/1482193/pexels-photo-1482193.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    "https://images.pexels.com/photos/1383775/pexels-photo-1383775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     "https://images.pexels.com/photos/581344/pexels-photo-581344.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     "https://images.pexels.com/photos/10511496/pexels-photo-10511496.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   ];
@@ -45,7 +45,7 @@ export default function Home() {
   return (
     <main>
       {/* Hero Section with Background Image */}
-      <section className="relative px-4 pb-24 pt-16 sm:px-6 sm:pt-20 sm:pb-36 lg:px-8 overflow-hidden min-h-[100vh] flex items-center">
+      <section className="relative px-4 pb-24 pt-16 sm:px-6 sm:pt-20 sm:pb-36 lg:px-8 overflow-hidden min-h-[85vh] sm:min-h-[100vh] flex items-center">
         {/* Background Image with Gradient Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           {backgroundImages.map((src, index) => (

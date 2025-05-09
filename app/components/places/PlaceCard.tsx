@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
 import { Place } from "@/types";
 import {
   Calendar,
-  MapPin,
-  Tag,
-  ExternalLink,
   CheckCircle,
   Circle,
-  Share2,
+  ExternalLink,
+  MapPin,
+  Tag,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import ShareModal from "../share/ShareModal";
+import React from "react";
 
 interface PlaceCardProps {
   place: Place;
@@ -21,8 +19,6 @@ interface PlaceCardProps {
 }
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
-  const [showShareModal, setShowShareModal] = useState(false);
-
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("ja-JP", {
       year: "numeric",
@@ -30,6 +26,18 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
       day: "numeric",
     }).format(date);
   };
+
+  const visitStatusElement = place.visited ? (
+    <div className="flex items-center text-xs text-primary-700">
+      <CheckCircle className="h-5 w-5 mr-1 text-primary-500" />
+      訪問済み
+    </div>
+  ) : (
+    <div className="flex items-center text-xs text-neutral-600">
+      <Circle className="h-5 w-5 mr-1 text-neutral-400" />
+      未訪問
+    </div>
+  );
 
   return (
     <>
@@ -53,22 +61,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
             <h3 className="text-lg font-medium text-neutral-800 line-clamp-1">
               {place.name}
             </h3>
-            <div className="ml-2 flex items-center space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowShareModal(true);
-                }}
-                className="p-1 text-neutral-400 hover:text-primary-500 transition-colors"
-              >
-                <Share2 className="h-4 w-4" />
-              </button>
-              {place.visited ? (
-                <CheckCircle className="h-5 w-5 text-primary-500" />
-              ) : (
-                <Circle className="h-5 w-5 text-neutral-300" />
-              )}
-            </div>
           </div>
 
           <div className="flex items-start mb-3">
@@ -105,6 +97,8 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
             ))}
           </div>
 
+          <div className="mb-3">{visitStatusElement}</div>
+
           <Link
             href={place.googleMapsUrl}
             target="_blank"
@@ -117,13 +111,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
           </Link>
         </div>
       </div>
-
-      <ShareModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        placeId={place.id}
-        placeName={place.name}
-      />
     </>
   );
 };

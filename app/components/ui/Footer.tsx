@@ -16,7 +16,7 @@ export default function Footer({ currentUser }: FooterProps) {
               <span className="text-lg font-medium">ココイコ</span>
             </div>
             <p className="mt-2 text-neutral-400 max-w-md">
-              カップルや友人グループで「行きたい場所」を共有できるサービスです。
+              デートや旅行の計画に。“行きたい場所”をリスト化・共有できるWebサービスです。
             </p>
           </div>
 

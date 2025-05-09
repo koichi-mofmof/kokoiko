@@ -65,10 +65,12 @@ export const mockPlaces: Place[] = [
     tags: ["中華街", "グルメ", "食べ歩き"],
     createdAt: new Date("2024-05-10T12:00:00Z"),
     updatedAt: new Date("2024-05-10T12:00:00Z"),
-    visited: false,
+    visited: true,
     createdBy: mockUsers[1].id,
     rating: 4,
     googlePlaceId: "ChIJN8zS-kGWGGARn5lIbmoV80Q",
+    imageUrl:
+      "https://images.pexels.com/photos/30968027/pexels-photo-30968027.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   // Additional Date Spots (Indices 12-19)
   {
@@ -79,13 +81,15 @@ export const mockPlaces: Place[] = [
     latitude: 35.3014,
     longitude: 139.4817,
     notes: "シーキャンドルからの眺めが最高。水族館や岩屋も楽しめる。",
-    tags: ["観光地", "海", "展望台", "水族館"],
+    tags: ["海", "展望台", "水族館"],
     createdAt: new Date("2024-06-01T11:00:00Z"),
     updatedAt: new Date("2024-06-01T11:00:00Z"),
     visited: false,
     createdBy: mockUsers[0].id,
     rating: 4,
     googlePlaceId: "ChIJcQfQ3kKFGGAREk8y3mI-B9k",
+    imageUrl:
+      "https://images.pexels.com/photos/29112375/pexels-photo-29112375.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "date-spot-004",
@@ -102,6 +106,8 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[1].id,
     rating: 5,
     googlePlaceId: "ChIJgUBK7_K9ImARt7rM2G37L9o",
+    imageUrl:
+      "https://images.pexels.com/photos/14159605/pexels-photo-14159605.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "date-spot-005",
@@ -118,6 +124,8 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[0].id,
     rating: 4,
     googlePlaceId: "ChIJm5_zL0iAImARJ4i_9Z1C0kU",
+    imageUrl:
+      "https://images.pexels.com/photos/31968757/pexels-photo-31968757.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "date-spot-006",
@@ -146,7 +154,7 @@ export const mockPlaces: Place[] = [
     tags: ["美術館", "ジブリ", "アニメ"],
     createdAt: new Date("2024-08-01T14:00:00Z"),
     updatedAt: new Date("2024-08-01T14:00:00Z"),
-    visited: false,
+    visited: true,
     createdBy: mockUsers[0].id,
     rating: 5,
     googlePlaceId: "ChIJsZ-C21T9GGAR7r0ZtU9v1zQ",
@@ -162,7 +170,7 @@ export const mockPlaces: Place[] = [
     tags: ["遊園地", "イルミネーション", "プール"],
     createdAt: new Date("2024-08-15T10:00:00Z"),
     updatedAt: new Date("2024-08-15T10:00:00Z"),
-    visited: false,
+    visited: true,
     createdBy: mockUsers[1].id,
     rating: 4,
     googlePlaceId: "ChIJ_c9Z2Tj4GGARf-5I9T5W0tI",
@@ -183,6 +191,8 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[0].id,
     rating: 4,
     googlePlaceId: "ChIJ4fyhqtuMGGARr36dO0Y6kL8",
+    imageUrl:
+      "https://images.pexels.com/photos/3699434/pexels-photo-3699434.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "date-spot-010",
@@ -216,6 +226,8 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[3].id,
     rating: 5,
     googlePlaceId: "ChIJoc_c50fnAGAR59GZkQkJVW8",
+    imageUrl:
+      "https://images.pexels.com/photos/4058530/pexels-photo-4058530.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "osaka-spot-002",
@@ -232,6 +244,8 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[4].id,
     rating: 5,
     googlePlaceId: "ChIJoz0xQ9fnAGARvKP3aj4dYqs",
+    imageUrl:
+      "https://images.pexels.com/photos/5432843/pexels-photo-5432843.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "osaka-spot-003",
@@ -248,6 +262,8 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[0].id,
     rating: 4,
     googlePlaceId: "ChIJH9R2pkTnAGARU95rU6y9Fzs",
+    imageUrl:
+      "https://images.pexels.com/photos/7729468/pexels-photo-7729468.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "osaka-spot-004",
@@ -280,104 +296,91 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[2].id,
     rating: 4,
     googlePlaceId: "ChIJ4-Rk_kLnAGAR4pY6q_X8L6o",
+    imageUrl:
+      "https://images.pexels.com/photos/31196085/pexels-photo-31196085.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
-  // Tokyo Entertainment Restaurants (Indices 27-32)
+  // New Sauna Spots
   {
-    id: "entertainment-restaurant-001",
-    name: "鮨さいとう",
-    address: "東京都港区六本木1-4-5 アークヒルズサウスタワー1F",
-    googleMapsUrl: "https://maps.app.goo.gl/example1", // ダミーURL
-    latitude: 35.6668,
-    longitude: 139.7418,
-    notes: "予約困難なことで有名な最高級寿司店。特別な接待に。",
-    tags: ["寿司", "高級", "個室"],
-    createdAt: new Date("2024-11-01T19:00:00Z"),
-    updatedAt: new Date("2024-11-01T19:00:00Z"),
-    visited: false,
-    createdBy: mockUsers[3].id,
-    rating: 5,
-    googlePlaceId: "ChIJEXAMPLE_Saito", // ダミーID
-  },
-  {
-    id: "entertainment-restaurant-002",
-    name: "NARISAWA",
-    address: "東京都港区南青山2-6-15 南青山ガーデンコート",
-    googleMapsUrl: "https://maps.app.goo.gl/HBHw9p2FMPnAa1c47",
-    latitude: 35.6705,
-    longitude: 139.7191,
-    notes: "イノベーティブ里山キュイジーヌ。自然を感じる独創的な料理。",
-    tags: ["フレンチ", "イノベーティブ", "個室"],
-    createdAt: new Date("2024-11-05T19:30:00Z"),
-    updatedAt: new Date("2024-11-05T19:30:00Z"),
-    visited: false,
-    createdBy: mockUsers[4].id,
-    rating: 5,
-    googlePlaceId: "ChIJEXAMPLE_Narisawa", // ダミーID
-  },
-  {
-    id: "entertainment-restaurant-003",
-    name: "龍吟",
-    address: "東京都千代田区有楽町1-1-2 ミッドタウン日比谷 7F",
-    googleMapsUrl: "https://maps.app.goo.gl/BcQR2eqSvihPZH587",
-    latitude: 35.6749,
-    longitude: 139.759,
-    notes: "日本の豊かさを表現するモダン懐石。海外からのゲストにも。",
-    tags: ["日本料理", "懐石", "モダン", "夜景"],
-    createdAt: new Date("2024-11-10T18:30:00Z"),
-    updatedAt: new Date("2024-11-10T18:30:00Z"),
-    visited: false,
+    id: "sauna-001",
+    name: "サウナしきじ",
+    address: "静岡県静岡市駿河区敷地２丁目２５−１",
+    googleMapsUrl: "https://maps.app.goo.gl/kxeFaq4sXN2vWnjHA",
+    latitude: 34.9507331,
+    longitude: 138.4140179,
+    notes: "サウナの聖地。天然水かけ流しの水風呂が最高。",
+    tags: ["サウナ", "聖地", "天然水", "水風呂"],
+    createdAt: new Date("2024-12-01T10:00:00Z"),
+    updatedAt: new Date("2024-12-01T10:00:00Z"),
+    visited: true,
     createdBy: mockUsers[0].id,
     rating: 5,
-    googlePlaceId: "ChIJEXAMPLE_Ryugin", // ダミーID
+    googlePlaceId: "ChIJSAUNA_Shikiji", // Dummy ID
   },
   {
-    id: "entertainment-restaurant-004",
-    name: "カンテサンス",
-    address: "東京都品川区北品川6-7-29 ガーデンシティ品川御殿山 1F",
-    googleMapsUrl: "https://maps.app.goo.gl/3YvZghLCHWpAxPLd8",
-    latitude: 35.631,
-    longitude: 139.7294,
-    notes:
-      "素材の持ち味を最大限に活かすモダンフレンチ。メニューはおまかせのみ。",
-    tags: ["フレンチ", "モダン"],
-    createdAt: new Date("2024-11-15T20:00:00Z"),
-    updatedAt: new Date("2024-11-15T20:00:00Z"),
-    visited: false,
+    id: "sauna-002",
+    name: "草加健康センター",
+    address: "埼玉県草加市北谷２丁目２３−２３",
+    googleMapsUrl: "https://maps.app.goo.gl/JquHDPAZEfSdg2Lb8",
+    latitude: 35.8410448,
+    longitude: 139.7809065,
+    notes: "爆風ロウリュと薬湯が名物。食事も美味しい。",
+    tags: ["サウナ", "健康センター", "ロウリュ", "薬湯"],
+    createdAt: new Date("2024-12-05T11:00:00Z"),
+    updatedAt: new Date("2024-12-05T11:00:00Z"),
+    visited: true,
     createdBy: mockUsers[1].id,
     rating: 5,
-    googlePlaceId: "ChIJEXAMPLE_Quintessence", // ダミーID
+    googlePlaceId: "ChIJSAUNA_Soka", // Dummy ID
   },
   {
-    id: "entertainment-restaurant-005",
-    name: "茶禅華",
-    address: "東京都港区南麻布4-7-5",
-    googleMapsUrl: "https://maps.app.goo.gl/nS1wJSoQsNB7q2d39",
-    latitude: 35.6504,
-    longitude: 139.7284,
-    notes: "和魂漢才をテーマにした中華料理。落ち着いた空間。",
-    tags: ["中華", "イノベーティブ", "個室"],
-    createdAt: new Date("2024-11-20T19:00:00Z"),
-    updatedAt: new Date("2024-11-20T19:00:00Z"),
-    visited: false,
+    id: "sauna-003",
+    name: "サウナと天然温泉 湯らっくす",
+    address: "熊本県熊本市中央区本荘町７２２",
+    googleMapsUrl: "https://maps.app.goo.gl/njC21W3W74pf2f9D7",
+    latitude: 32.785262,
+    longitude: 130.702207,
+    notes: "MADMAXボタンと深水風呂が有名。アウフグースも人気。",
+    tags: ["サウナ", "温泉", "MADMAX", "アウフグース"],
+    createdAt: new Date("2024-12-10T12:00:00Z"),
+    updatedAt: new Date("2024-12-10T12:00:00Z"),
+    visited: true,
     createdBy: mockUsers[2].id,
     rating: 5,
-    googlePlaceId: "ChIJEXAMPLE_Sazenka", // ダミーID
+    googlePlaceId: "ChIJSAUNA_Yulax", // Dummy ID
   },
   {
-    id: "entertainment-restaurant-006",
-    name: "うかい亭 表参道",
-    address: "東京都渋谷区神宮前5-10-1 表参道 ジャイル 5F",
-    googleMapsUrl: "https://maps.app.goo.gl/vAZMjNiujdr2c3Ma6",
-    latitude: 35.667,
-    longitude: 139.7077,
-    notes: "最高級の鉄板焼き。華やかな雰囲気で会話も弾む。",
-    tags: ["鉄板焼", "ステーキ", "高級", "夜景"],
-    createdAt: new Date("2024-11-25T18:00:00Z"),
-    updatedAt: new Date("2024-11-25T18:00:00Z"),
-    visited: false,
+    id: "sauna-004",
+    name: "御船山楽園ホテル らかんの湯",
+    address: "佐賀県武雄市武雄町 武雄 ４１００",
+    googleMapsUrl: "https://maps.app.goo.gl/YLH9u5i9qR3f1q4NA",
+    latitude: 33.182544,
+    longitude: 130.016065,
+    notes: "チームラボとのコラボが美しい。自然と一体になれるサウナ。",
+    tags: ["サウナ", "ホテル", "アート", "自然"],
+    createdAt: new Date("2024-12-15T13:00:00Z"),
+    updatedAt: new Date("2024-12-15T13:00:00Z"),
+    visited: true,
     createdBy: mockUsers[3].id,
     rating: 5,
-    googlePlaceId: "ChIJEXAMPLE_Ukai", // ダミーID
+    googlePlaceId: "ChIJSAUNA_Rakan", // Dummy ID
+    imageUrl:
+      "https://images.pexels.com/photos/5582214/pexels-photo-5582214.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+  },
+  {
+    id: "sauna-005",
+    name: "スパメッツァ おおたか 竜泉寺の湯",
+    address: "千葉県流山市おおたかの森西1丁目15番1",
+    googleMapsUrl: "https://maps.app.goo.gl/czioFJk2AmY7WiWc8",
+    latitude: 35.873133,
+    longitude: 139.922832,
+    notes: "ドラゴンロウリュが人気。多種多様なお風呂とサウナ。",
+    tags: ["サウナ", "スーパー銭湯", "ドラゴンロウリュ"],
+    createdAt: new Date("2024-12-20T14:00:00Z"),
+    updatedAt: new Date("2024-12-20T14:00:00Z"),
+    visited: true,
+    createdBy: mockUsers[4].id,
+    rating: 5,
+    googlePlaceId: "ChIJSAUNA_SpaMetsä", // Dummy ID
   },
 ];
 
@@ -403,6 +406,7 @@ const indoorDatePlaces = mockPlaces.filter((place) =>
 // Filter sunny day places from mockPlaces
 const sunnyDayPlaces = mockPlaces.filter((place) =>
   [
+    "date-spot-002", // 横浜中華街
     "date-spot-003", // 江の島
     "date-spot-004", // 国営ひたち海浜公園
     "date-spot-005", // マザー牧場
@@ -411,7 +415,7 @@ const sunnyDayPlaces = mockPlaces.filter((place) =>
   ].includes(place.id)
 );
 
-// Filter sunny day places from mockPlaces
+// Filter Osaka trip places from mockPlaces
 const osakaTripPlaces = mockPlaces.filter((place) =>
   [
     "osaka-spot-001", // 大阪城
@@ -422,16 +426,11 @@ const osakaTripPlaces = mockPlaces.filter((place) =>
   ].includes(place.id)
 );
 
-// Filter entertainment restaurants from mockPlaces
-const entertainmentRestaurants = mockPlaces.filter((place) =>
-  [
-    "entertainment-restaurant-001",
-    "entertainment-restaurant-002",
-    "entertainment-restaurant-003",
-    "entertainment-restaurant-004",
-    "entertainment-restaurant-005",
-    "entertainment-restaurant-006",
-  ].includes(place.id)
+// Filter Favorite Sauna places from mockPlaces
+const favoriteSaunaPlaces = mockPlaces.filter((place) =>
+  ["sauna-001", "sauna-002", "sauna-003", "sauna-004", "sauna-005"].includes(
+    place.id
+  )
 );
 
 export const mockPlaceLists: PlaceListGroup[] = [
@@ -464,11 +463,11 @@ export const mockPlaceLists: PlaceListGroup[] = [
     ],
   },
   {
-    id: "entertainment-restaurants",
-    name: "接待リスト",
-    description: "大切な接待で使える東京都内の高級レストラン",
-    places: entertainmentRestaurants,
-    sharedUserIds: [mockUsers[0].id],
+    id: "favorite-saunas",
+    name: "お気に入りサウナ",
+    description: "至福のととのいを提供する厳選サウナリスト",
+    places: favoriteSaunaPlaces,
+    sharedUserIds: [mockUsers[0].id], // Example: Shared with Alice
   },
 ];
 

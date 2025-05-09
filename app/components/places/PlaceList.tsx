@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import { Place } from "@/types";
-import { MapPin, ExternalLink, Calendar, Check, Circle } from "lucide-react";
+import { Calendar, Check, Circle, ExternalLink, MapPin } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 
 interface PlaceListProps {
   places: Place[];
@@ -42,14 +42,6 @@ const PlaceList: React.FC<PlaceListProps> = ({
             onClick={() => onPlaceSelect(place)}
           >
             <div className="flex items-start">
-              <div className="flex-shrink-0 mt-0.5">
-                {place.visited ? (
-                  <Check className="h-5 w-5 text-primary-500" />
-                ) : (
-                  <Circle className="h-5 w-5 text-neutral-300" />
-                )}
-              </div>
-
               <div className="ml-3 flex-grow">
                 <div className="flex justify-between">
                   <h3 className="text-sm font-medium text-neutral-800">
@@ -63,7 +55,7 @@ const PlaceList: React.FC<PlaceListProps> = ({
                   )}
                 </div>
 
-                <div className="mt-1 flex items-center text-xs text-neutral-500">
+                <div className="mt-2 flex items-center text-xs text-neutral-500">
                   <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
                   <span className="line-clamp-1 break-all">
                     {place.address}
@@ -71,12 +63,12 @@ const PlaceList: React.FC<PlaceListProps> = ({
                 </div>
 
                 {place.notes && (
-                  <p className="mt-1 text-xs text-neutral-600 line-clamp-1">
+                  <p className="mt-2 text-xs text-neutral-600 line-clamp-1">
                     {place.notes}
                   </p>
                 )}
 
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-3 flex flex-wrap gap-1">
                   {place.tags.map((tag) => (
                     <span
                       key={tag}
@@ -87,7 +79,21 @@ const PlaceList: React.FC<PlaceListProps> = ({
                   ))}
                 </div>
 
-                <div className="mt-2">
+                <div className="mt-3 flex items-center">
+                  {place.visited ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1 text-primary-500" />
+                      <span className="text-xs text-primary-700">訪問済み</span>
+                    </>
+                  ) : (
+                    <>
+                      <Circle className="h-4 w-4 mr-1 text-neutral-400" />
+                      <span className="text-xs text-neutral-600">未訪問</span>
+                    </>
+                  )}
+                </div>
+
+                <div className="mt-3">
                   <Link
                     href={place.googleMapsUrl}
                     target="_blank"
