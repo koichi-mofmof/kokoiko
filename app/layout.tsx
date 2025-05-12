@@ -1,7 +1,6 @@
 import Footer from "@/app/components/ui/Footer";
 import Header from "@/app/components/ui/Header";
 import { createClient } from "@/lib/supabase/server";
-import "mapbox-gl/dist/mapbox-gl.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
 import "./globals.css";

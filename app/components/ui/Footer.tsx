@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapIcon, MapPinHouse } from "lucide-react";
+import { MapPinHouse } from "lucide-react";
 
 interface FooterProps {
   currentUser?: { id: string } | null;
@@ -20,7 +20,7 @@ export default function Footer({ currentUser }: FooterProps) {
               </Link>
             </div>
             <p className="mt-2 text-neutral-400 max-w-md">
-              デートや旅行の計画に。"行きたい場所"をリスト化・共有できるWebサービスです。
+              デートや旅行の計画に。&quot;行きたい場所&quot;をリスト化・共有できるWebサービスです。
             </p>
           </div>
 

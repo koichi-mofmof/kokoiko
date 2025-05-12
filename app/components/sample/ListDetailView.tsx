@@ -1,17 +1,30 @@
 "use client";
 
-import MapboxView from "@/app/components/map/MapboxView";
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/app/components/ui/FilterBar";
 import ViewToggle from "@/app/components/ui/ViewToggle";
 import RankingView from "@/app/sample/[listId]/_components/RankingView";
 import { FilterOptions, Place, ViewMode } from "@/types";
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 
 interface ListDetailViewProps {
   places: Place[];
   listId: string;
 }
+
+// OpenStreetMapView を動的にインポートし、SSRを無効にする
+const DynamicOpenStreetMapView = dynamic(
+  () => import("@/app/components/map/OpenStreetMapView"),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="flex justify-center items-center h-full">
+        Map is loading...
+      </p>
+    ),
+  }
+);
 
 export default function ListDetailView({
   places,
@@ -119,7 +132,7 @@ export default function ListDetailView({
           }`}
         >
           {(hasMapBeenViewed || viewMode === "map") && (
-            <MapboxView
+            <DynamicOpenStreetMapView
               places={filteredPlaces}
               onPlaceSelect={handlePlaceSelect}
             />

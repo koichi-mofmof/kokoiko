@@ -55,7 +55,7 @@ export default function FilterBar({
 
   useEffect(() => {
     onFilterChange(filters);
-  }, []);
+  }, [filters, onFilterChange]);
 
   return (
     <Popover>
@@ -85,7 +85,7 @@ export default function FilterBar({
       <PopoverContent
         side="bottom"
         align="start"
-        className="w-80 max-h-[70vh] overflow-y-auto bg-white rounded-soft shadow-medium p-4 z-10 border border-neutral-200 animate-fadeIn"
+        className="w-80 max-h-[70vh] overflow-y-auto bg-white rounded-soft shadow-medium p-4 z-[1100] border border-neutral-200 animate-fadeIn"
       >
         <div className="mb-4">
           <h4 className="text-sm font-medium text-neutral-800 mb-2">タグ</h4>

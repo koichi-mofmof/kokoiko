@@ -28,6 +28,15 @@
 - [ ] 認証機能の実装
   - [ ] ログイン/登録フォーム (基本実装)
   - [ ] Supabase Auth の連携 (ssr, actions)
+- [x] 地図ライブラリの変更 (Mapbox -> OpenStreetMap) # 完了
+  - [x] react-leaflet および関連ライブラリのインストール
+  - [x] OpenStreetMapView コンポーネントの作成と基本機能実装
+  - [x] MapboxView コンポーネントから OpenStreetMapView コンポーネントへの置き換え (SSR エラー対応含む)
+  - [x] 動作確認と表示調整 (マーカー、ポップアップ、地図操作、フィルター表示)
+  - [ ] 多言語対応の検討（可能な範囲で） # 残タスク
+  - [x] パフォーマンス確認 (SSR エラー解消)
+  - [x] 不要な Mapbox コンポーネント (MapboxView.tsx) の削除
+  - [x] 不要な Mapbox ライブラリ (@mapbox/mapbox-gl-language) のアンインストール
 - [ ] 場所登録機能
   - [ ] 登録フォーム
   - [ ] 地図表示
