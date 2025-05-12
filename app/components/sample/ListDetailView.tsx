@@ -1,6 +1,6 @@
 "use client";
 
-import MapView from "@/app/components/map/MapView";
+import MapboxView from "@/app/components/map/MapboxView";
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/app/components/ui/FilterBar";
 import ViewToggle from "@/app/components/ui/ViewToggle";
@@ -119,7 +119,7 @@ export default function ListDetailView({
           }`}
         >
           {(hasMapBeenViewed || viewMode === "map") && (
-            <MapView
+            <MapboxView
               places={filteredPlaces}
               onPlaceSelect={handlePlaceSelect}
             />

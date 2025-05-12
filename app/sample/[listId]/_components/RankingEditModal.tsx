@@ -1,22 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Place } from "@/types";
-import { RankedPlace, PlaceListGroup } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { updateRankingAction } from "@/lib/actions/rankingActions"; // インポートを有効化
+import { Textarea } from "@/components/ui/textarea";
+import { updateRankingAction } from "@/lib/actions/rankingActions";
+import { PlaceListGroup, RankedPlace } from "@/lib/mockData";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface RankingEditModalProps {
   list: PlaceListGroup;
@@ -171,94 +171,118 @@ export default function RankingEditModal({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>ランキングを編集: {list.name}</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="pr-6">
+          <DialogTitle className="text-neutral-900 dark:text-neutral-50">
+            ランキングを編集: {list.name}
+          </DialogTitle>
+          <DialogDescription className="text-neutral-500 dark:text-neutral-400">
             ランキングのタイトル、説明、各場所の順位やコメントを編集します。
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-grow overflow-y-auto pr-2 space-y-4 py-2">
-          <div>
-            <Label htmlFor="rankingTitle">ランキングタイトル</Label>
-            <Input
-              id="rankingTitle"
-              value={rankingTitle}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setRankingTitle(e.target.value)
-              }
-              placeholder="例：東京の絶景カフェランキング TOP5"
-            />
-          </div>
-          <div>
-            <Label htmlFor="rankingDescription">ランキング説明（任意）</Label>
-            <Textarea
-              id="rankingDescription"
-              value={rankingDescription}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setRankingDescription(e.target.value)
-              }
-              placeholder="このランキングについての簡単な説明を入力します。"
-            />
+        <div className="flex-grow overflow-y-auto pr-6 space-y-6 py-4">
+          <div className="space-y-4">
+            <div>
+              <Label
+                htmlFor="rankingTitle"
+                className="text-neutral-700 dark:text-neutral-300"
+              >
+                ランキングタイトル
+              </Label>
+              <Input
+                id="rankingTitle"
+                value={rankingTitle}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setRankingTitle(e.target.value)
+                }
+                placeholder="例：東京の絶景カフェランキング TOP5"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label
+                htmlFor="rankingDescription"
+                className="text-neutral-700 dark:text-neutral-300"
+              >
+                ランキング説明（任意）
+              </Label>
+              <Textarea
+                id="rankingDescription"
+                value={rankingDescription}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setRankingDescription(e.target.value)
+                }
+                placeholder="このランキングについての簡単な説明を入力します。"
+                className="mt-1"
+              />
+            </div>
           </div>
 
-          <h4 className="font-semibold pt-2">場所のランキングとコメント</h4>
-          <div className="space-y-3">
-            {currentPlaces.map((rp, index) => (
-              <div
-                key={rp.placeId}
-                className="p-3 border rounded-md bg-slate-50/50"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span
-                    className="font-medium truncate pr-2"
-                    title={getPlaceName(rp.placeId)}
-                  >
-                    {rp.rank > 0 ? `${rp.rank}位: ` : "ランク外: "}{" "}
-                    {getPlaceName(rp.placeId)}
-                  </span>
-                  <div className="flex space-x-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => moveRank(rp.placeId, "up")}
-                      disabled={
-                        rp.rank === 0 ||
-                        index === 0 ||
-                        currentPlaces.filter((p) => p.rank > 0)[0]?.placeId ===
-                          rp.placeId
-                      }
+          <div className="border-t border-neutral-200 dark:border-neutral-700/60 pt-6 space-y-4">
+            <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+              場所のランキングとコメント
+            </h4>
+            <div className="space-y-4">
+              {currentPlaces.map((rp, index) => (
+                <div
+                  key={rp.placeId}
+                  className="p-4 border rounded-lg bg-neutral-50 dark:bg-neutral-800/30 border-neutral-200 dark:border-neutral-700/60"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className="font-medium truncate pr-2 text-neutral-800 dark:text-neutral-200"
+                      title={getPlaceName(rp.placeId)}
                     >
-                      ↑
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => moveRank(rp.placeId, "down")}
-                      disabled={
-                        rp.rank === 0 ||
-                        index === currentPlaces.length - 1 ||
-                        currentPlaces.filter((p) => p.rank > 0).slice(-1)[0]
-                          ?.placeId === rp.placeId
-                      }
-                    >
-                      ↓
-                    </Button>
+                      {rp.rank > 0 ? `${rp.rank}位: ` : "ランク外: "}{" "}
+                      {getPlaceName(rp.placeId)}
+                    </span>
+                    <div className="flex space-x-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => moveRank(rp.placeId, "up")}
+                        disabled={
+                          rp.rank === 0 ||
+                          index === 0 ||
+                          currentPlaces.filter((p) => p.rank > 0)[0]
+                            ?.placeId === rp.placeId
+                        }
+                        className="h-8 w-8"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                        <span className="sr-only">上へ</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => moveRank(rp.placeId, "down")}
+                        disabled={
+                          rp.rank === 0 ||
+                          index === currentPlaces.length - 1 ||
+                          currentPlaces.filter((p) => p.rank > 0).slice(-1)[0]
+                            ?.placeId === rp.placeId
+                        }
+                        className="h-8 w-8"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                        <span className="sr-only">下へ</span>
+                      </Button>
+                    </div>
                   </div>
+                  <Textarea
+                    value={rp.comment || ""}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      handleCommentChange(rp.placeId, e.target.value)
+                    }
+                    placeholder="コメント（任意） 例：ここの景色が最高！"
+                    rows={2}
+                    className="text-sm mt-1"
+                  />
                 </div>
-                <Textarea
-                  value={rp.comment || ""}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    handleCommentChange(rp.placeId, e.target.value)
-                  }
-                  placeholder="コメント（任意） 例：ここの景色が最高！"
-                  rows={2}
-                  className="text-sm"
-                />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="pr-6 pb-4">
           <DialogClose asChild>
             <Button variant="outline" disabled={isSaving}>
               キャンセル

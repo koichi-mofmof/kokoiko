@@ -1,10 +1,10 @@
-import "./globals.css";
-import { Inter } from "next/font/google";
-import { Noto_Sans_JP } from "next/font/google";
-import type { Metadata } from "next";
-import Header from "@/app/components/ui/Header";
 import Footer from "@/app/components/ui/Footer";
+import Header from "@/app/components/ui/Header";
 import { createClient } from "@/lib/supabase/server";
+import "mapbox-gl/dist/mapbox-gl.css";
+import type { Metadata } from "next";
+import { Inter, Noto_Sans_JP } from "next/font/google";
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],

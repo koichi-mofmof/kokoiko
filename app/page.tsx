@@ -168,8 +168,7 @@ export default function Home() {
                       かんたん登録
                     </h3>
                     <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                      Google
-                      Map上で地点を検索するだけで行きたい場所をかんたん登録。タグやメモを追加して整理できます。
+                      Googleマップ上で地点を検索するだけで行きたい場所をかんたん登録。タグやメモを追加して整理できます。
                     </p>
                   </div>
                 </div>
