@@ -1,6 +1,6 @@
 {
-  "name": "ココイコ",
-  "short_name": "ココイコ",
+  "name": "ClippyMap",
+  "short_name": "ClippyMap",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

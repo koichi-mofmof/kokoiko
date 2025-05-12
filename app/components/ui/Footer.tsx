@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapIcon } from "lucide-react";
+import { MapIcon, MapPinHouse } from "lucide-react";
 
 interface FooterProps {
   currentUser?: { id: string } | null;
@@ -12,11 +12,15 @@ export default function Footer({ currentUser }: FooterProps) {
         <div className="flex flex-col md:flex-row justify-between">
           <div className="mb-8 md:mb-0">
             <div className="flex items-center">
-              <MapIcon className="h-6 w-6 mr-2 text-primary-400" />
-              <span className="text-lg font-medium">ココイコ</span>
+              <Link href="/" className="flex items-center space-x-2">
+                <MapPinHouse className="h-6 w-6 text-primary-500" />
+                <span className="text-lg font-semibold font-quicksand text-neutral-100">
+                  ClippyMap
+                </span>
+              </Link>
             </div>
             <p className="mt-2 text-neutral-400 max-w-md">
-              デートや旅行の計画に。“行きたい場所”をリスト化・共有できるWebサービスです。
+              デートや旅行の計画に。"行きたい場所"をリスト化・共有できるWebサービスです。
             </p>
           </div>
 
@@ -107,7 +111,7 @@ export default function Footer({ currentUser }: FooterProps) {
 
         <div className="mt-12 border-t border-neutral-700 pt-8">
           <p className="text-center text-neutral-400 text-sm">
-            &copy; {new Date().getFullYear()} ココイコ. All rights reserved.
+            &copy; {new Date().getFullYear()} ClippyMap. All rights reserved.
           </p>
         </div>
       </div>

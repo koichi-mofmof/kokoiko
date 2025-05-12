@@ -25,8 +25,10 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
             href="/"
             className="text-lg font-medium text-gray-800 flex items-center"
           >
-            <MapPinHouse className="h-6 w-6 mr-2 text-primary-600" />
-            <span className="text-primary-600">ココイコ</span>
+            <MapPinHouse className="h-8 w-8 text-primary-500" />
+            <span className="ml-2 text-2xl font-semibold font-quicksand">
+              <span className="text-primary-600">ClippyMap</span>
+            </span>
           </Link>
         </div>
 

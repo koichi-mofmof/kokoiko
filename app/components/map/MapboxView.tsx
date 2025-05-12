@@ -6,7 +6,7 @@ import mapboxgl from "mapbox-gl";
 import MapboxLanguage from "@mapbox/mapbox-gl-language";
 import { Place } from "@/types";
 import PlaceCard from "@/app/components/places/PlaceCard";
-import { X } from "lucide-react";
+import { X, MapPinHouse } from "lucide-react";
 
 interface MapboxViewProps {
   places: Place[];
@@ -38,8 +38,6 @@ const CustomMapboxMarker: React.FC<CustomMapboxMarkerProps> = ({
   isSelected,
   placeName,
 }) => {
-  // MapView.tsx の CustomMarker のスタイルを参考に、Mapboxで同等の表現を目指します。
-  // MapboxではマーカーにHTML要素を直接指定できるため、より柔軟なスタイリングが可能です。
   return (
     <div
       className={`transition-all duration-150 ease-in-out cursor-pointer ${
@@ -50,20 +48,25 @@ const CustomMapboxMarker: React.FC<CustomMapboxMarkerProps> = ({
       style={{ transformOrigin: "bottom center" }}
       title={placeName} // マーカーにタイトル属性を追加
     >
+      {/* ピン本体 */}
       <div
-        className={`rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm ${
-          isSelected ? "bg-primary-700" : "bg-primary-600"
+        className={`rounded-full p-2 shadow-md flex items-center justify-center border border-primary-700 ${
+          isSelected ? "bg-primary-100" : "bg-white"
         }`}
       >
-        <span className="text-primary-foreground">ココイコ</span>
+        <MapPinHouse
+          className={`${
+            isSelected ? "h-7 w-7 text-primary-700" : "h-6 w-6 text-primary-600"
+          }`}
+          strokeWidth={isSelected ? 2.5 : 2}
+        />
       </div>
+      {/* 下向きの三角形 */}
       <div
         className={`w-0 h-0 mx-auto 
         border-l-[8px] border-l-transparent 
         border-r-[8px] border-r-transparent 
-        border-t-[10px] ${
-          isSelected ? "border-t-primary-700" : "border-t-primary-600"
-        }`}
+        border-t-[10px] border-t-primary-700`}
       ></div>
     </div>
   );
@@ -76,12 +79,12 @@ const MapboxView: React.FC<MapboxViewProps> = ({ places, onPlaceSelect }) => {
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const markerRootsRef = useRef<Map<string, ReactDOM.Root>>(new Map());
 
+  // useEffect for map initialization (初回のみ実行)
   useEffect(() => {
-    mapboxLoadCount++; // カウントを増やす
+    mapboxLoadCount++;
     logMessage(
       `Mapboxマップの初期化処理が実行されました（${mapboxLoadCount}回目）`
-    ); // ログ出力
-
+    );
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
     if (!mapContainerRef.current) return;
 
@@ -92,10 +95,8 @@ const MapboxView: React.FC<MapboxViewProps> = ({ places, onPlaceSelect }) => {
       zoom: savedZoom,
     });
 
-    // 言語設定を日本語に
     const language = new MapboxLanguage({ defaultLanguage: "ja" });
     mapInstance.addControl(language);
-
     mapRef.current = mapInstance;
 
     mapInstance.on("load", () => {
@@ -125,28 +126,25 @@ const MapboxView: React.FC<MapboxViewProps> = ({ places, onPlaceSelect }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // useEffect for updating markers (appearance and click handlers)
+  // Runs when 'places' or 'selectedPlace' changes.
   useEffect(() => {
     if (!mapRef.current || !places) return;
     const map = mapRef.current;
 
-    // 既存のマーカーとReact Rootをクリア
+    // Clear existing markers and their React roots
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
-
-    // unmount処理を非同期に実行
     const rootsToUnmount = Array.from(markerRootsRef.current.values());
     markerRootsRef.current.clear();
     setTimeout(() => {
       rootsToUnmount.forEach((root) => root.unmount());
     }, 0);
 
-    const bounds = new mapboxgl.LngLatBounds();
-
     places.forEach((place) => {
       const markerContainer = document.createElement("div");
       const isSelected = selectedPlace?.id === place.id;
 
-      // マーカーコンテナに対応するReact Rootを作成（または取得）し、コンポーネントをレンダリング
       let root = markerRootsRef.current.get(place.id);
       if (!root) {
         root = ReactDOM.createRoot(markerContainer);
@@ -160,7 +158,6 @@ const MapboxView: React.FC<MapboxViewProps> = ({ places, onPlaceSelect }) => {
         .setLngLat([place.longitude, place.latitude])
         .addTo(map);
 
-      // イベントリスナーはマーカーコンテナの親要素（mapboxglが生成するラッパー）に設定
       marker.getElement().addEventListener("click", (e) => {
         e.stopPropagation();
         setSelectedPlace(place);
@@ -170,11 +167,30 @@ const MapboxView: React.FC<MapboxViewProps> = ({ places, onPlaceSelect }) => {
         logMessage(`マーカーがクリックされました: ${place.name}`);
       });
       markersRef.current.push(marker);
-      bounds.extend([place.longitude, place.latitude]);
+    });
+  }, [places, selectedPlace, onPlaceSelect]);
+
+  // useEffect for fitting map to bounds ONLY when 'places' array changes
+  // Runs only when 'places' prop changes reference.
+  useEffect(() => {
+    if (!mapRef.current || !places) return;
+    const map = mapRef.current;
+
+    const bounds = new mapboxgl.LngLatBounds();
+    let validPlacesExist = false;
+    places.forEach((p) => {
+      if (p.longitude != null && p.latitude != null) {
+        bounds.extend([p.longitude, p.latitude]);
+        validPlacesExist = true;
+      }
     });
 
-    if (places.length > 0 && map.getCanvas()) {
-      if (places.length === 1) {
+    if (map.getCanvas() && validPlacesExist) {
+      if (
+        places.length === 1 &&
+        places[0].longitude != null &&
+        places[0].latitude != null
+      ) {
         map.setCenter([places[0].longitude, places[0].latitude]);
         map.setZoom(15);
         logMessage(`地図の中心を ${places[0].name} に設定 (Zoom: 15)`);
@@ -183,7 +199,7 @@ const MapboxView: React.FC<MapboxViewProps> = ({ places, onPlaceSelect }) => {
         logMessage(`地図の表示範囲を ${places.length} 個の場所に合わせて調整`);
       }
     }
-  }, [mapRef, places, onPlaceSelect, selectedPlace]);
+  }, [places]); // Only depends on 'places'
 
   return (
     <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden">
