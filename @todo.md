@@ -25,9 +25,23 @@
 - [ ] データベース設計
   - [ ] スキーマ設計
   - [ ] Supabase のセットアップ
-- [ ] 認証機能の実装
-  - [ ] ログイン/登録フォーム (基本実装)
-  - [ ] Supabase Auth の連携 (ssr, actions)
+- [x] 認証機能の実装
+  - [x] サインアップ機能実装
+    - [x] Zod スキーマ作成 (signupSchema)
+    - [x] Server Action 作成 (signupWithCredentials)
+    - [x] サインアップフォームコンポーネント作成 (signup-form.tsx)
+    - [x] パスワード表示切り替え機能実装
+    - [x] パスワード要件変更（8 文字以上、大文字・小文字・数字・記号）とバリデーション修正
+    - [x] サインアップページ作成 (signup/page.tsx)
+  - [x] メール/パスワードログインフォーム作成
+  - [x] Google ログインボタン追加
+- [x] Supabase Auth の連携 (Server Actions)
+  - [x] Zod によるバリデーションスキーマ作成 (lib/actions/auth.actions.ts)
+  - [x] ログイン用 Server Action 作成 (loginWithCredentials, loginWithGoogle in lib/actions/auth.actions.ts)
+  - [x] ログインフォームを Server Actions 対応にリファクタリング (useFormState, useFormStatus 使用)
+- [x] Supabase クライアント設定の確認 (lib/supabase/client.ts, lib/supabase/server.ts)
+- [x] ログインフォームコンポーネント作成 (app/components/auth/login-form.tsx)
+- [x] ログインページ作成 (app/login/page.tsx)
 - [x] 地図ライブラリの変更 (Mapbox -> OpenStreetMap) # 完了
   - [x] react-leaflet および関連ライブラリのインストール
   - [x] OpenStreetMapView コンポーネントの作成と基本機能実装
@@ -88,9 +102,18 @@
 - [ ] ソーシャル共有機能
 - [ ] 通知機能
 - [ ] エクスポート/インポート機能
-- [ ] サービス名変更: ココイコ -> ClippyMap
+- [x] サービス名変更: ココイコ -> ClippyMap
   - [x] 各ファイル内の「ココイコ」を「ClippyMap」に置換
   - [x] package.json の name を変更
-  - [!] `requirements.mdc` の変更 (手動対応)
-  - [!] `app/components/map/MapboxView.tsx` の変更 (手動対応)
-  - [!] `app/components/map/MapView.tsx` の変更 (手動対応)
+- [ ] メール認証用 SMTP 設定
+  - 本番運用や実際のメール送信確認のために、独自 SMTP サーバーの設定が必要
+  - Supabase ダッシュボード > Authentication > Settings > Email Templates > SMTP Settings で設定
+  - 公式ドキュメント: https://supabase.com/docs/guides/auth/auth-email#configuring-smtp
+  - 見積時間: 30 分〜1 時間
+- [x] ログイン後のヘッダー UI を shadcn/ui の Avatar・DropdownMenu で改善
+  - ユーザー名＋アイコンをドロップダウン化
+  - プロフィール・設定・ログアウトをメニューにまとめる
+  - モバイルも同様の体験に
+  - レスポンシブ・アクセシビリティ・UI 一貫性を担保
+  - 依存: shadcn/ui/dropdown-menu 新規作成
+  - 見積: 1h

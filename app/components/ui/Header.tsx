@@ -1,22 +1,29 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, MapPinHouse, Menu, User, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, MapPinHouse, Settings, User } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 interface HeaderProps {
-  currentUser?: { name: string; id: string } | null;
+  currentUser?: {
+    name: string;
+    id: string;
+    email: string;
+    avatarUrl?: string | null;
+  } | null;
   onLogout?: () => void;
 }
 
 const Header = ({ currentUser, onLogout }: HeaderProps) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
-
   return (
     <header className="fixed top-0 left-0 right-0 bg-white bg-opacity-95 backdrop-blur-sm shadow-sm z-50">
       <div className="max-w-[1920px] w-full px-6 sm:px-8 lg:px-12 py-3 flex justify-between items-center">
@@ -25,45 +32,83 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
             href="/"
             className="text-lg font-medium text-gray-800 flex items-center"
           >
-            <MapPinHouse className="h-8 w-8 text-primary-500" />
-            <span className="ml-2 text-2xl font-semibold font-quicksand">
+            <MapPinHouse className="h-6 w-6 text-primary-500" />
+            <span className="ml-2 text-xl font-semibold font-quicksand">
               <span className="text-primary-600">ClippyMap</span>
             </span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="flex items-center space-x-8">
           {currentUser ? (
             <>
-              <Link
-                href="/map"
-                className="text-neutral-600 hover:text-primary-600 transition-colors"
-              >
-                マイマップ
-              </Link>
-              <Link
-                href="/places/add"
-                className="text-neutral-600 hover:text-primary-600 transition-colors"
-              >
-                場所を追加
-              </Link>
-              <Link
-                href="/groups"
-                className="text-neutral-600 hover:text-primary-600 transition-colors"
-              >
-                グループ
-              </Link>
-              <div className="flex items-center space-x-4">
-                <span className="text-neutral-600">{currentUser.name}</span>
-                <button
-                  onClick={onLogout}
-                  className="text-neutral-600 hover:text-primary-600"
-                  aria-label="Logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center space-x-2 outline-none focus:ring-2 focus:ring-primary-500 px-1 py-1 rounded-md hover:bg-neutral-100 transition">
+                    <Avatar className="h-7 w-7 border border-neutral-300 flex items-center justify-center">
+                      {currentUser.avatarUrl ? (
+                        <AvatarImage
+                          src={currentUser.avatarUrl}
+                          alt={currentUser.name}
+                        />
+                      ) : (
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-9 w-9 border border-neutral-300 flex items-center justify-center">
+                        {currentUser.avatarUrl ? (
+                          <AvatarImage
+                            src={currentUser.avatarUrl}
+                            alt={currentUser.name}
+                          />
+                        ) : (
+                          <AvatarFallback>
+                            <User className="h-5 w-5" />
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-medium leading-none">
+                          {currentUser.name}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground pt-1.5">
+                          {currentUser.email}
+                        </p>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>その他</DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      設定
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <form
+                      action={onLogout}
+                      className="w-full flex items-center text-red-600 hover:!text-red-700 focus:text-red-700 cursor-pointer"
+                    >
+                      <button
+                        type="submit"
+                        className="w-full flex items-center"
+                      >
+                        <LogOut className="mr-4 h-4 w-4" />
+                        ログアウト
+                      </button>
+                    </form>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button asChild variant="secondary">
@@ -71,65 +116,7 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
             </Button>
           )}
         </nav>
-
-        {/* Mobile Menu Button */}
-        <button className="md:hidden text-neutral-600" onClick={toggleMenu}>
-          {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
       </div>
-
-      {/* Mobile Navigation */}
-      {menuOpen && (
-        <div className="md:hidden bg-white border-t border-neutral-100 px-6 sm:px-8 py-3 space-y-3 shadow-md animate-fadeIn">
-          {currentUser ? (
-            <>
-              <Link
-                href="/map"
-                className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
-                onClick={() => setMenuOpen(false)}
-              >
-                マイマップ
-              </Link>
-              <Link
-                href="/places/add"
-                className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
-                onClick={() => setMenuOpen(false)}
-              >
-                場所を追加
-              </Link>
-              <Link
-                href="/groups"
-                className="block py-2 text-neutral-600 hover:text-primary-600 transition-colors"
-                onClick={() => setMenuOpen(false)}
-              >
-                グループ
-              </Link>
-              <div className="flex items-center justify-between py-2 border-t border-neutral-100 pt-4 mt-2">
-                <div className="flex items-center">
-                  <User className="h-5 w-5 mr-2 text-neutral-600" />
-                  <span className="text-neutral-600">{currentUser.name}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    onLogout?.();
-                    setMenuOpen(false);
-                  }}
-                  className="text-neutral-600 hover:text-red-500"
-                  aria-label="Logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <Button asChild variant="default">
-                <Link href="/login">ログイン</Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
     </header>
   );
 };
