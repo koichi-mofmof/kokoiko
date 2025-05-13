@@ -353,8 +353,8 @@ export default function Home() {
               まずは無料で始めて、必要に応じてアップグレードできます。
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-            {/* フリープラン */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+            {/* フリープラン（無料） */}
             <div>
               <Card className="flex flex-col h-full border-primary-200 hover:shadow-xl transition-all duration-300">
                 <CardHeader className="text-center pb-4">
@@ -364,7 +364,7 @@ export default function Home() {
                   <div className="text-3xl font-extrabold text-neutral-900 mb-1">
                     無料
                   </div>
-                  <div className="text-sm text-neutral-500">ずっと0円</div>
+                  <div className="text-sm text-neutral-500">まずはお試し</div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col gap-3 mt-2 border-t border-neutral-100 pt-4">
                   <ul className="space-y-3 text-neutral-700">
@@ -389,7 +389,7 @@ export default function Home() {
               </Card>
             </div>
 
-            {/* ベーシックプラン - おすすめ */}
+            {/* プレミアムプラン（有料） */}
             <div>
               <Card className="flex flex-col h-full border-primary-400 shadow-lg ring-2 ring-primary-400 relative hover:shadow-2xl transition-all duration-300 z-10 scale-105">
                 <div className="absolute -top-4 left-0 right-0 mx-auto w-max px-4 py-1 bg-primary-500 text-white text-sm font-bold rounded-full shadow-md">
@@ -397,51 +397,16 @@ export default function Home() {
                 </div>
                 <CardHeader className="text-center pb-4">
                   <CardTitle className="text-2xl font-bold text-primary-700 mb-2">
-                    ベーシックプラン
-                  </CardTitle>
-                  <div className="text-3xl font-extrabold text-neutral-900 mb-1">
-                    <span className="text-lg font-bold mr-2">月額</span>480円
-                  </div>
-                  <div className="text-sm text-neutral-500">コスパ重視</div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col gap-3 mt-2 border-t border-primary-300 pt-4">
-                  <ul className="space-y-3 text-neutral-700">
-                    <li className="flex items-center">
-                      <div className="h-5 w-5 rounded-full bg-neutral-100 flex items-center justify-center mr-2">
-                        <span className="text-neutral-600 text-xs">✓</span>
-                      </div>
-                      登録地点数：
-                      <span className="font-semibold ml-1">100件/月まで</span>
-                    </li>
-                    <li className="flex items-center">
-                      <div className="h-5 w-5 rounded-full bg-neutral-100 flex items-center justify-center mr-2">
-                        <span className="text-neutral-600 text-xs">✓</span>
-                      </div>
-                      広告表示：
-                      <span className="font-semibold text-neutral-600 ml-1">
-                        なし
-                      </span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* プレミアムプラン */}
-            <div>
-              <Card className="flex flex-col h-full border-yellow-400 hover:shadow-xl transition-all duration-300">
-                <CardHeader className="text-center pb-4">
-                  <CardTitle className="text-2xl font-bold text-yellow-600 mb-2">
                     プレミアムプラン
                   </CardTitle>
                   <div className="text-3xl font-extrabold text-neutral-900 mb-1">
-                    <span className="text-lg font-bold mr-2">月額</span>980円
+                    <span className="text-lg font-bold mr-2">月額</span>480円
                   </div>
                   <div className="text-sm text-neutral-500">
                     すべての機能を無制限で
                   </div>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col gap-3 mt-2 border-t border-yellow-400 pt-4">
+                <CardContent className="flex-1 flex flex-col gap-3 mt-2 border-t border-primary-300 pt-4">
                   <ul className="space-y-3 text-neutral-700">
                     <li className="flex items-center">
                       <div className="h-5 w-5 rounded-full bg-neutral-100 flex items-center justify-center mr-2">
