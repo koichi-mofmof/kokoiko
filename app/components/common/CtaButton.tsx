@@ -7,14 +7,6 @@ type CtaButtonType = "login" | "sampleHero" | "sampleCta";
 
 interface CtaButtonProps {
   type: CtaButtonType;
-  // href?: string;
-  // mainText?: string;
-  // subText?: string;
-  // variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
-  // showChevron?: boolean;
-  // buttonClassName?: string;
-  // linkClassName?: string;
-  // subTextClassName?: string;
 }
 
 export function CtaButton({ type }: CtaButtonProps) {
@@ -35,7 +27,7 @@ export function CtaButton({ type }: CtaButtonProps) {
 
   switch (type) {
     case "login":
-      href = "/login";
+      href = "/mypage";
       mainText = "行きたい場所リストを作る";
       subText = "（要ログイン）";
       showChevron = true;

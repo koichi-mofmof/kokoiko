@@ -1,36 +1,18 @@
 "use client";
-
 import { Place } from "@/types";
-import {
-  Calendar,
-  Check,
-  Circle,
-  ExternalLink,
-  MapPin,
-  Tag,
-} from "lucide-react";
+import { Check, Circle, ExternalLink, MapPin, Tag } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-
 interface PlaceListProps {
   places: Place[];
   onPlaceSelect: (place: Place) => void;
   selectedPlaceId?: string;
 }
-
 const PlaceList: React.FC<PlaceListProps> = ({
   places,
   onPlaceSelect,
   selectedPlaceId,
 }) => {
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("ja-JP", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(date);
-  };
-
   return (
     <div className="space-y-2">
       {places.length === 0 ? (
@@ -54,12 +36,6 @@ const PlaceList: React.FC<PlaceListProps> = ({
                   <h3 className="text-sm font-medium text-neutral-800">
                     {place.name}
                   </h3>
-                  {place.visitPlanned && (
-                    <span className="text-xs text-neutral-500 flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {formatDate(place.visitPlanned)}
-                    </span>
-                  )}
                 </div>
 
                 <div className="mt-2 flex items-center text-xs text-neutral-500">

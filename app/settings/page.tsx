@@ -1,53 +1,31 @@
 import { ProfileSettings } from "./_components/profile-settings";
-import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation"; // 未認証時のリダイレクト用
+import { SettingsPageDataLoader } from "./_components/SettingsPageDataLoader";
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
+  const { initialData, error, userUnauthenticated } =
+    await SettingsPageDataLoader();
 
-  // ユーザー情報の取得
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (userUnauthenticated) {
+    redirect("/login"); // 未認証の場合はログインページへ
+  }
 
-  if (!user) {
+  if (error || !initialData) {
     return (
       <div className="container max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-center items-center min-h-[400px]">
-          <p>ログインしてください</p>
+          <p className="text-red-500">
+            {error || "設定情報の読み込みに失敗しました。"}
+          </p>
         </div>
       </div>
     );
   }
 
-  // プロフィール情報の取得
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username, display_name, bio, avatar_url")
-    .eq("id", user.id)
-    .single();
-
-  // プロフィール画像URLの取得
-  let avatarUrl = null;
-  if (profile?.avatar_url) {
-    const { data: imageData } = await supabase.storage
-      .from("profile_images")
-      .getPublicUrl(profile.avatar_url);
-
-    avatarUrl = imageData?.publicUrl || null;
-  }
-
   return (
-    <div className="container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-      <ProfileSettings
-        initialData={{
-          userId: user.id,
-          username: profile?.username || "",
-          displayName: profile?.display_name || "",
-          bio: profile?.bio || "",
-          avatarUrl,
-          avatarPath: profile?.avatar_url || null,
-        }}
-      />
+    <div className="container max-w-5xl mx-auto">
+      {/* initialDataがnullでないことは上でチェック済みなのでそのまま渡せる */}
+      <ProfileSettings initialData={initialData} />
     </div>
   );
 }

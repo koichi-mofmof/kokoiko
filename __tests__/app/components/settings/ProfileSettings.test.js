@@ -92,6 +92,7 @@ jest.mock("@/components/ui/textarea", () => ({
 
 jest.mock("lucide-react", () => ({
   User: () => <div data-testid="user-icon">UserIcon</div>,
+  Upload: () => <div data-testid="upload-icon">UploadIcon</div>,
 }));
 
 // テスト用の初期データ

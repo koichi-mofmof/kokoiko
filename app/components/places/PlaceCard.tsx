@@ -1,14 +1,7 @@
 "use client";
 
 import { Place } from "@/types";
-import {
-  Calendar,
-  CheckCircle,
-  Circle,
-  ExternalLink,
-  MapPin,
-  Tag,
-} from "lucide-react";
+import { CheckCircle, Circle, ExternalLink, MapPin, Tag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -19,14 +12,6 @@ interface PlaceCardProps {
 }
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("ja-JP", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(date);
-  };
-
   const visitStatusElement = place.visited ? (
     <div className="flex items-center text-xs text-primary-700">
       <CheckCircle className="h-5 w-5 mr-1 text-primary-500" />
@@ -69,15 +54,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
               {place.address}
             </p>
           </div>
-
-          {place.visitPlanned && (
-            <div className="flex items-center mb-3">
-              <Calendar className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-              <p className="text-sm text-neutral-600 ml-1">
-                {formatDate(place.visitPlanned)}
-              </p>
-            </div>
-          )}
 
           {place.notes && (
             <p className="text-sm text-neutral-700 mb-3 line-clamp-2">

@@ -36,28 +36,22 @@ export default function Footer({ currentUser }: FooterProps) {
                 >
                   ホーム
                 </Link>
+                {currentUser && (
+                  <>
+                    <Link
+                      href="/mypage"
+                      className="text-neutral-400 hover:text-white block"
+                    >
+                      リスト一覧
+                    </Link>
+                  </>
+                )}
                 <Link
                   href="/sample"
                   className="text-neutral-400 hover:text-white block"
                 >
                   サンプル
                 </Link>
-                {currentUser && (
-                  <>
-                    <Link
-                      href="/map"
-                      className="text-neutral-400 hover:text-white block"
-                    >
-                      マイマップ
-                    </Link>
-                    <Link
-                      href="/places/add"
-                      className="text-neutral-400 hover:text-white block"
-                    >
-                      場所を追加
-                    </Link>
-                  </>
-                )}
               </div>
             </div>
 

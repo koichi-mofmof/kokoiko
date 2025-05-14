@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
@@ -144,7 +144,7 @@ export default function AccountSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-0 sm:px-4">
       <div>
         <h2 className="text-xl font-semibold mb-1">アカウント設定</h2>
         <p className="text-sm text-muted-foreground">

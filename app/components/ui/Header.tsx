@@ -10,8 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, MapPinHouse, Settings, User } from "lucide-react";
+import { LogOut, MapPinHouse, Settings, User, List } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface HeaderProps {
   currentUser?: {
@@ -23,7 +25,64 @@ interface HeaderProps {
   onLogout?: () => void;
 }
 
-const Header = ({ currentUser, onLogout }: HeaderProps) => {
+const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
+  const [currentUser, setCurrentUser] = useState(initialUser);
+
+  // プロフィール情報の再取得
+  const refreshUserProfile = async () => {
+    if (!initialUser) return;
+
+    try {
+      const supabase = createClient();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", initialUser.id)
+        .single();
+
+      if (profile) {
+        let avatarUrl = null;
+        if (profile.avatar_url) {
+          const { data: imageData } = await supabase.storage
+            .from("profile_images")
+            .getPublicUrl(profile.avatar_url);
+
+          avatarUrl = imageData?.publicUrl || null;
+        }
+
+        setCurrentUser({
+          ...initialUser,
+          name: profile.display_name || initialUser.name,
+          avatarUrl: avatarUrl || initialUser.avatarUrl,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to refresh user profile:", error);
+    }
+  };
+
+  // プロフィール更新イベントのリスナー
+  useEffect(() => {
+    if (!initialUser) return;
+
+    // イベントリスナーの設定
+    const handleProfileUpdate = () => {
+      refreshUserProfile();
+    };
+
+    window.addEventListener("profile-updated", handleProfileUpdate);
+
+    // クリーンアップ関数
+    return () => {
+      window.removeEventListener("profile-updated", handleProfileUpdate);
+    };
+  }, [initialUser]);
+
+  // 初期値が変更された場合は状態を更新
+  useEffect(() => {
+    setCurrentUser(initialUser);
+  }, [initialUser]);
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-white bg-opacity-95 backdrop-blur-sm shadow-sm z-50">
       <div className="max-w-[1920px] w-full px-6 sm:px-8 lg:px-12 py-3 flex justify-between items-center">
@@ -86,6 +145,12 @@ const Header = ({ currentUser, onLogout }: HeaderProps) => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/mypage">
+                      <List className="mr-2 h-4 w-4" />
+                      リスト一覧
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuLabel>その他</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
                     <Link href="/settings">

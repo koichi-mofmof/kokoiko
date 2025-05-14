@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "lucide-react";
+import { Upload, User } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -95,6 +95,21 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
 
       // 新しい画像がアップロードされた場合
       if (imageFile) {
+        // 古い画像が存在する場合、Storageから削除
+        if (initialData.avatarPath) {
+          const { error: removeError } = await supabase.storage
+            .from("profile_images")
+            .remove([initialData.avatarPath]);
+
+          if (removeError) {
+            // 削除エラーはログには残すが、処理は続行する（致命的なエラーとはしない）
+            console.warn(
+              `古いアバター画像の削除に失敗しました: ${removeError.message}`,
+              removeError // エラーオブジェクト全体を出力するように変更
+            );
+          }
+        }
+
         const fileExt = imageFile.name.split(".").pop();
         const filePath = `${initialData.userId}/${Date.now()}.${fileExt}`;
 
@@ -133,6 +148,9 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
         title: "成功",
         description: "プロフィール情報が正常に更新されました",
       });
+
+      // プロフィール更新イベントを発火
+      window.dispatchEvent(new CustomEvent("profile-updated"));
     } catch (error) {
       console.error("プロフィール更新エラー:", error);
       toast({
@@ -176,23 +194,7 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
                   htmlFor="profile-image-upload"
                   className="flex items-center justify-center px-3 py-1.5 text-sm border rounded-md hover:bg-accent cursor-pointer"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-2 h-4 w-4"
-                    aria-hidden="true"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
+                  <Upload className="mr-2 h-4 w-4" />
                   画像をアップロード
                 </label>
                 <input
