@@ -171,13 +171,11 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
               )}
             </Avatar>
             <div className="space-y-2 text-left w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="relative overflow-hidden w-auto"
-              >
-                <span className="flex items-center justify-center">
+              <div className="relative">
+                <label
+                  htmlFor="profile-image-upload"
+                  className="flex items-center justify-center px-3 py-1.5 text-sm border rounded-md hover:bg-accent cursor-pointer"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -189,20 +187,23 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     className="mr-2 h-4 w-4"
+                    aria-hidden="true"
                   >
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                   </svg>
                   画像をアップロード
-                </span>
+                </label>
                 <input
+                  id="profile-image-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  className="sr-only"
+                  aria-label="プロフィール画像をアップロード"
                 />
-              </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 JPG, PNG, GIF形式で最大2MBまで
               </p>
