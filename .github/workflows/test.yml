@@ -52,15 +52,6 @@ jobs:
             echo "カバレッジファイルが見つかりません"
           fi
 
-      - name: テストカバレッジレポートのアップロード
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: unit-coverage-report
-          path: ./coverage
-          retention-days: 7
-          if-no-files-found: warn
-
   integration-test:
     name: 結合テスト
     runs-on: ubuntu-latest
@@ -104,15 +95,6 @@ jobs:
           else
             echo "カバレッジファイルが見つかりません"
           fi
-
-      - name: テストカバレッジレポートのアップロード
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: integration-coverage-report
-          path: ./coverage
-          retention-days: 7
-          if-no-files-found: warn
 
   lint:
     name: リント
@@ -179,15 +161,6 @@ jobs:
             echo "カバレッジファイルが見つかりません"
           fi
 
-      - name: テストカバレッジレポートのアップロード
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: all-coverage-report
-          path: ./coverage
-          retention-days: 7
-          if-no-files-found: warn
-
       - name: カバレッジチェック
         run: |
           if [ -f coverage/coverage-summary.json ]; then
@@ -217,3 +190,12 @@ jobs:
           else
             echo "カバレッジファイルが見つかりません"
           fi
+
+      # - name: テストカバレッジレポートのアップロード
+      #   if: always()
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: all-coverage-report
+      #     path: ./coverage
+      #     retention-days: 7
+      #     if-no-files-found: warn
