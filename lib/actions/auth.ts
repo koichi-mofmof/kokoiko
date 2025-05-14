@@ -101,9 +101,15 @@ export async function loginWithCredentials(
   // 今回は redirect を試みます
   try {
     redirect("/"); // ログイン後のリダイレクト先
-  } catch (e: any) {
+  } catch (e: unknown) {
     // redirect() は内部的にエラーをスローするため、キャッチしないとビルド時にエラーになる
-    if (e.digest?.startsWith("NEXT_REDIRECT")) {
+    if (
+      typeof e === "object" &&
+      e !== null &&
+      "digest" in e &&
+      typeof (e as { digest: string }).digest === "string" &&
+      (e as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
       throw e;
     }
     console.error("Redirect failed:", e);
@@ -176,8 +182,15 @@ export async function signupWithCredentials(
     // セッションがあればログイン成功とみなしリダイレクト
     try {
       redirect("/"); // 登録後のリダイレクト先
-    } catch (e: any) {
-      if (e.digest?.startsWith("NEXT_REDIRECT")) throw e;
+    } catch (e: unknown) {
+      if (
+        typeof e === "object" &&
+        e !== null &&
+        "digest" in e &&
+        typeof (e as { digest: string }).digest === "string" &&
+        (e as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+      )
+        throw e;
       console.error("Redirect failed after signup:", e);
       return {
         message:

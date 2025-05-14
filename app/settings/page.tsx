@@ -20,7 +20,7 @@ export default async function SettingsPage() {
   }
 
   // プロフィール情報の取得
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("username, display_name, bio, avatar_url")
     .eq("id", user.id)
