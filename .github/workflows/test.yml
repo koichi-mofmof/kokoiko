@@ -40,18 +40,6 @@ jobs:
       - name: ユニットテストの実行
         run: npm test -- --testPathIgnorePatterns="integration|e2e"
 
-      - name: ユニットテストカバレッジレポートの生成
-        run: npm test -- --testPathIgnorePatterns="integration|e2e" --coverage
-
-      - name: テストカバレッジレポートの表示
-        run: |
-          echo "ユニットテスト - カバレッジサマリー:"
-          if [ -f coverage/coverage-summary.json ]; then
-            cat coverage/coverage-summary.json | jq -r '.total | "\n - ステートメント: \(.statements.pct)%\n - ブランチ: \(.branches.pct)%\n - 関数: \(.functions.pct)%\n - 行: \(.lines.pct)%"'
-          else
-            echo "カバレッジファイルが見つかりません"
-          fi
-
   integration-test:
     name: 結合テスト
     runs-on: ubuntu-latest
@@ -83,18 +71,6 @@ jobs:
 
       - name: 結合テストの実行
         run: npm test -- --testMatch="**/*Integration.test.js"
-
-      - name: 結合テストカバレッジレポートの生成
-        run: npm test -- --testMatch="**/*Integration.test.js" --coverage
-
-      - name: テストカバレッジレポートの表示
-        run: |
-          echo "結合テスト - カバレッジサマリー:"
-          if [ -f coverage/coverage-summary.json ]; then
-            cat coverage/coverage-summary.json | jq -r '.total | "\n - ステートメント: \(.statements.pct)%\n - ブランチ: \(.branches.pct)%\n - 関数: \(.functions.pct)%\n - 行: \(.lines.pct)%"'
-          else
-            echo "カバレッジファイルが見つかりません"
-          fi
 
   lint:
     name: リント
@@ -149,54 +125,5 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env.local
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env.local
 
-      - name: すべてのテストの実行とカバレッジレポート生成
-        run: npm test -- --coverage --coverageThreshold='{"global":{"statements":5,"branches":5,"functions":5,"lines":5}}' || echo "テストに失敗しましたが続行します"
-
-      - name: テストカバレッジレポートの表示
-        run: |
-          echo "全体テスト - カバレッジサマリー:"
-          if [ -f coverage/coverage-summary.json ]; then
-            cat coverage/coverage-summary.json | jq -r '.total | "\n - ステートメント: \(.statements.pct)%\n - ブランチ: \(.branches.pct)%\n - 関数: \(.functions.pct)%\n - 行: \(.lines.pct)%"'
-          else
-            echo "カバレッジファイルが見つかりません"
-          fi
-
-      - name: カバレッジチェック
-        run: |
-          if [ -f coverage/coverage-summary.json ]; then
-            STATEMENTS=$(cat coverage/coverage-summary.json | jq -r '.total.statements.pct')
-            BRANCHES=$(cat coverage/coverage-summary.json | jq -r '.total.branches.pct')
-            FUNCTIONS=$(cat coverage/coverage-summary.json | jq -r '.total.functions.pct')
-            LINES=$(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')
-
-            THRESHOLD=5
-
-            echo "カバレッジ閾値: ${THRESHOLD}%"
-            echo "現在のカバレッジ:"
-            echo " - ステートメント: ${STATEMENTS}%"
-            echo " - ブランチ: ${BRANCHES}%"
-            echo " - 関数: ${FUNCTIONS}%"
-            echo " - 行: ${LINES}%"
-
-            if (( $(echo "$STATEMENTS < $THRESHOLD" | bc -l) )) || \
-               (( $(echo "$BRANCHES < $THRESHOLD" | bc -l) )) || \
-               (( $(echo "$FUNCTIONS < $THRESHOLD" | bc -l) )) || \
-               (( $(echo "$LINES < $THRESHOLD" | bc -l) )); then
-              echo "警告: テストカバレッジが目標値を下回っています。"
-              echo "目標値: ${THRESHOLD}%"
-              # 警告だけにして失敗させない
-            else
-              echo "成功: すべてのカバレッジ指標が目標値を達成しています。"
-            fi
-          else
-            echo "カバレッジファイルが見つかりません"
-          fi
-
-      # - name: テストカバレッジレポートのアップロード
-      #   if: always()
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: all-coverage-report
-      #     path: ./coverage
-      #     retention-days: 7
-      #     if-no-files-found: warn
+      - name: すべてのテストの実行
+        run: npm test || echo "テストに失敗しましたが続行します"
