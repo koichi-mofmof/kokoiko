@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   // if "next" is in param, use it as the redirect URL
-  const next = searchParams.get("next") || "/mypage"; // デフォルトのリダイレクト先を /mypage に変更
+  const next = searchParams.get("next") || "/lists"; // デフォルトのリダイレクト先を /lists に変更
 
   if (code) {
     const cookieStore = await cookies();

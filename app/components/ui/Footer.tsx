@@ -39,7 +39,7 @@ export default function Footer({ currentUser }: FooterProps) {
                 {currentUser && (
                   <>
                     <Link
-                      href="/mypage"
+                      href="/lists"
                       className="text-neutral-400 hover:text-white block"
                     >
                       リスト一覧

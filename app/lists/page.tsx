@@ -1,7 +1,7 @@
 import { List } from "lucide-react";
-import { ErrorMessageToast } from "./_components/ErrorMessageToast"; // 追加
+import { ErrorMessageToast } from "./_components/ErrorMessageToast";
 import { MyLists } from "./_components/MyLists";
-import { MyPageDataLoader } from "./_components/MyPageDataLoader"; // MyListForClient 型のインポートは不要になった
+import { MyPageDataLoader } from "./_components/MyPageDataLoader";
 
 export default async function MyPage() {
   const { myListsForClient, error } = await MyPageDataLoader();
@@ -12,7 +12,7 @@ export default async function MyPage() {
       <header className="mb-8">
         <h1 className="text-xl font-bold text-neutral-900 flex items-center">
           <List className="h-6 w-6 text-primary-600 mr-3" />
-          マイページ
+          リスト一覧
         </h1>
         <p className="text-neutral-600 text-xs sm:text-sm mt-2">
           あなたが作成したリストや共有されているリストの一覧です。

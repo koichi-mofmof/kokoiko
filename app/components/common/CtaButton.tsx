@@ -27,7 +27,7 @@ export function CtaButton({ type }: CtaButtonProps) {
 
   switch (type) {
     case "login":
-      href = "/mypage";
+      href = "/lists";
       mainText = "行きたい場所リストを作る";
       subText = "（要ログイン）";
       showChevron = true;

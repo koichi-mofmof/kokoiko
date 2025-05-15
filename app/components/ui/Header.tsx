@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, MapPinHouse, Settings, User, List } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface HeaderProps {
@@ -28,8 +28,8 @@ interface HeaderProps {
 const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
   const [currentUser, setCurrentUser] = useState(initialUser);
 
-  // プロフィール情報の再取得
-  const refreshUserProfile = async () => {
+  // プロフィール情報の再取得（useCallbackでラップ）
+  const refreshUserProfile = useCallback(async () => {
     if (!initialUser) return;
 
     try {
@@ -59,7 +59,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
     } catch (error) {
       console.error("Failed to refresh user profile:", error);
     }
-  };
+  }, [initialUser]);
 
   // プロフィール更新イベントのリスナー
   useEffect(() => {
@@ -76,7 +76,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
     return () => {
       window.removeEventListener("profile-updated", handleProfileUpdate);
     };
-  }, [initialUser]);
+  }, [initialUser, refreshUserProfile]);
 
   // 初期値が変更された場合は状態を更新
   useEffect(() => {
@@ -146,7 +146,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/mypage">
+                    <Link href="/lists">
                       <List className="mr-2 h-4 w-4" />
                       リスト一覧
                     </Link>

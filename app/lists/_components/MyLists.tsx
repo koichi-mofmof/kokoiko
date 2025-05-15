@@ -26,15 +26,12 @@ type SortOption = "name" | "updated_at" | "created_at" | "place_count";
 type SortOrder = "asc" | "desc";
 
 export function MyLists({ initialLists }: MyListsProps) {
-  // setSearchQueryは将来の検索機能のために残すが、ESLint警告を抑制
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const [searchQuery, setSearchQuery] = useState(""); // PlaceListGrid側で検索するため不要
   // 追加: ソート機能の状態変数
   const [sortOption, setSortOption] = useState<SortOption>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const processedLists = useMemo(() => {
-    let lists = [...initialLists]; // initialListsを直接変更しないようにコピー
+    const lists = [...initialLists]; // initialListsを直接変更しないようにコピー
 
     // ソート処理
     lists.sort((a, b) => {
@@ -63,7 +60,7 @@ export function MyLists({ initialLists }: MyListsProps) {
     });
 
     return lists;
-  }, [initialLists, sortOption, sortOrder]); // searchQueryを依存配列から削除
+  }, [initialLists, sortOption, sortOrder]);
 
   const handleSortOptionChange = (value: string) => {
     setSortOption(value as SortOption);
@@ -76,12 +73,12 @@ export function MyLists({ initialLists }: MyListsProps) {
   return (
     <TooltipProvider>
       <div>
-        {processedLists.length > 0 || initialLists.length > 0 ? ( // initialListsも考慮して空かどうか判断
+        {processedLists.length > 0 || initialLists.length > 0 ? (
           <PlaceListGrid
-            initialLists={processedLists} // ソート済みのリストを渡す
-            getLinkHref={(list) => `/mypage/list/${list.id}`}
+            initialLists={processedLists}
+            getLinkHref={(list) => `/lists/list/${list.id}`}
             renderCollaborators={renderLabeledCollaborators}
-            emptyMessage="表示できるリストはありません。" // メッセージを調整 (検索結果に応じてPlaceListGrid側で変化)
+            emptyMessage="表示できるリストはありません。"
             externalControls={
               <div className="flex items-center space-x-2">
                 <ListFilter className="h-5 w-5 text-muted-foreground" />

@@ -89,9 +89,9 @@
   - [ ] ランキング表示 (RankingCard) のデザイン調整 (SNS 映えなど) # 新規追加
   - [ ] エラーメッセージのトースト通知化 (ランキング編集モーダルなど) # 新規追加
 - [x] マイページ作成
-  - [x] マイページ用ルート作成 (`app/mypage/page.tsx`)
+  - [x] マイページ用ルート作成 (`app/lists/page.tsx`)
   - [x] サーバーコンポーネントでログインユーザーのリストを取得 (Supabase)
-  - [x] リスト表示用クライアントコンポーネント作成 (`app/mypage/_components/MyLists.tsx`)
+  - [x] リスト表示用クライアントコンポーネント作成 (`app/lists/_components/MyLists.tsx`)
   - [x] Sample 画面を参考に UI を構築 (検索機能、カードレイアウト)
   - [x] 型定義の整理 (`PlaceList` 型など)
   - [x] エラーハンドリングの改善 # ステータスを進行中に変更

@@ -100,7 +100,7 @@ export async function loginWithCredentials(
   // 代わりに成功状態を返し、クライアント側でリダイレクトをトリガーすることも可能
   // 今回は redirect を試みます
   try {
-    redirect("/mypage"); // ログイン後のリダイレクト先を /mypage に変更
+    redirect("/lists"); // ログイン後のリダイレクト先を /lists に変更
   } catch (e: unknown) {
     // redirect() は内部的にエラーをスローするため、キャッチしないとビルド時にエラーになる
     if (
@@ -181,7 +181,7 @@ export async function signupWithCredentials(
   if (signUpData.session) {
     // セッションがあればログイン成功とみなしリダイレクト
     try {
-      redirect("/mypage"); // 登録後のリダイレクト先を /mypage に変更
+      redirect("/lists"); // 登録後のリダイレクト先を /lists に変更
     } catch (e: unknown) {
       if (
         typeof e === "object" &&
