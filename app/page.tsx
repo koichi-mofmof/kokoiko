@@ -381,7 +381,7 @@ export default function Home() {
                       <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                         <X className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                       </div>
-                      リストへの編集者招待：
+                      共同編集者の招待：
                       <span className="font-semibold text-neutral-600 ml-1">
                         不可
                       </span>
@@ -402,11 +402,11 @@ export default function Home() {
 
             {/* プレミアムプラン（有料） */}
             <div className="flex">
-              <Card className="flex flex-col w-full border-primary-400 shadow-lg ring-2 ring-primary-400 relative hover:shadow-2xl transition-all duration-300 md:scale-105">
+              <Card className="flex flex-col w-full border-primary-400 shadow-lg ring-2 ring-primary-400 relative hover:shadow-2xl transition-all duration-300">
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-max px-3 py-0.5 bg-primary-500 text-white text-xs sm:text-sm font-bold rounded-full shadow-md">
                   おすすめ
                 </div>
-                <CardHeader className="text-center px-4 pt-7 pb-3 sm:px-6 sm:pt-8">
+                <CardHeader className="text-center px-4 pt-9 pb-3 sm:px-6 sm:pt-10">
                   <CardTitle className="text-xl sm:text-2xl font-bold text-primary-700 mb-1 sm:mb-2">
                     プレミアムプラン
                   </CardTitle>
@@ -433,7 +433,7 @@ export default function Home() {
                       <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                         <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                       </div>
-                      リストへの編集者招待：
+                      共同編集者の招待：
                       <span className="font-semibold text-neutral-600 ml-1">
                         可
                       </span>
