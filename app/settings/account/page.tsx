@@ -3,14 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { updateUserPassword } from "@/lib/actions/auth";
+import { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { z } from "zod";
 
-// パスワードバリデーションスキーマ
-const passwordSchema = z
+// クライアントサイドバリデーション用スキーマ
+const passwordClientSchema = z
   .object({
-    currentPassword: z
+    currentPassword: z // UI上残すがサーバーでは使用しない
       .string()
       .min(1, { message: "現在のパスワードを入力してください。" }),
     newPassword: z
@@ -22,125 +23,90 @@ const passwordSchema = z
       }),
   })
   .refine((data) => data.currentPassword !== data.newPassword, {
-    message: "新しいパスワードは現在のパスワードと異なる必要があります",
-    path: ["newPassword"], // エラーメッセージを表示するフィールド
+    message: "新しいパスワードは現在のパスワードと異なる必要があります。",
+    path: ["newPassword"],
   });
+
+// SubmitButtonコンポーネントを定義してpending状態をハンドリング
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type="submit"
+      disabled={pending}
+      className="bg-primary-600 text-white hover:bg-primary-600/90 w-full sm:w-auto px-8"
+    >
+      {pending ? "処理中..." : "パスワードを変更"}
+    </Button>
+  );
+}
 
 export default function AccountSettingsPage() {
   const { toast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [validationErrors, setValidationErrors] = useState<{
+  // const [userEmail, setUserEmail] = useState(""); // Server Action内で取得するため不要に
+  const [clientValidationErrors, setClientValidationErrors] = useState<{
     currentPassword?: string[];
     newPassword?: string[];
   }>({});
 
+  const initialState = { success: false, message: "", errors: [] };
+  const [state, formAction] = useActionState(updateUserPassword, initialState);
+
+  // useEffect(() => { // userEmailを取得するuseEffectは不要になった
+  //   const fetchUserData = async () => { ... };
+  //   fetchUserData();
+  // }, [toast]);
+
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase.auth.getUser();
-
-        if (error) {
-          console.error("認証エラー:", error.message);
-          toast({
-            variant: "destructive",
-            title: "エラー",
-            description: "ユーザー情報の取得に失敗しました",
-          });
-          return;
-        }
-
-        if (data && data.user) {
-          setUserEmail(data.user.email || "");
-        } else {
-          setUserEmail("未ログイン");
-        }
-      } catch (err) {
-        console.error("データ取得エラー:", err);
+    if (state.message) {
+      if (state.success) {
+        toast({
+          title: "成功",
+          description: state.message,
+        });
+        setCurrentPassword("");
+        setNewPassword("");
+        setClientValidationErrors({});
+      } else {
         toast({
           variant: "destructive",
           title: "エラー",
-          description: "ユーザー情報の読み込みに失敗しました",
+          description: state.message,
         });
+        if (state.errors) {
+          const newErrors: {
+            currentPassword?: string[];
+            newPassword?: string[];
+          } = {};
+          state.errors.forEach((err) => {
+            // Server ActionはnewPasswordフィールドのエラーのみ返す想定
+            if (err.field === "newPassword") {
+              newErrors[err.field] = [
+                ...(newErrors[err.field] || []),
+                err.message,
+              ];
+            }
+          });
+          setClientValidationErrors(newErrors);
+        }
       }
-    };
+    }
+  }, [state, toast]);
 
-    fetchUserData();
-  }, [toast]);
-
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setValidationErrors({});
-
-    // パスワードバリデーション
-    const validationResult = passwordSchema.safeParse({
+  const handleClientValidation = () => {
+    setClientValidationErrors({});
+    // バリデーションスキーマはcurrentPasswordを含むが、サーバーはnewPasswordのみ見る
+    const validationResult = passwordClientSchema.safeParse({
       currentPassword,
       newPassword,
     });
-
     if (!validationResult.success) {
-      setValidationErrors(validationResult.error.flatten().fieldErrors);
-      setIsLoading(false);
-      return;
+      setClientValidationErrors(validationResult.error.flatten().fieldErrors);
+      return false;
     }
-
-    try {
-      const supabase = createClient();
-
-      // 現在のパスワードで認証を試みる
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: userEmail,
-        password: currentPassword,
-      });
-
-      if (signInError) {
-        toast({
-          variant: "destructive",
-          title: "エラー",
-          description: "現在のパスワードが正しくありません",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // パスワード更新
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) {
-        toast({
-          variant: "destructive",
-          title: "エラー",
-          description: `パスワードの更新に失敗しました: ${updateError.message}`,
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // 成功メッセージを表示
-      toast({
-        title: "成功",
-        description: "パスワードが正常に変更されました",
-      });
-
-      // フォームをリセット
-      setCurrentPassword("");
-      setNewPassword("");
-    } catch (error) {
-      console.error("パスワード更新エラー:", error);
-      toast({
-        variant: "destructive",
-        title: "エラー",
-        description: "パスワードの更新中にエラーが発生しました",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    return true;
   };
 
   return (
@@ -153,12 +119,18 @@ export default function AccountSettingsPage() {
       </div>
 
       <div className="space-y-6">
-        <div>
-          <h3 className="text-md font-medium mb-2">メールアドレス</h3>
-          <p className="text-md">{userEmail || "読み込み中..."}</p>
-        </div>
-
-        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-full">
+        <form
+          action={(formData) => {
+            if (!handleClientValidation()) return;
+            const newFormData = new FormData();
+            newFormData.append(
+              "newPassword",
+              formData.get("newPassword") as string
+            );
+            formAction(newFormData);
+          }}
+          className="space-y-4 max-w-full"
+        >
           <div className="space-y-4">
             <div>
               <label
@@ -169,15 +141,16 @@ export default function AccountSettingsPage() {
               </label>
               <Input
                 id="current-password"
+                name="currentPassword" // nameは残すがサーバーでは利用しない
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className={`w-full ${
-                  validationErrors.currentPassword ? "border-red-500" : ""
+                  clientValidationErrors.currentPassword ? "border-red-500" : ""
                 }`}
-                required
+                required // UI上は必須のまま
               />
-              {validationErrors.currentPassword?.map((error, index) => (
+              {clientValidationErrors.currentPassword?.map((error, index) => (
                 <p key={index} className="mt-1 text-sm text-red-500">
                   {error}
                 </p>
@@ -193,15 +166,16 @@ export default function AccountSettingsPage() {
               </label>
               <Input
                 id="new-password"
+                name="newPassword" // これがServer Actionに渡される
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className={`w-full ${
-                  validationErrors.newPassword ? "border-red-500" : ""
+                  clientValidationErrors.newPassword ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors.newPassword?.map((error, index) => (
+              {clientValidationErrors.newPassword?.map((error, index) => (
                 <p key={index} className="mt-1 text-sm text-red-500">
                   {error}
                 </p>
@@ -213,13 +187,7 @@ export default function AccountSettingsPage() {
           </div>
 
           <div className="flex justify-center sm:justify-end w-full">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-primary-600 text-white hover:bg-primary-600/90 w-full sm:w-auto px-8"
-            >
-              {isLoading ? "処理中..." : "パスワードを変更"}
-            </Button>
+            <SubmitButton />
           </div>
         </form>
       </div>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, User } from "lucide-react";
 import { useState } from "react";
@@ -22,18 +23,8 @@ const profileSchema = z.object({
     .optional(),
 });
 
-// プロフィール初期データの型定義
-interface ProfileData {
-  userId: string;
-  username: string;
-  displayName: string;
-  bio: string;
-  avatarUrl: string | null;
-  avatarPath: string | null;
-}
-
 interface ProfileSettingsProps {
-  initialData: ProfileData;
+  initialData: ProfileSettingsData;
 }
 
 export function ProfileSettings({ initialData }: ProfileSettingsProps) {

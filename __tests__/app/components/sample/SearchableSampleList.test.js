@@ -83,6 +83,7 @@ jest.mock("@/components/ui/tooltip", () => ({
 
 jest.mock("lucide-react", () => ({
   Image: () => <div data-testid="image-icon">ImageIcon</div>,
+  Search: () => <div data-testid="search-icon">SearchIcon</div>,
 }));
 
 jest.mock("next/image", () => ({

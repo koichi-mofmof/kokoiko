@@ -13,25 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { Place } from "@/types";
+import { MyListForClient as MyListClientData } from "@/lib/dal/lists";
 import { ArrowDown, ArrowUp, ListFilter } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Collaborator } from "./MyPageDataLoader";
-
-// MyPageで表示するリストの型。page.tsxから渡される型と合わせる
-type MyListClientData = {
-  id: string;
-  name: string;
-  description: string | null;
-  is_public: boolean | null;
-  created_at: string | null;
-  updated_at: string | null;
-  created_by: string;
-  places: Place[];
-  place_count: number;
-  collaborators: Collaborator[];
-  permission?: string; // 閲覧者の権限（viewかedit）
-};
 
 type MyListsProps = {
   initialLists: MyListClientData[];
@@ -92,9 +76,6 @@ export function MyLists({ initialLists }: MyListsProps) {
   return (
     <TooltipProvider>
       <div>
-        {/* ソートUIはPlaceListGridのexternalControlsに渡すため、ここでの直接レンダリングは削除 */}
-        {/* <div className="mb-4 flex items-center space-x-2"> ... </div> */}
-
         {processedLists.length > 0 || initialLists.length > 0 ? ( // initialListsも考慮して空かどうか判断
           <PlaceListGrid
             initialLists={processedLists} // ソート済みのリストを渡す

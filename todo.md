@@ -73,6 +73,10 @@
 
 ## 🟢 通常タスク
 
+- [ ] テスト関連 # 新規追加
+  - [ ] テストカバレッジの向上 (目標 50%達成)
+  - [x] `SearchableSampleList` コンポーネントのテストエラー修正
+  - [x] `types/supabase.ts` のカバレッジ収集エラー修正
 - [~] UI/UX の改善 # ステータスを進行中に変更
   - [x] MapPage / SampleMapPage のビュー切り替え機能実装 # 追加
   - [x] MapPage / SampleMapPage の FilterBar 実装とレイアウト調整 # 追加

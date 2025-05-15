@@ -25,6 +25,7 @@ const customJestConfig = {
     "!<rootDir>/.next/**",
     "!<rootDir>/*.config.js",
     "!<rootDir>/coverage/**",
+    "!<rootDir>/types/supabase.ts",
   ],
   coverageReporters: ["text", "lcov", "json", "html", "json-summary"],
   coverageDirectory: "<rootDir>/coverage",

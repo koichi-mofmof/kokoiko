@@ -1,9 +1,9 @@
 "use server";
 
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 // Zod スキーマ定義
 const loginSchema = z.object({
@@ -263,4 +263,93 @@ export async function logoutUser() {
 
   // ホームページにリダイレクト
   redirect("/");
+}
+
+// パスワードバリデーションスキーマ (クライアントと共通化も検討)
+// updateUserPassword Action用には新しいパスワードのみを検証
+const newPasswordSchema = z.object({
+  newPassword: z
+    .string()
+    .min(8, { message: "パスワードは8文字以上で入力してください。" })
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/, {
+      message:
+        'パスワードは英大文字、小文字、数字、記号(!@#$%^&*(),.?":{}|<>)をそれぞれ1文字以上含める必要があります。',
+    }),
+});
+
+interface ActionResult {
+  success: boolean;
+  message: string;
+  errors?: { field?: string; message: string }[];
+}
+
+export async function updateUserPassword(
+  prevState: ActionResult | undefined, // useFormState を使う場合
+  formData: FormData
+): Promise<ActionResult> {
+  "use server";
+
+  const supabase = await createClient();
+
+  // 1. まず認証ユーザー情報を取得
+  const {
+    data: { user },
+    error: authUserError,
+  } = await supabase.auth.getUser();
+
+  if (authUserError || !user) {
+    return {
+      success: false,
+      message: "認証されていません。パスワードを変更できません。",
+    };
+  }
+
+  const newPassword = formData.get("newPassword") as string;
+
+  // サーバーサイドでも新しいパスワードのみをバリデーション
+  const validationResult = newPasswordSchema.safeParse({
+    newPassword,
+  });
+
+  if (!validationResult.success) {
+    return {
+      success: false,
+      message: "入力内容に誤りがあります。",
+      errors: validationResult.error
+        .flatten()
+        .fieldErrors.newPassword?.map((e) => ({
+          field: "newPassword",
+          message: e,
+        })),
+    };
+  }
+
+  // 2. パスワードを更新 (認証済みユーザーとして実行)
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: validationResult.data.newPassword,
+  });
+
+  if (updateError) {
+    // updateError.message には "New password should be different from the old password."
+    // のようなメッセージが含まれる場合があるため、これを活用できる
+    let errorMessage = `パスワードの更新に失敗しました。`;
+    if (updateError.message.includes("New password should be different")) {
+      errorMessage =
+        "新しいパスワードは現在のパスワードと異なる必要があります。";
+    } else if (updateError.message.includes("same as the old password")) {
+      errorMessage =
+        "新しいパスワードは現在のパスワードと同じものは使用できません。";
+    }
+
+    return {
+      success: false,
+      // message: `パスワードの更新に失敗しました: ${updateError.message}`,
+      message: errorMessage,
+    };
+  }
+
+  return {
+    success: true,
+    message: "パスワードが正常に変更されました。",
+  };
 }
