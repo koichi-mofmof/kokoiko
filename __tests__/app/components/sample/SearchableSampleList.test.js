@@ -233,7 +233,7 @@ describe("SearchableSampleListコンポーネントテスト", () => {
 
     // 「該当するリストは見つかりませんでした」メッセージが表示されることを確認
     expect(
-      screen.getByText("該当するリストは見つかりませんでした。")
+      screen.getByText("検索条件に一致するリストはありません。")
     ).toBeInTheDocument();
   });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { ListCardActions } from "@/app/lists/_components/ListCardActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,18 +9,17 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { MyListForClient } from "@/lib/dal/lists";
 import type { Place, User } from "@/types";
-import { Image as ImageIcon, Search } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
 
 /**
  * リスト表示用の共通型定義
@@ -31,6 +31,11 @@ export type ListDisplayItem = {
   places: Place[];
   place_count?: number;
   collaborators?: User[];
+  permission?: string;
+  is_public?: boolean;
+  created_by?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 export type PlaceListGridProps<T extends ListDisplayItem> = {
@@ -42,9 +47,6 @@ export type PlaceListGridProps<T extends ListDisplayItem> = {
     remainingCount: number
   ) => React.ReactNode;
   emptyMessage?: string;
-  searchPlaceholder?: string;
-  disableSearch?: boolean;
-  externalControls?: React.ReactNode;
   className?: string;
 };
 
@@ -222,43 +224,16 @@ export function PlaceListGrid<T extends ListDisplayItem>({
   getLinkHref,
   renderCollaborators = renderLabeledCollaborators,
   emptyMessage = "リストは見つかりませんでした。",
-  searchPlaceholder = "リスト名で検索...",
-  disableSearch = false,
-  externalControls,
   className = "",
 }: PlaceListGridProps<T>) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredLists = useMemo(() => {
-    if (!searchQuery) {
-      return initialLists;
-    }
-    return initialLists.filter((list) =>
-      list.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [initialLists, searchQuery]);
+  const displayLists = initialLists;
 
   return (
     <TooltipProvider>
       <div className={className}>
-        <div className="mb-4 flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 md:space-x-2">
-          {!disableSearch && (
-            <div className="flex items-center space-x-2">
-              <Search className="h-5 w-5 text-neutral-500" />
-              <Input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full max-w-sm"
-              />
-            </div>
-          )}
-          {externalControls && <div>{externalControls}</div>}
-        </div>
-        {filteredLists.length > 0 ? (
+        {displayLists.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredLists.map((list) => {
+            {displayLists.map((list) => {
               const placeImages = list.places
                 .filter((place) => place.imageUrl)
                 .slice(0, 4)
@@ -352,6 +327,11 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                           <ImageIcon className="h-12 w-12 text-neutral-400" />
                         </div>
                       )}
+
+                      {/* ListCardActionsの追加 - 常に表示し、内部で活性/非活性を制御 */}
+                      <ListCardActions
+                        list={list as unknown as MyListForClient}
+                      />
                     </div>
 
                     <CardContent className="p-4 flex flex-col flex-grow">

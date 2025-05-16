@@ -5,6 +5,7 @@ import {
   renderLabeledCollaborators,
 } from "@/app/components/common/PlaceListGrid";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MyListForClient as MyListClientData } from "@/lib/dal/lists";
-import { ArrowDown, ArrowUp, ListFilter } from "lucide-react";
+import { ArrowDown, ArrowUp, ListFilter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type MyListsProps = {
@@ -26,12 +27,19 @@ type SortOption = "name" | "updated_at" | "created_at" | "place_count";
 type SortOrder = "asc" | "desc";
 
 export function MyLists({ initialLists }: MyListsProps) {
-  // 追加: ソート機能の状態変数
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const processedLists = useMemo(() => {
-    const lists = [...initialLists]; // initialListsを直接変更しないようにコピー
+    let lists = [...initialLists];
+
+    // 検索フィルタリング
+    if (searchQuery) {
+      lists = lists.filter((list) =>
+        list.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
 
     // ソート処理
     lists.sort((a, b) => {
@@ -42,16 +50,16 @@ export function MyLists({ initialLists }: MyListsProps) {
           break;
         case "updated_at":
           comparison =
-            new Date(b.updated_at || 0).getTime() -
-            new Date(a.updated_at || 0).getTime();
+            new Date(a.updated_at || 0).getTime() -
+            new Date(b.updated_at || 0).getTime();
           break;
         case "created_at":
           comparison =
-            new Date(b.created_at || 0).getTime() -
-            new Date(a.created_at || 0).getTime();
+            new Date(a.created_at || 0).getTime() -
+            new Date(b.created_at || 0).getTime();
           break;
         case "place_count":
-          comparison = b.place_count - a.place_count;
+          comparison = a.place_count - b.place_count;
           break;
         default:
           break;
@@ -60,7 +68,7 @@ export function MyLists({ initialLists }: MyListsProps) {
     });
 
     return lists;
-  }, [initialLists, sortOption, sortOrder]);
+  }, [initialLists, searchQuery, sortOption, sortOrder]);
 
   const handleSortOptionChange = (value: string) => {
     setSortOption(value as SortOption);
@@ -73,41 +81,68 @@ export function MyLists({ initialLists }: MyListsProps) {
   return (
     <TooltipProvider>
       <div>
-        {processedLists.length > 0 || initialLists.length > 0 ? (
-          <PlaceListGrid
-            initialLists={processedLists}
-            getLinkHref={(list) => `/lists/list/${list.id}`}
-            renderCollaborators={renderLabeledCollaborators}
-            emptyMessage="表示できるリストはありません。"
-            externalControls={
-              <div className="flex items-center space-x-2">
-                <ListFilter className="h-5 w-5 text-muted-foreground" />
-                <Select
-                  value={sortOption}
-                  onValueChange={handleSortOptionChange}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="並び替え" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="updated_at">更新日時</SelectItem>
-                    <SelectItem value="created_at">作成日時</SelectItem>
-                    <SelectItem value="name">リスト名</SelectItem>
-                    <SelectItem value="place_count">登録地点数</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="icon" onClick={toggleSortOrder}>
-                  {sortOrder === "asc" ? (
-                    <ArrowUp className="h-4 w-4" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            }
-          />
+        {/* 検索バーとソートUIのコンテナ */}
+        <div className="mb-6 flex flex-row items-center space-y-0 space-x-4">
+          {/* 検索バー */}
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+
+          {/* ソートUI */}
+          <div className="flex items-center space-x-2 sm:flex-shrink-0">
+            <div className="relative w-full sm:w-[200px]">
+              <ListFilter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+              <Select value={sortOption} onValueChange={handleSortOptionChange}>
+                <SelectTrigger className="pl-10 w-full">
+                  <SelectValue placeholder="並び替え" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="updated_at">更新日時</SelectItem>
+                  <SelectItem value="created_at">作成日時</SelectItem>
+                  <SelectItem value="name">リスト名</SelectItem>
+                  <SelectItem value="place_count">登録地点数</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleSortOrder}
+              className="flex-shrink-0"
+            >
+              {sortOrder === "asc" ? (
+                <ArrowUp className="h-4 w-4" />
+              ) : (
+                <ArrowDown className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {initialLists.length > 0 ? (
+          processedLists.length > 0 ? (
+            <PlaceListGrid
+              initialLists={processedLists.map((list) => ({
+                ...list,
+                is_public: list.is_public === null ? undefined : list.is_public,
+              }))}
+              getLinkHref={(list) => `/lists/list/${list.id}`}
+              renderCollaborators={renderLabeledCollaborators}
+            />
+          ) : (
+            <p className="text-center text-muted-foreground py-8">
+              検索条件に一致するリストはありません。
+            </p>
+          )
         ) : (
-          <p className="text-center text-muted-foreground">
+          <p className="text-center text-muted-foreground py-8">
             まだリストは作成されていません。
           </p>
         )}
