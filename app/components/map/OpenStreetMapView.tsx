@@ -6,7 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Place } from "@/types";
 import PlaceCard from "@/app/components/places/PlaceCard";
-import { X, MapPinHouse } from "lucide-react";
+import { X } from "lucide-react";
 import ReactDOMServer from "react-dom/server";
 
 interface OpenStreetMapViewProps {
@@ -28,7 +28,7 @@ const CustomLeafletMarkerIcon = (isSelected: boolean, placeName: string) => {
     <div
       className={`transition-all duration-150 ease-in-out cursor-pointer ${
         isSelected
-          ? "scale-115 z-[1000] drop-shadow-lg" // z-indexを高く設定
+          ? "scale-110 z-[1000] drop-shadow-lg" // z-indexを高く設定
           : "scale-100 z-auto drop-shadow-md"
       }`}
       style={{ transformOrigin: "bottom center" }}
@@ -39,11 +39,11 @@ const CustomLeafletMarkerIcon = (isSelected: boolean, placeName: string) => {
           isSelected ? "bg-primary-100" : "bg-white"
         }`}
       >
-        <MapPinHouse
-          className={`${
-            isSelected ? "h-7 w-7 text-primary-700" : "h-6 w-6 text-primary-600"
-          }`}
-          strokeWidth={isSelected ? 2.5 : 2}
+        <img
+          src="/icon0.svg"
+          alt={placeName}
+          className={`${isSelected ? "h-7 w-7" : "h-7 w-7"} text-primary-600`}
+          style={{ strokeWidth: isSelected ? 2.5 : 2 }}
         />
       </div>
       <div
@@ -58,8 +58,8 @@ const CustomLeafletMarkerIcon = (isSelected: boolean, placeName: string) => {
   return L.divIcon({
     html: iconHtml,
     className: "dummy", // leaflet自身のスタイルを避けるため
-    iconSize: [40, 50], // Adjust size as needed
-    iconAnchor: [20, 50], // Point of the icon which will correspond to marker's location
+    iconSize: [44, 44], // アイコンの最大レンダリングサイズに合わせる (以前は [40, 40])
+    iconAnchor: [22, 44], // 新しいiconSizeの底辺中央に設定 (以前は [20, 40])
   });
 };
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPinHouse } from "lucide-react";
+import Image from "next/image";
 
 interface FooterProps {
   currentUser?: { id: string } | null;
@@ -13,8 +13,14 @@ export default function Footer({ currentUser }: FooterProps) {
           <div className="mb-8 md:mb-0">
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <MapPinHouse className="h-6 w-6 text-primary-500" />
-                <span className="text-lg font-semibold font-quicksand text-neutral-100">
+                <Image
+                  src="/icon0.svg"
+                  alt="ClippyMap icon"
+                  width={24}
+                  height={24}
+                  className="filter brightness-0 invert"
+                />
+                <span className="text-xl font-semibold font-quicksand text-neutral-100">
                   ClippyMap
                 </span>
               </Link>

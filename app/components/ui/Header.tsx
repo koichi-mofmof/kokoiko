@@ -10,10 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, MapPinHouse, Settings, User, List } from "lucide-react";
+import { LogOut, Settings, User, List } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 
 interface HeaderProps {
   currentUser?: {
@@ -91,7 +92,13 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
             href="/"
             className="text-lg font-medium text-gray-800 flex items-center"
           >
-            <MapPinHouse className="h-6 w-6 text-primary-500" />
+            <Image
+              src="/icon0.svg"
+              alt="ClippyMap icon"
+              width={24}
+              height={24}
+              className="text-primary-500"
+            />
             <span className="ml-2 text-xl font-semibold font-quicksand">
               <span className="text-primary-600">ClippyMap</span>
             </span>
