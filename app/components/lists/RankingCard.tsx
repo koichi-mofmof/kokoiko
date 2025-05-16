@@ -107,8 +107,8 @@ export default function RankingCard({ rankedPlace, place }: RankingCardProps) {
                 rankedPlace.rank
               )} bg-neutral-50 dark:bg-neutral-800/60 rounded-r-md`}
             >
-              <p className="italic text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
-                {rankedPlace.comment}
+              <p className="italic text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                &quot;{rankedPlace.comment}&quot;
               </p>
             </div>
           )}

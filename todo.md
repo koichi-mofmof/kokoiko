@@ -23,7 +23,7 @@
 ## 🟡 重要タスク
 
 - [ ] データベース設計
-  - [ ] スキーマ設計
+  - [ ] スキーマ設計 (Place テーブルから notes カラム削除検討)
   - [ ] Supabase のセットアップ
 - [x] 認証機能の実装
   - [x] サインアップ機能実装
@@ -56,7 +56,16 @@
     - [x] リスト作成用 Server Action 作成
     - [x] リスト作成モーダル実装
     - [x] リスト一覧ページへの組み込み
+  - [x] リスト詳細画面の UI コンポーネント共通化 (@sample と共通化)
+    - [x] ParticipantAvatars を app/components/common/ に移動
+    - [x] RankingView, RankingDisplay, RankingEditModal, RankingCard を app/components/lists/ に移動
+    - [x] ListDetailView を app/components/lists/ に移動し、内部インポートを修正
+    - [x] app/sample/[listId]/page.tsx のインポートパスを修正
+    - [x] app/lists/[listId]/page.tsx のデータ取得処理を実装 (モックデータからの置き換え)
   - [ ] リスト詳細ページの充実化
+    - [x] リスト詳細データと参加者情報を Supabase から取得するよう修正
+    - [x] 場所ごとのユーザーコメント表示
+    - [x] Place 型の `notes` を `user_comment` に統一し、関連箇所を修正
   - [ ] 共有設定の実装
   - [ ] 非公開リストのアクセス制御実装
     - [ ] リスト詳細ページでの権限チェック

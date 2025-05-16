@@ -51,7 +51,7 @@ export function CreateListModal() {
         setOpen(false);
         router.refresh();
         if (result.listId) {
-          router.push(`/lists/list/${result.listId}`);
+          router.push(`/lists/${result.listId}`);
         }
       } else {
         toast({
@@ -60,10 +60,14 @@ export function CreateListModal() {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      let errorMessage = "リスト作成中に問題が発生しました";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       toast({
         title: "エラー",
-        description: "リスト作成中に問題が発生しました",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -55,13 +55,17 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
             </p>
           </div>
 
-          {place.notes && (
-            <p className="text-sm text-neutral-700 mb-3 line-clamp-2">
-              {place.notes}
-            </p>
+          {place.user_comment && (
+            <div
+              className={`mt-2 pl-3 py-2 border-l-4 border-primary-300 bg-neutral-50 dark:bg-neutral-800/60 rounded-r-md`}
+            >
+              <p className="text-xs text-neutral-600 line-clamp-2">
+                &quot;{place.user_comment}&quot;
+              </p>
+            </div>
           )}
 
-          <div className="flex flex-wrap gap-1 mb-3">
+          <div className="mt-2 flex flex-wrap gap-1 mb-3">
             {place.tags.map((tag) => (
               <span
                 key={tag}

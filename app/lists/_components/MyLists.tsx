@@ -133,7 +133,7 @@ export function MyLists({ initialLists }: MyListsProps) {
                 ...list,
                 is_public: list.is_public === null ? undefined : list.is_public,
               }))}
-              getLinkHref={(list) => `/lists/list/${list.id}`}
+              getLinkHref={(list) => `/lists/${list.id}`}
               renderCollaborators={renderLabeledCollaborators}
             />
           ) : (

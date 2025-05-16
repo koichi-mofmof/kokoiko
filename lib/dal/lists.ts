@@ -54,7 +54,6 @@ const mapPlaceRowToPlace = (
     }`,
     latitude: placeRow.latitude || 0,
     longitude: placeRow.longitude || 0,
-    notes: "",
     tags: [],
     createdAt: placeRow.created_at ? new Date(placeRow.created_at) : new Date(),
     updatedAt: placeRow.updated_at ? new Date(placeRow.updated_at) : undefined,
@@ -84,7 +83,11 @@ async function fetchPlacesForList(
     .select(
       `
       id,
+      list_id,
       place_id,
+      user_comment,
+      user_id,
+      visited_status,
       places (*)
     `
     )
@@ -98,10 +101,18 @@ async function fetchPlacesForList(
   const places: Place[] = [];
   if (listPlacesData && listPlacesData.length > 0) {
     for (const lp of listPlacesData) {
-      if (lp.places) {
-        places.push(
-          mapPlaceRowToPlace(lp.places as unknown as PlaceRow, userId)
+      const listPlaceRow =
+        lp as Database["public"]["Tables"]["list_places"]["Row"] & {
+          places: Database["public"]["Tables"]["places"]["Row"] | null;
+        };
+
+      if (listPlaceRow.places) {
+        const place = mapPlaceRowToPlace(
+          listPlaceRow.places as unknown as PlaceRow,
+          userId
         );
+        place.user_comment = listPlaceRow.user_comment || undefined;
+        places.push(place);
       }
     }
   }
@@ -312,5 +323,181 @@ export async function fetchMyPageData(userId: string): Promise<MyPageData> {
       userId: userId,
       error: "ページの読み込み中に予期せぬエラーが発生しました。",
     };
+  }
+}
+
+// Function to fetch details for a specific list
+/**
+ * 特定のリストIDに基づいてリスト詳細情報を取得します。
+ * これには、リストの基本情報、含まれる場所のリスト、およびコラボレーター（オーナーを含む）のリストが含まれます。
+ * @param listId 取得するリストのID。
+ * @param userId 現在のユーザーID。場所情報や権限の判定に使用されます。
+ * @returns リスト詳細情報 (MyListForClient) 、またはリストが見つからない場合は null。
+ */
+export async function getListDetails(
+  listId: string,
+  userId: string
+): Promise<MyListForClient | null> {
+  const supabase = await createClient();
+
+  try {
+    // 1. Fetch basic list information
+    const { data: listData, error: listError } = await supabase
+      .from("place_lists")
+      .select(
+        "id, name, description, is_public, created_at, updated_at, created_by"
+      )
+      .eq("id", listId)
+      .single();
+
+    if (listError || !listData) {
+      console.error(
+        `Error fetching list details for listId ${listId}:`,
+        listError
+      );
+      return null;
+    }
+
+    // 2. Fetch places for the list
+    const places = await fetchPlacesForList(supabase, listId, userId);
+
+    // 3. Fetch collaborators
+    // ownerId for fetchCollaboratorsForList is listData.created_by
+    const collaboratorsWithoutOwner = await fetchCollaboratorsForList(
+      supabase,
+      listId,
+      listData.created_by
+    );
+
+    let ownerProfile: Collaborator | undefined;
+    // Try to find owner in collaborators first (if they are also a shared user explicitly)
+    ownerProfile = collaboratorsWithoutOwner.find(
+      (c) => c.id === listData.created_by && c.isOwner // isOwner might be set by fetchCollaboratorsForList if ownerId matches
+    );
+
+    if (!ownerProfile && listData.created_by) {
+      const { data: ownerDataFromProfiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .eq("id", listData.created_by)
+        .single();
+      if (ownerDataFromProfiles) {
+        const avatarUrl = ownerDataFromProfiles.avatar_url
+          ? await getStoragePublicUrl(ownerDataFromProfiles.avatar_url)
+          : undefined;
+        ownerProfile = {
+          id: ownerDataFromProfiles.id,
+          name: ownerDataFromProfiles.display_name || "",
+          email: "",
+          avatarUrl,
+          isOwner: true, // Explicitly set isOwner
+        };
+      }
+    }
+
+    const finalCollaborators: Collaborator[] = ownerProfile
+      ? [
+          ownerProfile,
+          ...collaboratorsWithoutOwner.filter(
+            // Ensure owner is not duplicated if already present in collaboratorsWithoutOwner (e.g. shared with self)
+            (c) => c.id !== listData.created_by
+          ),
+        ]
+      : [...collaboratorsWithoutOwner];
+
+    // Ensure current user's profile is in collaborators if they are the creator but not explicitly shared with
+    // This logic is similar to fetchMyPageData to ensure consistency
+    if (
+      listData.created_by === userId &&
+      !finalCollaborators.some((c) => c.id === userId && c.isOwner)
+    ) {
+      // If current user is owner and not in finalCollaborators as owner, fetch their profile and add/update.
+      const currentUserAsOwnerInCollaborators = finalCollaborators.find(
+        (c) => c.id === userId
+      );
+      if (currentUserAsOwnerInCollaborators) {
+        // User is a collaborator, ensure isOwner is true
+        currentUserAsOwnerInCollaborators.isOwner = true;
+      } else {
+        // User is not in collaborators, fetch profile and add as owner
+        const { data: currentUserProfileData } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url")
+          .eq("id", userId)
+          .single();
+        if (currentUserProfileData) {
+          const avatarUrl = currentUserProfileData.avatar_url
+            ? await getStoragePublicUrl(currentUserProfileData.avatar_url)
+            : undefined;
+          const currentUserAsOwner: Collaborator = {
+            id: currentUserProfileData.id,
+            name: currentUserProfileData.display_name || "",
+            email: "",
+            avatarUrl,
+            isOwner: true,
+          };
+          finalCollaborators.unshift(currentUserAsOwner); // Add to the beginning
+        }
+      }
+    }
+
+    // 4. Determine user's permission for the list
+    let permission: string = "viewer"; // Default permission
+
+    if (listData.created_by === userId) {
+      permission = "owner";
+    } else {
+      const { data: sharedEntry, error: sharedError } = await supabase
+        .from("shared_lists")
+        .select("permission")
+        .eq("list_id", listId)
+        .eq("shared_with_user_id", userId)
+        .single();
+
+      if (sharedError && sharedError.code !== "PGRST116") {
+        // PGRST116: Row not found, which is fine
+        console.error("Error fetching shared_lists entry:", sharedError);
+        // Potentially return null or handle error appropriately
+      }
+      if (sharedEntry) {
+        permission = sharedEntry.permission; // 'edit' or 'view'
+      } else {
+        // If not owner and not explicitly shared, check if list is public
+        if (!listData.is_public) {
+          // Not owner, not shared, and not public - user should not see this list.
+          // This case should ideally be caught by RLS or a higher-level check.
+          // For now, returning null as if the list doesn't exist for this user.
+          console.warn(
+            `User ${userId} attempted to access non-public, unshared list ${listId}`
+          );
+          return null;
+        }
+        // For public lists, non-owners/non-collaborators are viewers
+        permission = "viewer";
+      }
+    }
+
+    // RLS should prevent access if not owner, not shared, and list is not public.
+    // If code reaches here for a private list the user shouldn't see, it's an issue.
+
+    return {
+      id: listData.id,
+      name: listData.name || "リスト名未設定",
+      description: listData.description,
+      is_public: listData.is_public,
+      created_at: listData.created_at,
+      updated_at: listData.updated_at,
+      created_by: listData.created_by,
+      places,
+      place_count: places.length,
+      collaborators: finalCollaborators,
+      permission: permission,
+    };
+  } catch (error) {
+    console.error(
+      `Unexpected error in getListDetails for listId ${listId}:`,
+      error
+    );
+    return null;
   }
 }

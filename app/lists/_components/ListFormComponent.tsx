@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect } from "react";
+import isEqual from "lodash/isEqual";
+import { useEffect, useReducer, useRef } from "react";
 
 export interface ListFormData {
   name: string;
@@ -24,6 +25,27 @@ interface ListFormComponentProps {
   cancelButtonText?: string;
 }
 
+// Reducer のアクションタイプ
+type FormAction =
+  | {
+      type: "SET_FIELD";
+      fieldName: keyof ListFormData;
+      value: string | boolean;
+    }
+  | { type: "RESET_FORM"; payload: ListFormData };
+
+// Reducer 関数
+function formReducer(state: ListFormData, action: FormAction): ListFormData {
+  switch (action.type) {
+    case "SET_FIELD":
+      return { ...state, [action.fieldName]: action.value };
+    case "RESET_FORM":
+      return action.payload;
+    default:
+      return state;
+  }
+}
+
 export function ListFormComponent({
   initialData = { name: "", description: "", isPublic: false },
   onSubmit,
@@ -33,22 +55,30 @@ export function ListFormComponent({
   onCancel,
   cancelButtonText = "キャンセル",
 }: ListFormComponentProps) {
-  const [formData, setFormData] = useState<ListFormData>(initialData);
+  const [formData, dispatch] = useReducer(formReducer, initialData);
+  const prevInitialDataRef = useRef<ListFormData>(initialData);
 
-  // 初期データが変更された場合にフォームデータを更新
+  // initialData が変更された場合にフォームデータをリセットする
   useEffect(() => {
-    setFormData(initialData);
-  }, [initialData.name, initialData.description, initialData.isPublic]);
+    if (!isEqual(prevInitialDataRef.current, initialData)) {
+      dispatch({ type: "RESET_FORM", payload: initialData });
+    }
+    prevInitialDataRef.current = initialData;
+  }, [initialData]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    dispatch({
+      type: "SET_FIELD",
+      fieldName: name as keyof ListFormData,
+      value,
+    });
   };
 
   const handleSwitchChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, isPublic: checked }));
+    dispatch({ type: "SET_FIELD", fieldName: "isPublic", value: checked });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

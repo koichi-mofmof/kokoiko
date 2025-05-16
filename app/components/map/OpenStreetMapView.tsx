@@ -8,6 +8,7 @@ import { Place } from "@/types";
 import PlaceCard from "@/app/components/places/PlaceCard";
 import { X } from "lucide-react";
 import ReactDOMServer from "react-dom/server";
+import Image from "next/image";
 
 interface OpenStreetMapViewProps {
   places: Place[];
@@ -39,9 +40,11 @@ const CustomLeafletMarkerIcon = (isSelected: boolean, placeName: string) => {
           isSelected ? "bg-primary-100" : "bg-white"
         }`}
       >
-        <img
+        <Image
           src="/icon0.svg"
           alt={placeName}
+          width={28}
+          height={28}
           className={`${isSelected ? "h-7 w-7" : "h-7 w-7"} text-primary-600`}
           style={{ strokeWidth: isSelected ? 2.5 : 2 }}
         />

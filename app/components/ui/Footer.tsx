@@ -25,7 +25,7 @@ export default function Footer({ currentUser }: FooterProps) {
                 </span>
               </Link>
             </div>
-            <p className="mt-2 text-neutral-400 max-w-md">
+            <p className="mt-2 text-sm text-neutral-400 max-w-md">
               デートや旅行の計画に。&quot;行きたい場所&quot;をリスト化・共有できるWebサービスです。
             </p>
           </div>
@@ -38,7 +38,7 @@ export default function Footer({ currentUser }: FooterProps) {
               <div className="mt-4 space-y-2">
                 <Link
                   href="/"
-                  className="text-neutral-400 hover:text-white block"
+                  className="text-sm text-neutral-400 hover:text-white block"
                 >
                   ホーム
                 </Link>
@@ -46,7 +46,7 @@ export default function Footer({ currentUser }: FooterProps) {
                   <>
                     <Link
                       href="/lists"
-                      className="text-neutral-400 hover:text-white block"
+                      className="text-sm text-neutral-400 hover:text-white block"
                     >
                       リスト一覧
                     </Link>
@@ -54,7 +54,7 @@ export default function Footer({ currentUser }: FooterProps) {
                 )}
                 <Link
                   href="/sample"
-                  className="text-neutral-400 hover:text-white block"
+                  className="text-sm text-neutral-400 hover:text-white block"
                 >
                   サンプル
                 </Link>
@@ -68,19 +68,19 @@ export default function Footer({ currentUser }: FooterProps) {
               <div className="mt-4 space-y-2">
                 <Link
                   href="/help"
-                  className="text-neutral-400 hover:text-white block"
+                  className="text-sm text-neutral-400 hover:text-white block"
                 >
                   ヘルプ
                 </Link>
                 <Link
                   href="/contact"
-                  className="text-neutral-400 hover:text-white block"
+                  className="text-sm text-neutral-400 hover:text-white block"
                 >
                   お問い合わせ
                 </Link>
                 <Link
                   href="/terms"
-                  className="text-neutral-400 hover:text-white block"
+                  className="text-sm text-neutral-400 hover:text-white block"
                 >
                   利用規約
                 </Link>
@@ -94,13 +94,13 @@ export default function Footer({ currentUser }: FooterProps) {
               <div className="mt-4 space-y-2">
                 <Link
                   href="/privacy"
-                  className="text-neutral-400 hover:text-white block"
+                  className="text-sm text-neutral-400 hover:text-white block"
                 >
                   プライバシーポリシー
                 </Link>
                 <Link
                   href="/cookies"
-                  className="text-neutral-400 hover:text-white block"
+                  className="text-sm text-neutral-400 hover:text-white block"
                 >
                   Cookie ポリシー
                 </Link>

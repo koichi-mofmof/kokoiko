@@ -158,7 +158,7 @@ export default function RankingEditModal({
     } catch (error) {
       console.error("Error calling updateRankingAction:", error);
       // 一般的なエラーメッセージを表示 (ユーザーフレンドリーに)
-      alert(`ランキングの保存中に予期せぬエラーが発生しました。`);
+      alert("ランキングの保存中に予期せぬエラーが発生しました。");
     } finally {
       setIsSaving(false);
     }
@@ -232,7 +232,7 @@ export default function RankingEditModal({
                       className="font-medium truncate pr-2 text-neutral-800 dark:text-neutral-200"
                       title={getPlaceName(rp.placeId)}
                     >
-                      {rp.rank > 0 ? `${rp.rank}位: ` : "ランク外: "}{" "}
+                      {rp.rank > 0 ? rp.rank + "位: " : "ランク外: "}{" "}
                       {getPlaceName(rp.placeId)}
                     </span>
                     <div className="flex space-x-1.5">
@@ -249,7 +249,6 @@ export default function RankingEditModal({
                         className="h-8 w-8"
                       >
                         <ChevronUp className="h-4 w-4" />
-                        <span className="sr-only">上へ</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -257,38 +256,62 @@ export default function RankingEditModal({
                         onClick={() => moveRank(rp.placeId, "down")}
                         disabled={
                           rp.rank === 0 ||
-                          index === currentPlaces.length - 1 ||
-                          currentPlaces.filter((p) => p.rank > 0).slice(-1)[0]
+                          index ===
+                            currentPlaces.filter((p) => p.rank > 0).length -
+                              1 ||
+                          currentPlaces.filter((p) => p.rank > 0).pop()
                             ?.placeId === rp.placeId
                         }
                         className="h-8 w-8"
                       >
                         <ChevronDown className="h-4 w-4" />
-                        <span className="sr-only">下へ</span>
                       </Button>
                     </div>
                   </div>
                   <Textarea
-                    value={rp.comment || ""}
+                    value={rp.comment}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       handleCommentChange(rp.placeId, e.target.value)
                     }
-                    placeholder="コメント（任意） 例：ここの景色が最高！"
+                    placeholder="コメント（任意）"
+                    className="w-full text-sm"
                     rows={2}
-                    className="text-sm mt-1"
                   />
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPlaces(
+                        currentPlaces.map((p) =>
+                          p.placeId === rp.placeId ? { ...p, rank: 0 } : p
+                        )
+                      )
+                    }
+                    className="text-xs text-red-600 hover:text-red-700 mt-2 p-0 h-auto dark:text-red-500 dark:hover:text-red-400"
+                    disabled={rp.rank === 0}
+                  >
+                    {rp.rank > 0 ? "ランク外にする" : "ランク外"}
+                  </Button>
                 </div>
               ))}
             </div>
           </div>
         </div>
-        <DialogFooter className="pr-6 pb-4">
+        <DialogFooter className="border-t pt-4 pr-6">
           <DialogClose asChild>
-            <Button variant="outline" disabled={isSaving}>
+            <Button
+              variant="ghost"
+              className="text-neutral-700 dark:text-neutral-300"
+            >
               キャンセル
             </Button>
           </DialogClose>
-          <Button onClick={handleSubmit} disabled={isSaving}>
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isSaving}
+            className="bg-primary-600 hover:bg-primary-700 text-white dark:bg-primary-500 dark:hover:bg-primary-600"
+          >
             {isSaving ? "保存中..." : "ランキングを保存"}
           </Button>
         </DialogFooter>

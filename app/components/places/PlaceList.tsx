@@ -45,16 +45,20 @@ const PlaceList: React.FC<PlaceListProps> = ({
                   </span>
                 </div>
 
-                {place.notes && (
-                  <p className="mt-2 text-xs text-neutral-600 line-clamp-1">
-                    {place.notes}
-                  </p>
+                {place.user_comment && (
+                  <div
+                    className={`mt-2 pl-3 py-2 border-l-4 border-primary-300 bg-neutral-50 dark:bg-neutral-800/60 rounded-r-md`}
+                  >
+                    <p className="text-xs text-neutral-600 line-clamp-2">
+                      &quot;{place.user_comment}&quot;
+                    </p>
+                  </div>
                 )}
 
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {place.tags.map((tag) => (
+                  {place.tags.map((tag, index) => (
                     <span
-                      key={tag}
+                      key={`${tag}-${index}`}
                       className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
                     >
                       <Tag className="h-3 w-3 mr-1 opacity-80" />

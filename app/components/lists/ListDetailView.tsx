@@ -3,7 +3,7 @@
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/app/components/ui/FilterBar";
 import ViewToggle from "@/app/components/ui/ViewToggle";
-import RankingView from "@/app/sample/[listId]/_components/RankingView";
+import RankingView from "@/app/components/lists/RankingView";
 import { FilterOptions, Place, ViewMode } from "@/types";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
@@ -116,13 +116,22 @@ export default function ListDetailView({
       </div>
 
       {/* Places Not Found Message */}
-      {viewMode !== "ranking" && filteredPlaces.length === 0 && (
+      {viewMode !== "ranking" && places.length === 0 && (
         <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
-          <p className="text-neutral-600 mb-4">
-            フィルター条件に一致する場所がありません。
+          <p className="text-sm text-neutral-600 mb-4">
+            このリストにはまだ場所が登録されていません。
           </p>
         </div>
       )}
+      {viewMode !== "ranking" &&
+        places.length > 0 &&
+        filteredPlaces.length === 0 && (
+          <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
+            <p className="text-sm text-neutral-600 mb-4">
+              フィルター条件に一致する場所がありません。
+            </p>
+          </div>
+        )}
 
       {/* Map View */}
       {filteredPlaces.length > 0 && (

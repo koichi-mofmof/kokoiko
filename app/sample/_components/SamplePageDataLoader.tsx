@@ -17,6 +17,7 @@ export interface SampleListForClient
   name: string; // name は PlaceList から必須で継承
   description?: string;
   created_by?: string; // created_by をオプショナルとして明示
+  ownerId: string; // ownerId を追加
   places: NonNullable<PlaceList["places"]>; // オプショナルから必須に変更し、NonNullable を使用
   sharedUserIds?: PlaceList["sharedUserIds"];
   ranking?: PlaceList["ranking"];
@@ -34,7 +35,9 @@ export async function SamplePageDataLoader(): Promise<{
 
   const sampleListsForClient = placeLists.map((list) => {
     const creatorId =
-      (list as PlaceList).created_by || list.sharedUserIds?.[0] || "";
+      (list as unknown as PlaceList).created_by ||
+      list.sharedUserIds?.[0] ||
+      "";
     const owner = allUsers.find((user) => user.id === creatorId);
     const sharedUsers = list.sharedUserIds
       ? allUsers.filter(
@@ -53,7 +56,10 @@ export async function SamplePageDataLoader(): Promise<{
     return {
       ...list,
       created_by:
-        (list as PlaceList).created_by || list.sharedUserIds?.[0] || undefined,
+        (list as unknown as PlaceList).created_by ||
+        list.sharedUserIds?.[0] ||
+        undefined,
+      ownerId: creatorId, // ownerId を creatorId から設定
       collaborators,
       place_count: placeCount,
       places: list.places || [],

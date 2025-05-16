@@ -23,7 +23,6 @@ type DeleteListDialogProps = {
 export function DeleteListDialog({
   isOpen,
   onClose,
-  listId,
   listName,
   onConfirm,
 }: DeleteListDialogProps) {

@@ -5,7 +5,6 @@ export interface Place {
   googleMapsUrl: string;
   latitude: number;
   longitude: number;
-  notes: string;
   tags: string[];
   createdAt: Date;
   updatedAt?: Date;
@@ -14,6 +13,7 @@ export interface Place {
   imageUrl?: string;
   rating?: number;
   googlePlaceId?: string;
+  user_comment?: string;
 }
 
 export interface User {

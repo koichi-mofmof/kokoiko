@@ -38,7 +38,13 @@ export default function RankingView({ listId }: RankingViewProps) {
   }
 
   if (!currentList) {
-    return <div>リストが見つかりません。</div>;
+    return (
+      <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
+        <p className="text-sm text-neutral-600 mb-4">
+          このリストはランキングが作成されていません。
+        </p>
+      </div>
+    );
   }
 
   const {
