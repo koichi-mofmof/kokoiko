@@ -53,14 +53,14 @@ export type PlaceListGridProps<T extends ListDisplayItem> = {
 const MAX_AVATARS_DISPLAYED = 5; // 表示するアバターの最大数
 
 /**
- * 作成者・参加者ラベル付きアバター表示
+ * 作成者・共同編集者ラベル付きアバター表示
  */
 export function renderLabeledCollaborators<T extends ListDisplayItem>(
   list: T,
   displayedCollaborators: User[],
   remainingCount: number
 ) {
-  // 作成者と参加者を分離
+  // 作成者と共同編集者を分離
   const owners = displayedCollaborators.filter((user) => user.isOwner);
   const members = displayedCollaborators.filter((user) => !user.isOwner);
 
@@ -95,10 +95,10 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
             </Tooltip>
           ))}
 
-          {/* 参加者の表示 - グループ化して表示 */}
+          {/* 共同編集者の表示 - グループ化して表示 */}
           {members.length > 0 && (
             <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm">
-              <span className="text-neutral-700 mr-1">参加者</span>
+              <span className="text-neutral-700 mr-1">共同編集者</span>
               <div className="flex -space-x-1">
                 {members.map((member) => (
                   <Tooltip key={member.id}>

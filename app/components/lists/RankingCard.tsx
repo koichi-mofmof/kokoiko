@@ -116,11 +116,11 @@ export default function RankingCard({ rankedPlace, place }: RankingCardProps) {
             <div className="pt-1.5 flex flex-wrap gap-1.5">
               {place.tags.slice(0, 3).map((tag) => (
                 <span
-                  key={tag}
+                  key={tag.id}
                   className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
                 >
                   <Tag className="h-3 w-3 mr-1 opacity-70" />
-                  {tag}
+                  {tag.name}
                 </span>
               ))}
             </div>
@@ -176,11 +176,11 @@ export default function RankingCard({ rankedPlace, place }: RankingCardProps) {
             <div className="pt-1.5 flex flex-wrap gap-1">
               {place.tags.slice(0, 2).map((tag) => (
                 <span
-                  key={tag}
+                  key={tag.id}
                   className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
                 >
                   <Tag className="h-3 w-3 mr-1 opacity-70" />
-                  {tag}
+                  {tag.name}
                 </span>
               ))}
             </div>

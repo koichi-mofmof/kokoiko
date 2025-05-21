@@ -5,10 +5,10 @@ export interface Place {
   googleMapsUrl: string;
   latitude: number;
   longitude: number;
-  tags: string[];
+  tags: { id: string; name: string }[];
   createdAt: Date;
   updatedAt?: Date;
-  visited: boolean;
+  visited: "visited" | "not_visited" | null | undefined;
   createdBy: string;
   imageUrl?: string;
   rating?: number;

@@ -104,7 +104,7 @@ export function ListFormComponent({
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="description">説明（オプション）</Label>
+          <Label htmlFor="description">説明（任意）</Label>
           <Textarea
             id="description"
             name="description"
@@ -125,7 +125,7 @@ export function ListFormComponent({
         </div>
       </div>
 
-      <DialogFooter>
+      <DialogFooter className="mt-4 flex gap-2">
         {showCancelButton && onCancel && (
           <Button variant="outline" type="button" onClick={onCancel}>
             {cancelButtonText}

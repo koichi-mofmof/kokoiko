@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import AddPlaceButtonClient from "@/app/components/places/AddPlaceButtonClient";
 
 interface ListDetailPageProps {
   params: Promise<{ listId: string }>;
@@ -44,7 +45,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-20">
-        <div className="mb-6">
+        <div className="mb-4">
           <Link
             href="/lists"
             className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
@@ -54,7 +55,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           </Link>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-1">
           <h1 className="text-xl font-semibold text-neutral-900">
             {listDetails.name}
           </h1>
@@ -65,8 +66,9 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           )}
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 flex justify-between">
           <ParticipantAvatars owner={owner} participants={otherParticipants} />
+          <AddPlaceButtonClient listId={listId} />
         </div>
 
         <Suspense

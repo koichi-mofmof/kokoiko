@@ -68,11 +68,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onClick }) => {
           <div className="mt-2 flex flex-wrap gap-1 mb-3">
             {place.tags.map((tag) => (
               <span
-                key={tag}
+                key={tag.id}
                 className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600"
               >
                 <Tag className="h-3 w-3 mr-1" />
-                {tag}
+                {tag.name}
               </span>
             ))}
           </div>

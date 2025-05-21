@@ -57,7 +57,7 @@ const mapPlaceRowToPlace = (
     tags: [],
     createdAt: placeRow.created_at ? new Date(placeRow.created_at) : new Date(),
     updatedAt: placeRow.updated_at ? new Date(placeRow.updated_at) : undefined,
-    visited: false,
+    visited: undefined,
     createdBy: currentUserId,
     imageUrl: undefined,
     rating: undefined,
@@ -88,7 +88,10 @@ async function fetchPlacesForList(
       user_comment,
       user_id,
       visited_status,
-      places (*)
+      places (*),
+      list_place_tags (
+        tags (id, name)
+      )
     `
     )
     .eq("list_id", listId);
@@ -101,17 +104,37 @@ async function fetchPlacesForList(
   const places: Place[] = [];
   if (listPlacesData && listPlacesData.length > 0) {
     for (const lp of listPlacesData) {
-      const listPlaceRow =
-        lp as Database["public"]["Tables"]["list_places"]["Row"] & {
-          places: Database["public"]["Tables"]["places"]["Row"] | null;
-        };
+      // 型アサーションをより安全にするか、Zodなどでパースすることを推奨
+      const listPlaceRow = lp as unknown as {
+        id: string;
+        list_id: string;
+        place_id: string;
+        user_comment: string | null;
+        user_id: string;
+        visited_status: string | null;
+        places: PlaceRow | null;
+        list_place_tags: {
+          tags: { id: string; name: string } | null;
+        }[];
+      };
 
       if (listPlaceRow.places) {
         const place = mapPlaceRowToPlace(
-          listPlaceRow.places as unknown as PlaceRow,
+          listPlaceRow.places, // PlaceRow型のはず
           userId
         );
         place.user_comment = listPlaceRow.user_comment || undefined;
+        // ★修正: visited_status を正しくマッピング
+        place.visited = listPlaceRow.visited_status as
+          | "visited"
+          | "not_visited"
+          | null
+          | undefined;
+
+        // タグ情報をマッピング
+        place.tags = listPlaceRow.list_place_tags
+          .map((lpt) => lpt.tags)
+          .filter((tag) => tag !== null) as { id: string; name: string }[];
         places.push(place);
       }
     }

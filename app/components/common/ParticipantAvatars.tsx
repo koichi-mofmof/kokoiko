@@ -64,7 +64,7 @@ export function ParticipantAvatars({
 
         {(displayMembers.length > 0 || remainingCount > 0) && (
           <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">
-            <span className="text-neutral-700 mr-1">参加者</span>
+            <span className="text-neutral-700 mr-1">共同編集者</span>
             <div className="flex -space-x-1">
               {displayMembers.map((member) => (
                 <Tooltip key={member.id}>

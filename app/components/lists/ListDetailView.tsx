@@ -43,8 +43,10 @@ export default function ListDetailView({
   });
 
   const availableTags = useMemo(() => {
-    const allTags = places.flatMap((place) => place.tags || []);
-    return Array.from(new Set(allTags));
+    const allTagNames = places.flatMap((place) =>
+      (place.tags || []).map((tagObj) => tagObj.name)
+    );
+    return Array.from(new Set(allTagNames));
   }, [places]);
 
   const availablePrefectures = useMemo(() => {
@@ -63,7 +65,7 @@ export default function ListDetailView({
     let result = [...places];
     if (filters.tags.length > 0) {
       result = result.filter((place) =>
-        place.tags?.some((tag) => filters.tags.includes(tag))
+        place.tags?.some((tagObj) => filters.tags.includes(tagObj.name))
       );
     }
     if (filters.visited !== null) {

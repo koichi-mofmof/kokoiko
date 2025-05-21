@@ -56,19 +56,19 @@ const PlaceList: React.FC<PlaceListProps> = ({
                 )}
 
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {place.tags.map((tag, index) => (
+                  {place.tags.map((tagObj, index) => (
                     <span
-                      key={`${tag}-${index}`}
+                      key={tagObj.id || `tag-${index}`}
                       className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
                     >
                       <Tag className="h-3 w-3 mr-1 opacity-80" />
-                      {tag}
+                      {tagObj.name}
                     </span>
                   ))}
                 </div>
 
                 <div className="mt-3 flex items-center">
-                  {place.visited ? (
+                  {place.visited === "visited" ? (
                     <>
                       <Check className="h-4 w-4 mr-1 text-primary-500" />
                       <span className="text-xs text-primary-700">訪問済み</span>

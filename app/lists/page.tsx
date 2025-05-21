@@ -17,16 +17,14 @@ export default async function MyPage() {
             リスト一覧
           </h1>
           <p className="text-neutral-600 text-xs sm:text-sm mt-2">
-            あなたが作成したリストや共有されているリストの一覧です。
+            あなたが作成したリストや、共同編集者として参加しているリストを表示しています。
           </p>
+        </div>
+        <div className="ml-auto">
+          <CreateListModal />
         </div>
       </header>
       <MyLists initialLists={myListsForClient} />
-
-      {/* 新規リスト作成ボタン (FAB or Top Right Button) */}
-      <div className="fixed bottom-6 right-6 z-50 sm:fixed sm:top-24 sm:right-8 sm:bottom-auto sm:bg-transparent">
-        <CreateListModal />
-      </div>
     </div>
   );
 }
