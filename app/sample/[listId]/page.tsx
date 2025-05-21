@@ -76,7 +76,7 @@ export default async function SampleListDetailPage({
           className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          リスト一覧に戻る
+          マイリスト一覧に戻る
         </Link>
       </div>
 

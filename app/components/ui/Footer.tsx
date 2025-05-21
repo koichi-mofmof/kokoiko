@@ -26,7 +26,9 @@ export default function Footer({ currentUser }: FooterProps) {
               </Link>
             </div>
             <p className="mt-2 text-sm text-neutral-400 max-w-md">
-              デートや旅行の計画に。&quot;行きたい場所&quot;をリスト化・共有できるWebサービスです。
+              デートや旅行の計画に。
+              <br />
+              &quot;行きたい場所&quot;をリスト化・共有できるサービスです。
             </p>
           </div>
 
@@ -48,7 +50,7 @@ export default function Footer({ currentUser }: FooterProps) {
                       href="/lists"
                       className="text-sm text-neutral-400 hover:text-white block"
                     >
-                      リスト一覧
+                      マイリスト一覧
                     </Link>
                   </>
                 )}

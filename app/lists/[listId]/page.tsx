@@ -44,14 +44,14 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="mb-4">
           <Link
             href="/lists"
             className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            リスト一覧に戻る
+            マイリスト一覧に戻る
           </Link>
         </div>
 

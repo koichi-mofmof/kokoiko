@@ -10,11 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User, List } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { List, LogIn, LogOut, Settings, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import Image from "next/image";
 
 interface HeaderProps {
   currentUser?: {
@@ -85,8 +85,8 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
   }, [initialUser]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white bg-opacity-95 backdrop-blur-sm shadow-sm z-50">
-      <div className="max-w-[1920px] w-full px-6 sm:px-8 lg:px-12 py-3 flex justify-between items-center">
+    <header className="bg-white bg-opacity-95 backdrop-blur-sm shadow-sm z-50">
+      <div className="px-6 sm:px-8 py-2 flex justify-between items-center">
         <div className="flex items-center">
           <Link
             href="/"
@@ -112,7 +112,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center space-x-2 outline-none focus:ring-2 focus:ring-primary-500 px-1 py-1 rounded-md hover:bg-neutral-100 transition">
-                    <Avatar className="h-7 w-7 border border-neutral-300 flex items-center justify-center">
+                    <Avatar className="h-9 w-9 border border-neutral-300 flex items-center justify-center">
                       {currentUser.avatarUrl ? (
                         <AvatarImage
                           src={currentUser.avatarUrl}
@@ -155,7 +155,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                   <DropdownMenuItem asChild>
                     <Link href="/lists">
                       <List className="mr-2 h-4 w-4" />
-                      リスト一覧
+                      マイリスト一覧
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuLabel>その他</DropdownMenuLabel>
@@ -183,8 +183,11 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
               </DropdownMenu>
             </>
           ) : (
-            <Button asChild variant="secondary">
-              <Link href="/login">ログイン</Link>
+            <Button asChild variant="outline">
+              <Link href="/login">
+                <LogIn className="h-4 w-4" />
+                ログイン
+              </Link>
             </Button>
           )}
         </nav>

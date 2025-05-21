@@ -10,7 +10,7 @@ export default async function SampleListPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-medium text-neutral-900 flex items-center">
           <List className="h-6 w-6 text-primary-600 mr-2" />
-          リスト一覧（サンプル）
+          マイリスト一覧（サンプル）
         </h1>
       </div>
 
