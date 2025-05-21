@@ -109,6 +109,13 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
         <nav className="flex items-center space-x-8">
           {currentUser ? (
             <>
+              {/* PC表示時のみヘッダーにマイリスト一覧を表示 */}
+              <Link
+                href="/lists"
+                className="text-sm hidden md:flex items-center text-primary-700 hover:text-primary-900 font-medium transition"
+              >
+                マイリスト一覧
+              </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center space-x-2 outline-none focus:ring-2 focus:ring-primary-500 px-1 py-1 rounded-md hover:bg-neutral-100 transition">
@@ -152,15 +159,15 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
+                  {/* ドロップダウン内のマイリスト一覧はmd未満のみ表示 */}
+                  <DropdownMenuItem asChild className="md:hidden">
                     <Link href="/lists">
                       <List className="mr-2 h-4 w-4" />
                       マイリスト一覧
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuLabel>その他</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
-                    <Link href="/settings">
+                    <Link href="/settings" className="text-gray-600">
                       <Settings className="mr-2 h-4 w-4" />
                       設定
                     </Link>
