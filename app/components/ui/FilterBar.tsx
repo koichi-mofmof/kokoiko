@@ -38,7 +38,7 @@ export default function FilterBar({
     onFilterChange(newFilters);
   };
 
-  const handleVisitedChange = (value: boolean | null) => {
+  const handleVisitedChange = (value: "visited" | "not_visited" | null) => {
     const newFilters = { ...filters, visited: value };
     setFilters(newFilters);
     onFilterChange(newFilters);
@@ -133,9 +133,9 @@ export default function FilterBar({
           </h4>
           <div className="flex gap-2">
             <button
-              onClick={() => handleVisitedChange(true)}
+              onClick={() => handleVisitedChange("visited")}
               className={`px-2.5 py-1.5 rounded-full text-xs ${
-                filters.visited === true
+                filters.visited === "visited"
                   ? "bg-primary-100 text-primary-800 border border-primary-200"
                   : "bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200"
               } transition-colors`}
@@ -143,9 +143,9 @@ export default function FilterBar({
               訪問済み
             </button>
             <button
-              onClick={() => handleVisitedChange(false)}
+              onClick={() => handleVisitedChange("not_visited")}
               className={`px-2.5 py-1.5 rounded-full text-xs ${
-                filters.visited === false
+                filters.visited === "not_visited"
                   ? "bg-primary-100 text-primary-800 border border-primary-200"
                   : "bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200"
               } transition-colors`}

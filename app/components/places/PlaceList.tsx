@@ -26,7 +26,7 @@ const PlaceList: React.FC<PlaceListProps> = ({
             className={`p-3 border rounded-lg cursor-pointer transition-colors ${
               selectedPlaceId === place.id
                 ? "border-primary-300 bg-primary-50"
-                : "border-neutral-200 bg-white hover:bg-neutral-50"
+                : "border-neutral-200 bg-white hover:bg-primary-50"
             }`}
             onClick={() => onPlaceSelect(place)}
           >

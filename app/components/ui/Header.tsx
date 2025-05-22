@@ -112,7 +112,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
               {/* PC表示時のみヘッダーにマイリスト一覧を表示 */}
               <Link
                 href="/lists"
-                className="text-sm hidden md:flex items-center text-primary-700 hover:text-primary-900 font-medium transition"
+                className="text-sm hidden md:flex items-center text-neutral-800 hover:text-neutral-900 transition"
               >
                 マイリスト一覧
               </Link>

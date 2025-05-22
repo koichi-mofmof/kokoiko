@@ -153,7 +153,7 @@ describe("CreateListModalコンポーネントテスト", () => {
     render(<CreateListModal />);
     const button = screen.getByTestId("button");
     expect(button).toBeInTheDocument();
-    expect(button).toHaveAttribute("aria-label", "新規リスト作成");
+    expect(button).toHaveAttribute("aria-label", "リストを作成");
   });
 
   it("ボタンクリックでモーダルが表示されること", async () => {

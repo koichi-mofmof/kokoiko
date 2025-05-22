@@ -17,6 +17,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { MyListForClient as MyListClientData } from "@/lib/dal/lists";
 import { ArrowDown, ArrowUp, ListFilter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { CreateListModal } from "./CreateListModal";
 
 type MyListsProps = {
   initialLists: MyListClientData[];
@@ -81,9 +82,8 @@ export function MyLists({ initialLists }: MyListsProps) {
   return (
     <TooltipProvider>
       <div>
-        {/* 検索バーとソートUIのコンテナ */}
-        <div className="mb-6 flex flex-row items-center space-y-0 space-x-4">
-          {/* 検索バー */}
+        {/* 1行目: 検索バーのみ */}
+        <div className="flex flex-row items-center space-y-0 mb-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
@@ -94,9 +94,12 @@ export function MyLists({ initialLists }: MyListsProps) {
               className="pl-10 w-full"
             />
           </div>
+        </div>
 
+        {/* 2行目: ソートUIとリストを作成ボタン */}
+        <div className="flex flex-row items-center justify-between space-x-4 mb-4">
           {/* ソートUI */}
-          <div className="flex items-center space-x-2 sm:flex-shrink-0">
+          <div className="flex items-center space-x-2">
             <div className="relative w-full sm:w-[200px]">
               <ListFilter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
               <Select value={sortOption} onValueChange={handleSortOptionChange}>
@@ -123,6 +126,10 @@ export function MyLists({ initialLists }: MyListsProps) {
                 <ArrowDown className="h-4 w-4" />
               )}
             </Button>
+          </div>
+          {/* リストを作成ボタン */}
+          <div>
+            <CreateListModal />
           </div>
         </div>
 

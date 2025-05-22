@@ -33,7 +33,7 @@ export interface Group {
 
 export interface FilterOptions {
   tags: string[];
-  visited: boolean | null;
+  visited: "visited" | "not_visited" | null;
   groupId: string | null;
   prefecture: string[];
   dateRange: {

@@ -72,9 +72,9 @@
     - [ ] 非公開リストへの未認可アクセス時の処理（エラー表示またはリダイレクト）
     - [ ] `shared_lists`テーブルを使った権限確認ロジック
     - [ ] `list_share_tokens`を使った共有リンク経由のアクセス処理
-- [~] 場所登録機能 # addPlace/add-place-todo.md と同期
-  - [~] 登録フォーム (UI 設計、Autocomplete 連携など進行中)
-  - [~] タグ付け機能 (UI 追加、Supabase 登録処理が次のタスク)
+- [x] 場所登録機能 # addPlace/add-place-todo.md と同期
+  - [x] 登録フォーム (UI 設計、Autocomplete 連携など進行中)
+  - [x] タグ付け機能 (UI 追加、Supabase 登録処理が次のタスク)
 - [ ] 場所編集機能
   - [ ] 編集画面へのリンク追加 (PlaceCard, PlaceList)
   - [ ] 編集ページルート作成 (`/places/[id]/edit`)

@@ -38,11 +38,11 @@ export default function AddPlaceButtonClient({
       {/* スマートフォン表示用のフローティングボタン */}
       <Button
         variant="outline"
-        className="h-10 w-10 rounded-full p-0 shadow-lg md:hidden bg-primary-600 hover:bg-primary-700 text-white"
+        className="h-10 w-10 rounded-full shadow-lg md:hidden"
         aria-label="場所を追加 (スマートフォン)"
         onClick={() => setOpen(true)}
       >
-        <Plus className="h-7 w-7" />
+        <Plus />
       </Button>
       {/* PC表示用のボタン */}
       <Button

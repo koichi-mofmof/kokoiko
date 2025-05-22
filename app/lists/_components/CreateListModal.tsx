@@ -86,14 +86,13 @@ export function CreateListModal() {
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
               <Button
-                variant="default"
-                className="rounded-full w-12 h-12 p-0 shadow-lg flex items-center justify-center sm:rounded-md sm:w-auto sm:h-auto sm:px-4 sm:py-2 sm:gap-2"
-                aria-label="新規リスト作成"
+                className="h-10 w-10 md:w-auto md:h-auto rounded-full md:rounded-md shadow-lg items-center"
+                aria-label="リストを作成"
                 aria-haspopup="menu"
                 aria-expanded="false"
               >
                 <ListPlus className="h-6 w-6 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">新規リスト作成</span>
+                <span className="hidden md:inline">リストを作成</span>
               </Button>
             </DialogTrigger>
           </TooltipTrigger>

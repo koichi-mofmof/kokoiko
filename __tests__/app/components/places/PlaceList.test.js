@@ -50,7 +50,7 @@ describe("PlaceListコンポーネントテスト", () => {
 
       // タグが表示されていることを確認
       place.tags.forEach((tag) => {
-        expect(screen.getByText(tag)).toBeInTheDocument();
+        expect(screen.getByText(tag.name)).toBeInTheDocument();
       });
 
       // 訪問ステータスが表示されていることを確認
@@ -67,10 +67,10 @@ describe("PlaceListコンポーネントテスト", () => {
 
     // テストプレースデータの訪問状態に応じた要素数を確認
     expect(visitedElements.length).toBe(
-      testPlaces.filter((p) => p.visited).length
+      testPlaces.filter((p) => p.visited === "visited").length
     );
     expect(notVisitedElements.length).toBe(
-      testPlaces.filter((p) => !p.visited).length
+      testPlaces.filter((p) => p.visited !== "visited").length
     );
 
     // Googleマップへのリンクが各場所分存在することを確認

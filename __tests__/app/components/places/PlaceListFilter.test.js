@@ -32,7 +32,7 @@ const PlaceListWithFilters = ({ places: initialPlaces }) => {
     if (filters.tag) {
       result = result.filter((place) =>
         place.tags.some(
-          (tag) => tag.toLowerCase() === filters.tag.toLowerCase()
+          (tag) => tag.name.toLowerCase() === filters.tag.toLowerCase()
         )
       );
     }
@@ -192,7 +192,7 @@ describe("場所一覧のフィルタリングと並び替えテスト", () => {
     // 「観光」タグを持つ場所だけが表示されることを確認
     await waitFor(() => {
       const filteredCount = mockPlaces.filter((place) =>
-        place.tags.some((tag) => tag.toLowerCase() === "観光")
+        place.tags.some((tag) => tag.name.toLowerCase() === "観光")
       ).length;
 
       expect(screen.getByTestId("result-count").textContent).toContain(
@@ -287,7 +287,7 @@ describe("場所一覧のフィルタリングと並び替えテスト", () => {
           (place.name.includes("東京") ||
             place.address.includes("東京") ||
             (place.notes && place.notes.includes("東京"))) &&
-          place.tags.some((tag) => tag.toLowerCase() === "観光")
+          place.tags.some((tag) => tag.name.toLowerCase() === "観光")
       ).length;
 
       expect(screen.getByTestId("result-count").textContent).toContain(

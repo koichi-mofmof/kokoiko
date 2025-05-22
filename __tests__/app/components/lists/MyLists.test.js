@@ -125,6 +125,13 @@ jest.mock("lucide-react", () => ({
   ArrowDown: () => <div data-testid="arrow-down-icon">ArrowDownIcon</div>,
 }));
 
+// CreateListModalをモック
+jest.mock("../../../../app/lists/_components/CreateListModal", () => ({
+  CreateListModal: () => (
+    <button data-testid="mock-create-list-modal">モックリスト作成</button>
+  ),
+}));
+
 // テスト用リストデータ
 const mockLists = [
   {

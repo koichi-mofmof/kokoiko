@@ -7,6 +7,7 @@ import RankingView from "@/app/components/lists/RankingView";
 import { FilterOptions, Place, ViewMode } from "@/types";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
 
 interface ListDetailViewProps {
   places: Place[];
@@ -97,9 +98,8 @@ export default function ListDetailView({
   return (
     <div>
       <div
-        className={`flex items-center mb-6 ${
-          viewMode === "ranking" ? "justify-end" : "justify-between"
-        }`}
+        className={`flex items-center mb-4
+          ${viewMode === "ranking" ? "justify-center" : "justify-between"}`}
       >
         {viewMode !== "ranking" && (
           <FilterBar
@@ -110,6 +110,8 @@ export default function ListDetailView({
           />
         )}
         <ViewToggle currentView={viewMode} onViewChange={handleViewChange} />
+
+        {viewMode !== "ranking" && <AddPlaceButtonClient listId={listId} />}
       </div>
 
       {/* Ranking View */}
@@ -138,7 +140,7 @@ export default function ListDetailView({
       {/* Map View */}
       {filteredPlaces.length > 0 && (
         <div
-          className={`bg-white rounded-soft border border-neutral-200 shadow-soft h-[calc(100vh-25rem)] mb-6 ${
+          className={`bg-white rounded-soft border border-neutral-200 shadow-soft h-[calc(100vh-25rem)] ${
             viewMode === "map" ? "block" : "hidden"
           }`}
         >

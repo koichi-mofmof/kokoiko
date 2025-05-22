@@ -1,5 +1,4 @@
 import { List } from "lucide-react";
-import { CreateListModal } from "./_components/CreateListModal";
 import { ErrorMessageToast } from "./_components/ErrorMessageToast";
 import { MyLists } from "./_components/MyLists";
 import { MyPageDataLoader } from "./_components/MyPageDataLoader";
@@ -19,9 +18,6 @@ export default async function MyPage() {
           <p className="text-neutral-600 text-xs sm:text-sm mt-2">
             あなたが作成したリストや、共同編集者として参加しているリストを表示しています。
           </p>
-        </div>
-        <div className="ml-auto">
-          <CreateListModal />
         </div>
       </header>
       <MyLists initialLists={myListsForClient} />
