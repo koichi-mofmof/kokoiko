@@ -1,7 +1,7 @@
 "use client";
 
 import { ViewMode } from "@/types";
-import { BarChartBig, List, Map } from "lucide-react";
+import { ChartNoAxesColumn, List, Map } from "lucide-react";
 
 interface ViewToggleProps {
   currentView: ViewMode;
@@ -25,35 +25,69 @@ export default function ViewToggle({
         onClick={() => onViewChange("list")}
         type="button"
         className={`${buttonBaseClass} ${
+          currentView === "list" ? "w-auto px-3" : "w-9"
+        } sm:w-auto sm:px-3 py-2 ${
           currentView === "list"
             ? `${activeClass} ${activeBorderClass}`
             : `${inactiveClass} ${borderClass}`
         }`}
       >
-        <List className="h-4 w-4 sm:mr-2" />
-        <span className="hidden sm:inline">リスト</span>
+        <List
+          className={`h-4 w-4 sm:mr-2 ${
+            currentView === "list" ? "mr-2" : "mr-0"
+          }`}
+        />
+        <span
+          className={`sm:inline ${
+            currentView === "list" ? "inline" : "hidden"
+          }`}
+        >
+          リスト
+        </span>
       </button>
       <button
         onClick={() => onViewChange("ranking")}
         type="button"
         className={`${buttonBaseClass} ${
+          currentView === "ranking" ? "w-auto px-3" : "w-9"
+        } sm:w-auto sm:px-3 py-2 ${
           currentView === "ranking"
             ? `${activeClass} ${activeBorderClass}`
             : `${inactiveClass} ${borderClass}`
         }`}
       >
-        <BarChartBig className="h-4 w-4 sm:mr-2" />
-        <span className="hidden sm:inline">ランキング</span>
+        <ChartNoAxesColumn
+          className={`h-4 w-4 sm:mr-2 ${
+            currentView === "ranking" ? "mr-2" : "mr-0"
+          }`}
+        />
+        <span
+          className={`sm:inline ${
+            currentView === "ranking" ? "inline" : "hidden"
+          }`}
+        >
+          ランキング
+        </span>
       </button>
       <button
         onClick={() => onViewChange("map")}
         type="button"
         className={`${buttonBaseClass} ${
+          currentView === "map" ? "w-auto px-3" : "w-9"
+        } sm:w-auto sm:px-3 py-2 ${
           currentView === "map" ? activeClass : inactiveClass
         }`}
       >
-        <Map className="h-4 w-4 sm:mr-2" />
-        <span className="hidden sm:inline">マップ</span>
+        <Map
+          className={`h-4 w-4 sm:mr-2 ${
+            currentView === "map" ? "mr-2" : "mr-0"
+          }`}
+        />
+        <span
+          className={`sm:inline ${currentView === "map" ? "inline" : "hidden"}`}
+        >
+          マップ
+        </span>
       </button>
     </div>
   );

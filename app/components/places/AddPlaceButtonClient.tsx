@@ -37,7 +37,6 @@ export default function AddPlaceButtonClient({
     <>
       {/* スマートフォン表示用のフローティングボタン */}
       <Button
-        variant="outline"
         className="h-10 w-10 rounded-full shadow-lg md:hidden"
         aria-label="場所を追加 (スマートフォン)"
         onClick={() => setOpen(true)}
