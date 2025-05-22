@@ -4,28 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { updateUserPassword } from "@/lib/actions/auth";
+import { passwordClientSchema } from "@/lib/validators/auth";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { z } from "zod";
-
-// クライアントサイドバリデーション用スキーマ
-const passwordClientSchema = z
-  .object({
-    currentPassword: z // UI上残すがサーバーでは使用しない
-      .string()
-      .min(1, { message: "現在のパスワードを入力してください。" }),
-    newPassword: z
-      .string()
-      .min(8, { message: "パスワードは8文字以上で入力してください。" })
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/, {
-        message:
-          'パスワードは英大文字、小文字、数字、記号(!@#$%^&*(),.?":{}|<>)をそれぞれ1文字以上含める必要があります。',
-      }),
-  })
-  .refine((data) => data.currentPassword !== data.newPassword, {
-    message: "新しいパスワードは現在のパスワードと異なる必要があります。",
-    path: ["newPassword"],
-  });
 
 // SubmitButtonコンポーネントを定義してpending状態をハンドリング
 function SubmitButton() {

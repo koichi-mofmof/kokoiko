@@ -1,23 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createListSchema, updateListSchema } from "@/lib/validators/list";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
-
-// リスト作成用のスキーマ
-const createListSchema = z.object({
-  name: z.string().min(1, "リスト名は必須です"),
-  description: z.string().optional(),
-  isPublic: z.boolean().default(false),
-});
-
-// リスト編集用のスキーマ
-const updateListSchema = z.object({
-  id: z.string().uuid("無効なリストIDです"),
-  name: z.string().min(1, "リスト名は必須です"),
-  description: z.string().optional(),
-  isPublic: z.boolean().default(false),
-});
 
 // リスト作成アクション
 export async function createList(formData: FormData) {

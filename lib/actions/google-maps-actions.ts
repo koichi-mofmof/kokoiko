@@ -1,23 +1,12 @@
 "use server";
 
-import { z } from "zod";
+import {
+  autocompleteSchema,
+  placeDetailsSchema,
+} from "@/lib/validators/google-maps";
 
 // 環境変数からAPIキーを取得 (安全な方法で管理されている前提)
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-
-const autocompleteSchema = z.object({
-  query: z.string().min(1, "検索クエリは必須です。"),
-  sessionToken: z.string().uuid("無効なセッショントークンです。"),
-  languageCode: z.string().optional().default("ja"),
-  regionCode: z.string().optional().default("JP"),
-});
-
-const placeDetailsSchema = z.object({
-  placeId: z.string().min(1, "Place IDは必須です。"),
-  sessionToken: z.string().uuid("無効なセッショントークンです。"),
-  languageCode: z.string().optional().default("ja"),
-  regionCode: z.string().optional().default("JP"),
-});
 
 interface AutocompleteSuggestion {
   placePrediction: {

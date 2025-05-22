@@ -1,47 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { loginSchema, signupSchema } from "@/lib/validators/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-
-// Zod スキーマ定義
-const loginSchema = z.object({
-  email: z
-    .string()
-    .email({ message: "有効なメールアドレスを入力してください。" }),
-  password: z
-    .string()
-    .min(8, { message: "パスワードは8文字以上で入力してください。" })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-      message:
-        "パスワードは英大文字、小文字、数字をそれぞれ1文字以上含める必要があります。",
-    }),
-});
-
-// サインアップ用 Zod スキーマ定義 (パスワード要件を強化)
-const signupSchema = z
-  .object({
-    email: z
-      .string()
-      .email({ message: "有効なメールアドレスを入力してください。" }),
-    password: z
-      .string()
-      .min(8, { message: "パスワードは8文字以上で入力してください。" })
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/, {
-        message:
-          'パスワードは英大文字、小文字、数字、記号(!@#$%^&*(),.?\\":{}|<>)をそれぞれ1文字以上含める必要があります。',
-      }),
-    confirmPassword: z.string(),
-    // 利用規約同意のチェックボックスを追加
-    termsAccepted: z.boolean().refine((val) => val === true, {
-      message: "利用規約とプライバシーポリシーへの同意が必要です。",
-    }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "パスワードが一致しません。",
-    path: ["confirmPassword"],
-  });
 
 // 認証状態の型定義 (useFormState用)
 export interface AuthState {
