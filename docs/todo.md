@@ -22,7 +22,7 @@
 
 ## 🟡 重要タスク
 
-- [ ] データベース設計
+- [x] データベース設計
   - [x] スキーマ設計 (Place テーブルから notes カラム削除検討、user_comment に統一済み)
   - [x] Supabase のセットアップ
 - [x] 認証機能の実装
@@ -62,7 +62,7 @@
     - [x] ListDetailView を app/components/lists/ に移動し、内部インポートを修正
     - [x] app/sample/[listId]/page.tsx のインポートパスを修正
     - [x] app/lists/[listId]/page.tsx のデータ取得処理を実装 (モックデータからの置き換え)
-  - [~] リスト詳細ページの充実化 # ステータス変更
+  - [x] リスト詳細ページの充実化 # ステータス変更
     - [x] リスト詳細データと共同編集者情報を Supabase から取得するよう修正
     - [x] 場所ごとのユーザーコメント表示
     - [x] Place 型の `notes` を `user_comment` に統一し、関連箇所を修正
@@ -82,6 +82,16 @@
   - [ ] Server Action での更新処理実装
   - [ ] フォームバリデーション (Zod)
   - [ ] フォームと Server Action の接続 (useFormState, useFormStatus)
+- [~] 場所詳細画面の UI・機能
+  - [x] 住所横に「MAP」ボタンを配置し、Google マップで開くように修正
+  - [x] 既存の「Google マップで開く」リンクを削除
+  - [x] コメント・タグ・訪問ステータスの表示
+  - [x] 地図表示（PlaceMapClient）
+  - [x] 編集・削除メニューの UI（DropdownMenu）
+  - [x] コメントをスレッド形式で追加できるように（要テーブル定義変更）
+  - [ ] 編集・削除機能の実装（Server Action 連携）
+  - [ ] 権限判定・認可処理の強化
+  - [ ] アクセシビリティ・レスポンシブ最適化
 - [~] 行きたい場所リストのランキング機能実装 # 新規追加・進行中
   - [x] ランキングデータ構造の定義 (PlaceListGroup, RankedPlace)
   - [x] ランキング表示 UI コンポーネント作成 (RankingView, RankingDisplay, RankingCard)

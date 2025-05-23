@@ -13,7 +13,7 @@ export interface Place {
   imageUrl?: string;
   rating?: number;
   googlePlaceId?: string;
-  user_comment?: string;
+  listPlaceId?: string;
 }
 
 export interface User {
@@ -73,4 +73,14 @@ export interface RankedPlace {
   placeId: string;
   rank: number;
   comment?: string;
+}
+
+// list_place_commntsテーブル用の型
+export interface ListPlaceComment {
+  id: string;
+  list_place_id: string;
+  user_id: string;
+  comment: string;
+  created_at: string;
+  updated_at: string;
 }

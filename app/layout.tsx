@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 const inter = Inter({
   subsets: ["latin"],

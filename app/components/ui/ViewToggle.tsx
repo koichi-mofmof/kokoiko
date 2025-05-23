@@ -46,14 +46,34 @@ export default function ViewToggle({
         </span>
       </button>
       <button
+        onClick={() => onViewChange("map")}
+        type="button"
+        className={`${buttonBaseClass} ${
+          currentView === "map" ? "w-auto px-3" : "w-9"
+        } sm:w-auto sm:px-3 py-2 ${
+          currentView === "map"
+            ? `${activeClass} ${activeBorderClass}`
+            : `${inactiveClass} ${borderClass}`
+        }`}
+      >
+        <Map
+          className={`h-4 w-4 sm:mr-2 ${
+            currentView === "map" ? "mr-2" : "mr-0"
+          }`}
+        />
+        <span
+          className={`sm:inline ${currentView === "map" ? "inline" : "hidden"}`}
+        >
+          マップ
+        </span>
+      </button>
+      <button
         onClick={() => onViewChange("ranking")}
         type="button"
         className={`${buttonBaseClass} ${
           currentView === "ranking" ? "w-auto px-3" : "w-9"
         } sm:w-auto sm:px-3 py-2 ${
-          currentView === "ranking"
-            ? `${activeClass} ${activeBorderClass}`
-            : `${inactiveClass} ${borderClass}`
+          currentView === "ranking" ? activeClass : inactiveClass
         }`}
       >
         <ChartNoAxesColumn
@@ -67,26 +87,6 @@ export default function ViewToggle({
           }`}
         >
           ランキング
-        </span>
-      </button>
-      <button
-        onClick={() => onViewChange("map")}
-        type="button"
-        className={`${buttonBaseClass} ${
-          currentView === "map" ? "w-auto px-3" : "w-9"
-        } sm:w-auto sm:px-3 py-2 ${
-          currentView === "map" ? activeClass : inactiveClass
-        }`}
-      >
-        <Map
-          className={`h-4 w-4 sm:mr-2 ${
-            currentView === "map" ? "mr-2" : "mr-0"
-          }`}
-        />
-        <span
-          className={`sm:inline ${currentView === "map" ? "inline" : "hidden"}`}
-        >
-          マップ
         </span>
       </button>
     </div>

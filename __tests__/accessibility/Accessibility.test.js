@@ -50,6 +50,13 @@ jest.mock("@/components/ui/avatar", () => ({
   ),
 }));
 
+// Cardコンポーネントのモック
+jest.mock("@/components/ui/card", () => ({
+  Card: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardContent: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardTitle: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+}));
+
 // Next.jsのLinkコンポーネントをモック
 jest.mock("next/link", () => {
   return ({ children, href, ...rest }) => (
@@ -73,6 +80,9 @@ jest.mock("lucide-react", () => ({
   User: () => <span data-testid="user-icon">ユーザーアイコン</span>,
   Mail: () => <span data-testid="mail-icon">メールアイコン</span>,
   Info: () => <span data-testid="info-icon">情報アイコン</span>,
+  ChevronRight: () => (
+    <span data-testid="chevron-right-icon">シェブロン右アイコン</span>
+  ),
   // 他のアイコンも必要に応じて追加
 }));
 

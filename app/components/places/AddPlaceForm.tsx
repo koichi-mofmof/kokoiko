@@ -505,7 +505,7 @@ export default function AddPlaceForm({
           onKeyDown={(e: React.KeyboardEvent<HTMLFormElement>) => {
             if (e.key === "Enter") {
               const target = e.target as HTMLElement;
-              // タグ入力欄・メモ欄以外でEnterが押された場合、フォーム送信を抑制
+              // タグ入力欄・コメント欄以外でEnterが押された場合、フォーム送信を抑制
               if (target.id !== "tags-input" && target.id !== "memo") {
                 e.preventDefault();
               }
@@ -565,16 +565,16 @@ export default function AddPlaceForm({
             </div>
             <div>
               <Label htmlFor="memo" className="block text-sm font-medium mb-1">
-                メモ (任意)
+                コメント (任意)
               </Label>
               <Textarea
                 id="memo"
                 name="memo"
                 rows={3}
-                placeholder="この場所に関するメモ..."
+                placeholder="この場所に関するコメント..."
                 className="w-full"
               />
-              {/* ★追加: メモのフィールドエラー表示 */}
+              {/* ★追加: コメントのフィールドエラー表示 */}
               {registerState.fieldErrors?.memo?.[0] && (
                 <p className="text-sm text-red-500 mt-1">
                   {registerState.fieldErrors.memo[0]}

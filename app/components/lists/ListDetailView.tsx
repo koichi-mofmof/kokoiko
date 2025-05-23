@@ -12,6 +12,7 @@ import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
 interface ListDetailViewProps {
   places: Place[];
   listId: string;
+  isSample?: boolean;
 }
 
 // OpenStreetMapView を動的にインポートし、SSRを無効にする
@@ -30,6 +31,7 @@ const DynamicOpenStreetMapView = dynamic(
 export default function ListDetailView({
   places,
   listId,
+  isSample,
 }: ListDetailViewProps) {
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>(places);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -99,7 +101,13 @@ export default function ListDetailView({
     <div>
       <div
         className={`flex items-center mb-4
-          ${viewMode === "ranking" ? "justify-center" : "justify-between"}`}
+          ${
+            viewMode === "ranking"
+              ? isSample
+                ? "justify-end"
+                : "justify-center"
+              : "justify-between"
+          }`}
       >
         {viewMode !== "ranking" && (
           <FilterBar
@@ -111,8 +119,29 @@ export default function ListDetailView({
         )}
         <ViewToggle currentView={viewMode} onViewChange={handleViewChange} />
 
-        {viewMode !== "ranking" && <AddPlaceButtonClient listId={listId} />}
+        {viewMode !== "ranking" && !isSample && (
+          <AddPlaceButtonClient listId={listId} />
+        )}
       </div>
+
+      {/* List View */}
+      {filteredPlaces.length > 0 && (
+        <div
+          className={`grid gap-6 ${
+            viewMode === "list" ? "grid-cols-1" : "hidden"
+          }`}
+        >
+          {/* PlaceListはviewModeがlistの時のみ中身をレンダリングする（負荷軽減のため） */}
+          {viewMode === "list" && (
+            <PlaceList
+              places={filteredPlaces}
+              listId={listId}
+              selectedPlaceId={selectedPlace?.id}
+              isSample={isSample}
+            />
+          )}
+        </div>
+      )}
 
       {/* Ranking View */}
       <div className={`${viewMode === "ranking" ? "block" : "hidden"}`}>
@@ -148,24 +177,8 @@ export default function ListDetailView({
             <DynamicOpenStreetMapView
               places={filteredPlaces}
               onPlaceSelect={handlePlaceSelect}
-            />
-          )}
-        </div>
-      )}
-
-      {/* List View */}
-      {filteredPlaces.length > 0 && (
-        <div
-          className={`grid gap-6 ${
-            viewMode === "list" ? "grid-cols-1" : "hidden"
-          }`}
-        >
-          {/* PlaceListはviewModeがlistの時のみ中身をレンダリングする（負荷軽減のため） */}
-          {viewMode === "list" && (
-            <PlaceList
-              places={filteredPlaces}
-              onPlaceSelect={handlePlaceSelect}
-              selectedPlaceId={selectedPlace?.id}
+              listId={listId}
+              isSample={isSample}
             />
           )}
         </div>

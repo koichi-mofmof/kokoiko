@@ -6,8 +6,6 @@ import { Suspense } from "react";
 import { getPlaceListDetails, mockUsers } from "@/lib/mockData";
 import { ParticipantAvatars } from "@/app/components/common/ParticipantAvatars";
 
-// Removed local definitions of PlaceListGroup, mockPlaceLists, and getPlaceListDetails
-
 interface SampleListDetailPageProps {
   params: Promise<{ listId: string }>;
 }
@@ -37,34 +35,9 @@ export default async function SampleListDetailPage({
   // For now, we'll proceed assuming owner will be found as per mock data structure.
   // In a real app, you might want to throw an error or show a specific UI.
   if (!owner) {
-    // This case should ideally not happen with current mock data logic
-    // but adding a guard for robustness.
-    // Depending on requirements, you could notFound() or provide a default owner, or hide ParticipantAvatars.
-    // For this sample, if owner is somehow not found, we won't render ParticipantAvatars by passing undefined,
-    // which might then require ParticipantAvatars to handle undefined owner or we ensure owner is always passed.
-    // Given the current error, we MUST pass a valid owner.
-    // Let's assume for mock data, owner will always be found.
-    // If not, `ParticipantAvatars` will error out as per the original problem if it doesn't handle undefined owner.
-    // The original problem indicates owner is required by ParticipantAvatars.
-    // So, if owner is not found from mockUsers, we should probably trigger notFound() or similar error.
-    // For now, if owner is not found, this will lead to an error similar to the original one
-    // when ParticipantAvatars tries to access owner.id if owner is undefined.
-    // A better approach for production would be to ensure data integrity or handle this case explicitly.
-    // Forcing an error if owner is not found, as ParticipantAvatars requires it.
     console.error(
       `Owner not found for listId: ${listId} with ownerId: ${listDetails.ownerId}`
     );
-    // To ensure ParticipantAvatars gets a valid owner, or we make owner optional there.
-    // For now, let's stick to the requirement that owner is mandatory in ParticipantAvatars.
-    // If owner is not found, this implies data inconsistency in mock data or logic.
-    // Given ParticipantAvatars expects a non-null owner, we should ensure it or handle the error upstream.
-    // Let's assume owner will be found based on mock data setup.
-    // If a real scenario where owner might not exist, ParticipantAvatars should be made resilient
-    // or this page should handle it (e.g., by not rendering it or showing an error).
-    // For now, if owner is not found, this will lead to an error similar to the original one
-    // when ParticipantAvatars tries to access owner.id if owner is undefined.
-    // A better approach for production would be to ensure data integrity or handle this case explicitly.
-    // Forcing an error if owner is not found, as ParticipantAvatars requires it.
     notFound(); // Or handle as a critical error
   }
 
@@ -100,7 +73,11 @@ export default async function SampleListDetailPage({
           <div className="text-center p-8">リスト詳細を読み込み中...</div>
         }
       >
-        <ListDetailView places={listDetails.places} listId={listId} />
+        <ListDetailView
+          places={listDetails.places}
+          listId={listId}
+          isSample={true}
+        />
       </Suspense>
     </>
   );

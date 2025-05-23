@@ -4,6 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { PlaceToRegisterSchema } from "@/lib/validators/place";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { ListPlaceComment } from "@/types";
+import {
+  AddCommentSchema,
+  AddCommentInput,
+  UpdateCommentSchema,
+  UpdateCommentInput,
+} from "@/lib/validators/comment";
 
 export type PlaceToRegisterType = z.infer<typeof PlaceToRegisterSchema>;
 
@@ -147,4 +154,144 @@ export async function registerPlaceToListAction(
       error: "予期せぬエラーが発生しました。場所を登録できませんでした。",
     };
   }
+}
+
+/**
+ * 指定したlist_place_idに紐づくコメント一覧を取得
+ */
+export async function getCommentsByListPlaceId(
+  listPlaceId: string
+): Promise<ListPlaceComment[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("list_place_commnts")
+    .select("id, list_place_id, user_id, comment, created_at, updated_at")
+    .eq("list_place_id", listPlaceId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("コメント取得エラー", error);
+    return [];
+  }
+  return (data as ListPlaceComment[]) || [];
+}
+
+/**
+ * 指定したlist_place_idにコメントを追加
+ */
+export async function addCommentToListPlace(
+  input: AddCommentInput
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  // 認証チェック
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "認証が必要です。" };
+  }
+  // バリデーション
+  const result = AddCommentSchema.safeParse(input);
+  if (!result.success) {
+    return {
+      success: false,
+      error: result.error.errors[0]?.message || "入力内容に誤りがあります。",
+    };
+  }
+  try {
+    const { comment, listPlaceId } = result.data;
+    const { error: insertError } = await supabase
+      .from("list_place_commnts")
+      .insert({
+        list_place_id: listPlaceId,
+        user_id: user.id,
+        comment,
+      });
+    if (insertError) {
+      return { success: false, error: "コメントの保存に失敗しました。" };
+    }
+    revalidatePath(`/lists/${listPlaceId}`);
+    return { success: true };
+  } catch (e) {
+    console.error("Unexpected error in addCommentToListPlace:", e);
+    return { success: false, error: "予期せぬエラーが発生しました。" };
+  }
+}
+
+export async function updateComment({
+  commentId,
+  comment,
+}: UpdateCommentInput & { commentId: string; comment: string }): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "認証が必要です。" };
+  }
+  // 権限チェック: 自分のコメントのみ
+  const { data: commentData, error: fetchError } = await supabase
+    .from("list_place_commnts")
+    .select("user_id, list_place_id")
+    .eq("id", commentId)
+    .single();
+  if (fetchError || !commentData) {
+    return { success: false, error: "コメントが見つかりません。" };
+  }
+  if (commentData.user_id !== user.id) {
+    return { success: false, error: "編集権限がありません。" };
+  }
+  // バリデーション
+  const result = UpdateCommentSchema.safeParse({ commentId, comment });
+  if (!result.success) {
+    return { success: false, error: result.error.errors[0]?.message };
+  }
+  const { error: updateError } = await supabase
+    .from("list_place_commnts")
+    .update({ comment })
+    .eq("id", commentId);
+  if (updateError) {
+    return { success: false, error: "コメントの更新に失敗しました。" };
+  }
+  revalidatePath(`/lists/${commentData.list_place_id}`);
+  return { success: true };
+}
+
+export async function deleteComment(
+  commentId: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "認証が必要です。" };
+  }
+  // 権限チェック: 自分のコメントのみ
+  const { data: commentData, error: fetchError } = await supabase
+    .from("list_place_commnts")
+    .select("user_id, list_place_id")
+    .eq("id", commentId)
+    .single();
+  if (fetchError || !commentData) {
+    return { success: false, error: "コメントが見つかりません。" };
+  }
+  if (commentData.user_id !== user.id) {
+    return { success: false, error: "削除権限がありません。" };
+  }
+  const { error: deleteError } = await supabase
+    .from("list_place_commnts")
+    .delete()
+    .eq("id", commentId);
+  if (deleteError) {
+    return { success: false, error: "コメントの削除に失敗しました。" };
+  }
+  revalidatePath(`/lists/${commentData.list_place_id}`);
+  return { success: true };
 }

@@ -6,6 +6,19 @@ import { ProfileSettings } from "../../app/settings/_components/profile-settings
 import PlaceList from "../../app/components/places/PlaceList";
 import { mockPlaces } from "../../lib/mockData";
 
+// next/router の useRouter をモック (トップレベルに移動)
+const mockRouterPush = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockRouterPush,
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+  }),
+  redirect: jest.fn(), // redirect もモックしておく
+}));
+
 // モックの設定
 jest.mock("@/hooks/use-toast", () => ({
   useToast: jest.fn().mockReturnValue({ toast: jest.fn() }),
@@ -21,14 +34,6 @@ jest.mock("@/lib/supabase/client", () => ({
     from: jest.fn().mockReturnValue({
       upsert: jest.fn().mockResolvedValue({ error: null }),
     }),
-  }),
-}));
-
-jest.mock("next/navigation", () => ({
-  redirect: jest.fn(),
-  useRouter: jest.fn().mockReturnValue({
-    push: jest.fn(),
-    back: jest.fn(),
   }),
 }));
 
@@ -121,6 +126,9 @@ jest.mock("lucide-react", () => ({
   MapPin: () => <span data-testid="map-pin-icon">地図ピンアイコン</span>,
   Tag: () => <span data-testid="tag-icon">タグアイコン</span>,
   Upload: () => <span data-testid="upload-icon">アップロードアイコン</span>,
+  ChevronRight: () => (
+    <span data-testid="chevron-right-icon">シェブロン右アイコン</span>
+  ),
 }));
 
 // Next.jsのLinkコンポーネントをモック
@@ -131,6 +139,13 @@ jest.mock("next/link", () => {
     </a>
   );
 });
+
+// Cardコンポーネントのモック
+jest.mock("@/components/ui/card", () => ({
+  Card: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardContent: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardTitle: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+}));
 
 // モックデータ
 const mockInitialData = {
@@ -143,6 +158,10 @@ const mockInitialData = {
 };
 
 describe("キーボードナビゲーションテスト", () => {
+  beforeEach(() => {
+    mockRouterPush.mockClear(); // 各テスト前にモックをクリア
+  });
+
   it("ProfileSettingsコンポーネントで基本的なキーボードナビゲーションが可能なこと", async () => {
     const user = userEvent.setup();
     render(<ProfileSettings initialData={mockInitialData} />);
@@ -171,29 +190,37 @@ describe("キーボードナビゲーションテスト", () => {
 
   it("PlaceListコンポーネントでキーボード操作が可能なこと", async () => {
     const user = userEvent.setup();
-    const mockOnPlaceSelect = jest.fn();
-
     const testPlaces = mockPlaces.slice(0, 3);
-    render(<PlaceList places={testPlaces} onPlaceSelect={mockOnPlaceSelect} />);
+    const listId = "test-list-id";
 
-    // Googleマップで開くリンクが存在することを確認
-    const placeItems = screen.getAllByText(/Googleマップで開く/);
-    expect(placeItems.length).toBeGreaterThan(0);
+    render(<PlaceList places={testPlaces} listId={listId} />);
 
-    // リンクにフォーカスして選択する
-    await user.click(placeItems[0]);
+    // 最初の場所アイテムを取得
+    const firstPlaceElement = screen.getByLabelText(
+      `${testPlaces[0].name}の詳細を見る`
+    );
+    expect(firstPlaceElement).toBeInTheDocument();
 
-    // 場所項目を選択してクリックイベントをテスト
-    const placeItemDivs =
-      screen.getAllByText(/彫刻の森美術館|横浜中華街|江の島/);
-    if (placeItemDivs.length > 0) {
-      // 場所名を含む要素を見つけてクリック
-      const placeElement = placeItemDivs[0].closest("div.p-3");
-      if (placeElement) {
-        await user.click(placeElement);
-        expect(mockOnPlaceSelect).toHaveBeenCalled();
-      }
-    }
+    // 最初の場所にフォーカスしてEnterキーを押す
+    firstPlaceElement.focus();
+    await user.keyboard("{enter}");
+
+    expect(mockRouterPush).toHaveBeenCalledTimes(1);
+    expect(mockRouterPush).toHaveBeenCalledWith(
+      `/lists/${listId}/place/${testPlaces[0].id}`
+    );
+
+    // 2番目の場所にフォーカスしてスペースキーを押す (isSample = false の場合)
+    mockRouterPush.mockClear(); // router.push のモックをクリア
+    const secondPlaceElement = screen.getByLabelText(
+      `${testPlaces[1].name}の詳細を見る`
+    );
+    secondPlaceElement.focus();
+    await user.keyboard(" "); //スペースキー
+    expect(mockRouterPush).toHaveBeenCalledTimes(1);
+    expect(mockRouterPush).toHaveBeenCalledWith(
+      `/lists/${listId}/place/${testPlaces[1].id}`
+    );
   });
 
   it("フォーカスインジケーターがキーボード操作で機能すること", async () => {

@@ -75,7 +75,7 @@ jest.mock("@/app/components/ui/ViewToggle", () => ({
 }));
 
 // マップビューコンポーネントをモック
-jest.mock("@/app/components/map/MapView", () => ({
+jest.mock("@/app/components/map/OpenStreetMapView", () => ({
   __esModule: true,
   default: ({ places }) => (
     <div data-testid="map-view">

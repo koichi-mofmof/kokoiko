@@ -62,6 +62,7 @@ const mapPlaceRowToPlace = (
     imageUrl: undefined,
     rating: undefined,
     googlePlaceId: placeRow.google_place_id || undefined,
+    listPlaceId: undefined,
   };
 };
 
@@ -85,7 +86,6 @@ async function fetchPlacesForList(
       id,
       list_id,
       place_id,
-      user_comment,
       user_id,
       visited_status,
       places (*),
@@ -109,7 +109,6 @@ async function fetchPlacesForList(
         id: string;
         list_id: string;
         place_id: string;
-        user_comment: string | null;
         user_id: string;
         visited_status: string | null;
         places: PlaceRow | null;
@@ -123,8 +122,7 @@ async function fetchPlacesForList(
           listPlaceRow.places, // PlaceRow型のはず
           userId
         );
-        place.user_comment = listPlaceRow.user_comment || undefined;
-        // ★修正: visited_status を正しくマッピング
+        place.listPlaceId = listPlaceRow.id;
         place.visited = listPlaceRow.visited_status as
           | "visited"
           | "not_visited"

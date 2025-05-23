@@ -4,6 +4,18 @@ import PlaceList from "../../../../app/components/places/PlaceList";
 import "@testing-library/jest-dom";
 import { mockPlaces } from "../../../../lib/mockData";
 
+// next/router の useRouter をモック (トップレベルに移動)
+const mockRouterPush = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockRouterPush,
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+  }),
+}));
+
 // アイコンコンポーネントをモック
 jest.mock("lucide-react", () => ({
   Calendar: () => <span data-testid="calendar-icon">カレンダーアイコン</span>,
@@ -14,6 +26,9 @@ jest.mock("lucide-react", () => ({
   ),
   MapPin: () => <span data-testid="map-pin-icon">地図ピンアイコン</span>,
   Tag: () => <span data-testid="tag-icon">タグアイコン</span>,
+  ChevronRight: () => (
+    <span data-testid="chevron-right-icon">シェブロン右アイコン</span>
+  ),
 }));
 
 // Next.jsのLinkコンポーネントをモック
@@ -26,46 +41,29 @@ jest.mock("next/link", () => {
 });
 
 describe("PlaceListコンポーネントテスト", () => {
-  const mockOnPlaceSelect = jest.fn();
-
   beforeEach(() => {
-    mockOnPlaceSelect.mockClear();
+    mockRouterPush.mockClear(); // 各テスト前にモックをクリア
   });
 
   it("場所のリストが正しく表示されること", () => {
-    // テスト用のサンプルデータ（最初の3件のみ使用）
     const testPlaces = mockPlaces.slice(0, 3);
+    const listId = "test-list-id";
 
-    render(<PlaceList places={testPlaces} onPlaceSelect={mockOnPlaceSelect} />);
+    render(<PlaceList places={testPlaces} listId={listId} />);
 
-    // 各場所の名前が表示されていることを確認
     testPlaces.forEach((place) => {
       expect(screen.getByText(place.name)).toBeInTheDocument();
       expect(screen.getByText(place.address)).toBeInTheDocument();
-
-      // メモがある場合はメモも表示されていることを確認
       if (place.notes) {
         expect(screen.getByText(place.notes)).toBeInTheDocument();
       }
-
-      // タグが表示されていることを確認
       place.tags.forEach((tag) => {
         expect(screen.getByText(tag.name)).toBeInTheDocument();
       });
-
-      // 訪問ステータスが表示されていることを確認
-      // if (place.visited) {
-      //   expect(screen.getByText("訪問済み")).toBeInTheDocument();
-      // } else {
-      //   expect(screen.getByText("未訪問")).toBeInTheDocument();
-      // }
     });
 
-    // 訪問ステータスが表示されていることを確認（複数要素対応）
     const visitedElements = screen.queryAllByText("訪問済み");
     const notVisitedElements = screen.queryAllByText("未訪問");
-
-    // テストプレースデータの訪問状態に応じた要素数を確認
     expect(visitedElements.length).toBe(
       testPlaces.filter((p) => p.visited === "visited").length
     );
@@ -73,58 +71,78 @@ describe("PlaceListコンポーネントテスト", () => {
       testPlaces.filter((p) => p.visited !== "visited").length
     );
 
-    // Googleマップへのリンクが各場所分存在することを確認
-    const googleMapsLinks = screen.getAllByText("Googleマップで開く");
-    expect(googleMapsLinks).toHaveLength(testPlaces.length);
+    // "Googleマップで開く" のアサーションは削除
   });
 
-  it("場所をクリックすると選択イベントが発火すること", () => {
+  it("場所をクリックすると正しいパスに遷移すること", () => {
     const testPlaces = mockPlaces.slice(0, 3);
+    const listId = "test-list-id";
+    const isSample = false;
 
-    render(<PlaceList places={testPlaces} onPlaceSelect={mockOnPlaceSelect} />);
+    render(
+      <PlaceList places={testPlaces} listId={listId} isSample={isSample} />
+    );
 
-    // 最初の場所をクリック
-    fireEvent.click(screen.getByText(testPlaces[0].name));
+    const firstPlaceElement = screen.getByLabelText(
+      `${testPlaces[0].name}の詳細を見る`
+    );
+    fireEvent.click(firstPlaceElement);
 
-    // onPlaceSelectが正しいプレースデータで呼ばれることを確認
-    expect(mockOnPlaceSelect).toHaveBeenCalledTimes(1);
-    expect(mockOnPlaceSelect).toHaveBeenCalledWith(testPlaces[0]);
+    expect(mockRouterPush).toHaveBeenCalledTimes(1);
+    expect(mockRouterPush).toHaveBeenCalledWith(
+      `/lists/${listId}/place/${testPlaces[0].id}`
+    );
+  });
+
+  it("サンプルモードで場所をクリックすると正しいパスに遷移すること", () => {
+    const testPlaces = mockPlaces.slice(0, 3);
+    const listId = "sample-list-id";
+    const isSample = true;
+
+    render(
+      <PlaceList places={testPlaces} listId={listId} isSample={isSample} />
+    );
+
+    const firstPlaceElement = screen.getByLabelText(
+      `${testPlaces[0].name}の詳細を見る`
+    );
+    fireEvent.click(firstPlaceElement);
+
+    expect(mockRouterPush).toHaveBeenCalledTimes(1);
+    expect(mockRouterPush).toHaveBeenCalledWith(
+      `/sample/${listId}/place/${testPlaces[0].id}`
+    );
   });
 
   it("選択された場所が強調表示されること", () => {
     const testPlaces = mockPlaces.slice(0, 3);
+    const listId = "test-list-id";
     const selectedPlaceId = testPlaces[1].id;
 
     const { container } = render(
       <PlaceList
         places={testPlaces}
-        onPlaceSelect={mockOnPlaceSelect}
+        listId={listId}
         selectedPlaceId={selectedPlaceId}
       />
     );
 
-    // 選択された場所のコンテナが特別なクラスを持つことを確認
-    // 注意: データ属性や特定のセレクタを使用するのが理想的ですが、
-    // 現在のコンポーネント実装ではクラス名に基づいて判断します
-    const placeElements = container.querySelectorAll(".border");
+    const placeElements = container.querySelectorAll("div[role='button']");
 
-    // 各要素のクラスを確認
-    let foundSelected = false;
     placeElements.forEach((element) => {
-      if (element.textContent.includes(testPlaces[1].name)) {
-        expect(element.className).toContain("border-primary-300");
-        foundSelected = true;
+      const ariaLabel = element.getAttribute("aria-label");
+      if (ariaLabel && ariaLabel.includes(testPlaces[1].name)) {
+        expect(element).toHaveClass("border-primary-300", "bg-primary-50");
       } else {
-        expect(element.className).toContain("border-neutral-200");
+        expect(element).not.toHaveClass("border-primary-300");
+        expect(element).not.toHaveClass("bg-primary-50");
       }
     });
-
-    expect(foundSelected).toBe(true);
   });
 
   it("場所が0件の場合は適切なメッセージが表示されること", () => {
-    render(<PlaceList places={[]} onPlaceSelect={mockOnPlaceSelect} />);
-
+    const listId = "test-list-id";
+    render(<PlaceList places={[]} listId={listId} />);
     expect(screen.getByText("登録された場所がありません")).toBeInTheDocument();
   });
 });

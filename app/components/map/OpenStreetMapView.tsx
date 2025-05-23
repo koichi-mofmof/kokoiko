@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { Place } from "@/types";
 import PlaceCard from "@/app/components/places/PlaceCard";
 import { X } from "lucide-react";
@@ -15,6 +14,8 @@ interface OpenStreetMapViewProps {
   onPlaceSelect?: (place: Place) => void;
   initialCenter?: { lat: number; lng: number };
   initialZoom?: number;
+  listId?: string;
+  isSample?: boolean;
 }
 
 const DEFAULT_CENTER: L.LatLngTuple = [35.681236, 139.767125]; // 東京駅
@@ -82,10 +83,14 @@ const MapEvents = ({
 
   useEffect(() => {
     map.setView(center, zoom);
+    map.invalidateSize();
   }, [center, zoom, map]);
 
   useEffect(() => {
-    if (!places || places.length === 0) return;
+    if (!places || places.length === 0) {
+      map.invalidateSize();
+      return;
+    }
 
     if (places.length === 1 && places[0].latitude && places[0].longitude) {
       map.setView([places[0].latitude, places[0].longitude], 15);
@@ -99,6 +104,7 @@ const MapEvents = ({
         map.fitBounds(bounds, { padding: [50, 50] });
       }
     }
+    map.invalidateSize();
   }, [places, map]);
 
   useEffect(() => {
@@ -127,6 +133,8 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   onPlaceSelect,
   initialCenter,
   initialZoom,
+  listId,
+  isSample,
 }) => {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [currentCenter, setCurrentCenter] = useState<L.LatLngTuple>(
@@ -151,7 +159,7 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   }, [initialCenter, initialZoom]);
 
   return (
-    <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden">
+    <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden z-10">
       <MapContainer
         center={currentCenter}
         zoom={currentZoom}
@@ -177,7 +185,7 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
                 position={[place.latitude, place.longitude]}
                 icon={CustomLeafletMarkerIcon(isSelected, place.name)}
                 eventHandlers={{
-                  click: (e) => {
+                  click: (e: L.LeafletMouseEvent) => {
                     L.DomEvent.stopPropagation(e); // MapContainerのクリックイベントの発火を抑制
                     setSelectedPlace(place);
                     if (onPlaceSelect) {
@@ -193,7 +201,7 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
         })}
       </MapContainer>
       {selectedPlace && (
-        <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000]">
+        <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-120 sm:max-w-xl z-[1000]">
           {" "}
           {/* z-indexをマーカーより高く */}
           <div className="relative">
@@ -207,7 +215,11 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
             >
               <X className="h-4 w-4 text-neutral-600" />
             </button>
-            <PlaceCard place={selectedPlace} />
+            <PlaceCard
+              place={selectedPlace}
+              listId={listId}
+              isSample={isSample}
+            />
           </div>
         </div>
       )}
