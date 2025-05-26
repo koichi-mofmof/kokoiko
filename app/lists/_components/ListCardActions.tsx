@@ -55,7 +55,7 @@ export function ListCardActions({
     <>
       <div className={className} onClick={handleClick}>
         {canEdit && (
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 ref={buttonRef}

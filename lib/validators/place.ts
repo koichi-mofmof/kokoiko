@@ -23,3 +23,18 @@ export const PlaceToRegisterSchema = z.object({
   listId: z.string().uuid(),
   visited_status: VisitedStatusEnum.optional(),
 });
+
+export const UpdatePlaceDetailsSchema = z.object({
+  listPlaceId: z.string().uuid(),
+  visitedStatus: z.enum(["visited", "not_visited"]),
+  tags: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string().min(1, "タグ名は空にできません"),
+    })
+  ),
+});
+
+export const DeletePlaceSchema = z.object({
+  listPlaceId: z.string().uuid(),
+});

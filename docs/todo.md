@@ -47,7 +47,6 @@
   - [x] OpenStreetMapView コンポーネントの作成と基本機能実装
   - [x] MapboxView コンポーネントから OpenStreetMapView コンポーネントへの置き換え (SSR エラー対応含む)
   - [x] 動作確認と表示調整 (マーカー、ポップアップ、地図操作、フィルター表示)
-  - [ ] 多言語対応の検討（可能な範囲で） # 残タスク
   - [x] パフォーマンス確認 (SSR エラー解消)
   - [x] 不要な Mapbox コンポーネント (MapboxView.tsx) の削除
   - [x] 不要な Mapbox ライブラリ (@mapbox/mapbox-gl-language) のアンインストール
@@ -75,23 +74,22 @@
 - [x] 場所登録機能 # addPlace/add-place-todo.md と同期
   - [x] 登録フォーム (UI 設計、Autocomplete 連携など進行中)
   - [x] タグ付け機能 (UI 追加、Supabase 登録処理が次のタスク)
-- [ ] 場所編集機能
-  - [ ] 編集画面へのリンク追加 (PlaceCard, PlaceList)
-  - [ ] 編集ページルート作成 (`/places/[id]/edit`)
-  - [ ] 編集フォームコンポーネント作成 (基本)
-  - [ ] Server Action での更新処理実装
-  - [ ] フォームバリデーション (Zod)
-  - [ ] フォームと Server Action の接続 (useFormState, useFormStatus)
-- [~] 場所詳細画面の UI・機能
+- [×] 場所編集機能
+  - [x] 編集ダイアログ表示実装（PlaceCard, PlaceList などから遷移ではなくダイアログで編集フォームを表示）
+  - [x] 編集ページルート作成
+  - [x] 編集フォームコンポーネント作成 (基本)
+  - [x] Server Action での更新処理実装
+  - [x] フォームバリデーション (Zod)
+  - [x] フォームと Server Action の接続 (useFormState, useFormStatus)
+- [×] 場所詳細画面の UI・機能
   - [x] 住所横に「MAP」ボタンを配置し、Google マップで開くように修正
   - [x] 既存の「Google マップで開く」リンクを削除
   - [x] コメント・タグ・訪問ステータスの表示
   - [x] 地図表示（PlaceMapClient）
   - [x] 編集・削除メニューの UI（DropdownMenu）
   - [x] コメントをスレッド形式で追加できるように（要テーブル定義変更）
-  - [ ] 編集・削除機能の実装（Server Action 連携）
-  - [ ] 権限判定・認可処理の強化
-  - [ ] アクセシビリティ・レスポンシブ最適化
+  - [x] 編集・削除機能の UI 改善（AlertDialog 導入・DropdownMenu modal=false 対応・削除確認文言改善）
+  - [x] 編集・削除機能の実装（Server Action 連携）
 - [~] 行きたい場所リストのランキング機能実装 # 新規追加・進行中
   - [x] ランキングデータ構造の定義 (PlaceListGroup, RankedPlace)
   - [x] ランキング表示 UI コンポーネント作成 (RankingView, RankingDisplay, RankingCard)
@@ -100,6 +98,8 @@
   - [ ] ランキング編集モーダルでのドラッグ＆ドロップによる順位変更機能
   - [ ] Supabase とのデータ連携 (ランキング情報の永続化)
   - [x] リスト詳細ページへのランキングビュータブ/切り替え UI の追加
+- [ ]「このマップをコピーして使う」機能（他人のマップを複製して自分用にカスタマイズ可能に）
+- [ ] SNS 埋め込み機能（X やブログに地図リストを埋め込むタグ発行）
 
 ## 🟢 通常タスク
 
@@ -145,18 +145,8 @@
 - [ ] ソーシャル共有機能
 - [ ] 通知機能
 - [ ] エクスポート/インポート機能
-- [x] サービス名変更: ココイコ -> ClippyMap
-  - [x] 各ファイル内の「ココイコ」を「ClippyMap」に置換
-  - [x] package.json の name を変更
 - [ ] メール認証用 SMTP 設定
   - 本番運用や実際のメール送信確認のために、独自 SMTP サーバーの設定が必要
   - Supabase ダッシュボード > Authentication > Settings > Email Templates > SMTP Settings で設定
   - 公式ドキュメント: https://supabase.com/docs/guides/auth/auth-email#configuring-smtp
   - 見積時間: 30 分〜1 時間
-- [x] ログイン後のヘッダー UI を shadcn/ui の Avatar・DropdownMenu で改善
-  - ユーザー名＋アイコンをドロップダウン化
-  - プロフィール・設定・ログアウトをメニューにまとめる
-  - モバイルも同様の体験に
-  - レスポンシブ・アクセシビリティ・UI 一貫性を担保
-  - 依存: shadcn/ui/dropdown-menu 新規作成
-  - 見積: 1h

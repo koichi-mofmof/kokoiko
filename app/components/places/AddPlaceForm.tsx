@@ -485,12 +485,12 @@ export default function AddPlaceForm({
     return (
       <Card className="w-full max-w-lg mx-auto">
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="text-neutral-800">
             {selectedPredictionForDisplay!.structured_formatting.main_text}
           </CardTitle>
           {placeDetailsState.placeDetails!.formattedAddress && (
-            <CardDescription className="flex items-center pt-1">
-              <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
+            <CardDescription className="flex items-center pt-1 text-neutral-600">
+              <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-neutral-600" />
               <span>
                 {placeDetailsState.placeDetails!.formattedAddress.replace(
                   /(〒?\s*\d{3}-?\d{4}\s*)/,

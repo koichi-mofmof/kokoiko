@@ -1,13 +1,8 @@
 import AddCommentForm from "@/app/lists/_components/AddCommentForm";
 import CommentItem from "@/app/lists/_components/CommentItem";
+import EditPlaceDialogButton from "@/app/components/places/EditPlaceDialogButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { getCommentsByListPlaceId } from "@/lib/actions/place-actions";
 import { getListDetails } from "@/lib/dal/lists";
 import { fetchAuthenticatedUserWithProfile } from "@/lib/dal/users";
@@ -17,12 +12,9 @@ import {
   ArrowLeft,
   Check,
   Circle,
-  Edit,
   ExternalLink,
   MapPin,
-  MoreVertical,
   Tag,
-  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -76,26 +68,7 @@ export default async function PlaceDetailPage({
         <CardContent className="py-6 relative">
           {canEditOrDelete && (
             <div className="absolute right-4 top-4 z-10">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="p-2 rounded-full hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-400"
-                    aria-label="操作メニュー"
-                  >
-                    <MoreVertical className="h-5 w-5 text-neutral-500" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Edit className="h-4 w-4 mr-2" />
-                    場所を編集
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive focus:text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    場所を削除
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <EditPlaceDialogButton place={place} listId={listId} />
             </div>
           )}
           <CardTitle className="text-neutral-800 sm:text-xl mb-1">

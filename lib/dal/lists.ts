@@ -57,7 +57,7 @@ const mapPlaceRowToPlace = (
     tags: [],
     createdAt: placeRow.created_at ? new Date(placeRow.created_at) : new Date(),
     updatedAt: placeRow.updated_at ? new Date(placeRow.updated_at) : undefined,
-    visited: undefined,
+    visited: "not_visited",
     createdBy: currentUserId,
     imageUrl: undefined,
     rating: undefined,
@@ -125,9 +125,7 @@ async function fetchPlacesForList(
         place.listPlaceId = listPlaceRow.id;
         place.visited = listPlaceRow.visited_status as
           | "visited"
-          | "not_visited"
-          | null
-          | undefined;
+          | "not_visited";
 
         // タグ情報をマッピング
         place.tags = listPlaceRow.list_place_tags

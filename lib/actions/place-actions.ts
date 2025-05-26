@@ -1,16 +1,20 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { PlaceToRegisterSchema } from "@/lib/validators/place";
+import {
+  AddCommentInput,
+  AddCommentSchema,
+  UpdateCommentInput,
+  UpdateCommentSchema,
+} from "@/lib/validators/comment";
+import {
+  DeletePlaceSchema,
+  PlaceToRegisterSchema,
+  UpdatePlaceDetailsSchema,
+} from "@/lib/validators/place";
+import { ListPlaceComment } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { ListPlaceComment } from "@/types";
-import {
-  AddCommentSchema,
-  AddCommentInput,
-  UpdateCommentSchema,
-  UpdateCommentInput,
-} from "@/lib/validators/comment";
 
 export type PlaceToRegisterType = z.infer<typeof PlaceToRegisterSchema>;
 
@@ -294,4 +298,136 @@ export async function deleteComment(
   }
   revalidatePath(`/lists/${commentData.list_place_id}`);
   return { success: true };
+}
+
+// EditPlaceForm.tsx から渡されるタグの型
+interface ClientPlaceTag {
+  id: string; // "new-tagName" または既存のUUID
+  name: string;
+}
+
+// updatePlaceDetailsAction用の戻り値型を定義
+export type UpdatePlaceDetailsResult = {
+  success?: string;
+  error?: string;
+  fieldErrors?: {
+    [key: string]: string[];
+  };
+};
+
+/**
+ * 場所の詳細情報（訪問ステータス、タグ）を更新するサーバーアクション
+ * @param listPlaceId 更新対象のlist_placesのID
+ * @param visitedStatus 訪問ステータス
+ * @param clientTags クライアントから送られてくるタグ情報の配列
+ */
+export async function updatePlaceDetailsAction(
+  prevState: UpdatePlaceDetailsResult | null, // useFormStateのために追加
+  formData: FormData
+): Promise<UpdatePlaceDetailsResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id;
+
+  const rawFormData = {
+    listPlaceId: formData.get("listPlaceId"),
+    visitedStatus: formData.get("visitedStatus"),
+    tags: JSON.parse(
+      (formData.get("tags") as string) || "[]"
+    ) as ClientPlaceTag[],
+  };
+
+  const validatedFields = UpdatePlaceDetailsSchema.safeParse(rawFormData);
+
+  if (!validatedFields.success) {
+    console.error(
+      "Validation Error:",
+      validatedFields.error.flatten().fieldErrors
+    );
+    return {
+      error: "入力データが無効です。",
+      fieldErrors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { listPlaceId, visitedStatus, tags: clientTags } = validatedFields.data;
+
+  try {
+    // タグ名配列のみを準備
+    const tagNames: string[] = clientTags.map((tag) => tag.name);
+
+    // RPC呼び出し
+    const { error: rpcError } = await supabase.rpc(
+      "update_list_place_and_tags",
+      {
+        p_list_place_id: listPlaceId,
+        p_visited_status: visitedStatus,
+        p_tags: tagNames,
+        p_user_id: userId,
+      }
+    );
+
+    if (rpcError) throw rpcError;
+
+    // 関連する可能性のあるパスを再検証
+    revalidatePath(`/lists/${listPlaceId}`);
+    revalidatePath("/settings/account");
+
+    return { success: "場所の情報を更新しました。" };
+  } catch (error) {
+    console.error("Error in updatePlaceDetailsAction:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "不明なエラーが発生しました。";
+    return { error: `場所情報の更新に失敗しました: ${errorMessage}` };
+  }
+}
+
+/**
+ * リスト内の場所を削除するサーバーアクション
+ * @param listPlaceId 削除対象のlist_placesのID
+ */
+export async function deleteListPlaceAction(formData: FormData) {
+  const supabase = await createClient();
+
+  const rawFormData = {
+    listPlaceId: formData.get("listPlaceId"),
+  };
+
+  const validatedFields = DeletePlaceSchema.safeParse(rawFormData);
+
+  if (!validatedFields.success) {
+    console.error(
+      "Validation Error:",
+      validatedFields.error.flatten().fieldErrors
+    );
+    return {
+      error: "入力データが無効です。",
+      fieldErrors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { listPlaceId } = validatedFields.data;
+
+  try {
+    const { error: rpcError } = await supabase.rpc(
+      "delete_list_place_cascade",
+      {
+        p_list_place_id: listPlaceId,
+      }
+    );
+
+    if (rpcError) throw rpcError;
+
+    revalidatePath(`/lists/${listPlaceId}`);
+    revalidatePath("/settings/account");
+
+    return { success: "場所を削除しました。" };
+  } catch (error) {
+    console.error("Error in deleteListPlaceAction:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "不明なエラーが発生しました。";
+    return { error: `場所の削除に失敗しました: ${errorMessage}` };
+  }
 }

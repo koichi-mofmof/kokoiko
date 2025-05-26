@@ -59,9 +59,7 @@ export default function AddPlaceButtonClient({
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-xl">
-              新しい場所をリストに追加
-            </DialogTitle>
+            <DialogTitle>新しい場所をリストに追加</DialogTitle>
           </DialogHeader>
           <AddPlaceForm
             key={formKey}

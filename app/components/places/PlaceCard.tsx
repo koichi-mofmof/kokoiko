@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Place } from "@/types";
-import { CheckCircle, Circle, MapPin, Tag, X } from "lucide-react";
+import { Check, Circle, MapPin, Tag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -22,17 +22,18 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   onClose,
 }) => {
   const router = useRouter();
-  const visitStatusElement = place.visited ? (
-    <div className="flex items-center text-xs text-primary-700">
-      <CheckCircle className="h-5 w-5 mr-1 text-primary-500" />
-      訪問済み
-    </div>
-  ) : (
-    <div className="flex items-center text-xs text-neutral-600">
-      <Circle className="h-5 w-5 mr-1 text-neutral-400" />
-      未訪問
-    </div>
-  );
+  const visitStatusElement =
+    place.visited === "visited" ? (
+      <div className="flex items-center text-xs text-primary-700">
+        <Check className="h-5 w-5 mr-1 text-primary-500" />
+        訪問済み
+      </div>
+    ) : (
+      <div className="flex items-center text-xs text-neutral-600">
+        <Circle className="h-5 w-5 mr-1 text-neutral-400" />
+        未訪問
+      </div>
+    );
 
   const handleDetailClick = (e: React.MouseEvent) => {
     e.stopPropagation();

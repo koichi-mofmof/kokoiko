@@ -8,7 +8,7 @@ export interface Place {
   tags: { id: string; name: string }[];
   createdAt: Date;
   updatedAt?: Date;
-  visited: "visited" | "not_visited" | null | undefined;
+  visited: "visited" | "not_visited";
   createdBy: string;
   imageUrl?: string;
   rating?: number;
