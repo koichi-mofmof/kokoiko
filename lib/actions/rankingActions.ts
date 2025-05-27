@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { mockPlaceLists, PlaceListGroup, RankedPlace } from "@/lib/mockData"; // mockPlacesは不要なので削除
+import { mockPlaceLists } from "@/lib/mockData";
+import { PlaceListGroup, RankedPlace } from "@/types";
 
 // 実際にはここでSupabaseクライアント等を使用してDB操作を行う
 // 以下はモックデータ操作の例

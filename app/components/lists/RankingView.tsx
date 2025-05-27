@@ -1,7 +1,8 @@
 "use client"; // Client Component に変更
 
 import { useState, useEffect } from "react"; // useState, useEffect をインポート
-import { getPlaceListDetails, PlaceListGroup } from "@/lib/mockData"; // PlaceListGroup をインポート
+import { getPlaceListDetails } from "@/lib/mockData";
+import { PlaceListGroup } from "@/types";
 import RankingDisplay from "./RankingDisplay";
 import RankingEditModal from "./RankingEditModal"; // インポート
 import { Button } from "@/components/ui/button";

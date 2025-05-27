@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import Header from "../../../../app/components/ui/Header";
+import Header from "@/components/ui/Header";
 import "@testing-library/jest-dom";
 
 // RadixUIのドロップダウンメニューをモックする

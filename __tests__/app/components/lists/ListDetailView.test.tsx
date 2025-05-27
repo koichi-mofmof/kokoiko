@@ -6,21 +6,28 @@ import ListDetailView from "@/app/components/lists/ListDetailView";
 jest.mock("@/app/components/places/PlaceList", () => () => (
   <div data-testid="PlaceList">PlaceList</div>
 ));
-jest.mock("@/app/components/ui/FilterBar", () => (props: any) => (
+jest.mock("@/components/ui/FilterBar", () => (props: any) => (
   <button
     data-testid="FilterBar"
     onClick={() =>
-      props.onFilterChange({ ...props.initialFilters, tags: ["タグ1"] })
+      props.onFilterChange &&
+      props.onFilterChange({ tags: ["タグ1"], prefecture: [] })
     }
   >
-    FilterBar
+    フィルター
   </button>
 ));
-jest.mock("@/app/components/ui/ViewToggle", () => (props: any) => (
+jest.mock("@/components/ui/ViewToggle", () => (props: any) => (
   <div data-testid="ViewToggle">
-    <button onClick={() => props.onViewChange("list")}>リスト</button>
-    <button onClick={() => props.onViewChange("map")}>マップ</button>
-    <button onClick={() => props.onViewChange("ranking")}>ランキング</button>
+    <button onClick={() => props.onViewChange && props.onViewChange("list")}>
+      リスト
+    </button>
+    <button onClick={() => props.onViewChange && props.onViewChange("map")}>
+      マップ
+    </button>
+    <button onClick={() => props.onViewChange && props.onViewChange("ranking")}>
+      ランキング
+    </button>
   </div>
 ));
 jest.mock("@/app/components/places/AddPlaceButtonClient", () => () => (

@@ -3,7 +3,7 @@
 import {
   PlaceListGrid,
   renderLabeledCollaborators,
-} from "@/app/components/common/PlaceListGrid";
+} from "@/components/ui/placelist-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

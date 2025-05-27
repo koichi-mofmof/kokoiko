@@ -1,22 +1,35 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { ListFormComponent } from "../../../../app/lists/_components/ListFormComponent";
 import "@testing-library/jest-dom";
+import { ListFormComponent } from "@/app/components/lists/ListFormComponent";
 
 // UIコンポーネントをモック
 jest.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick, disabled, variant, type, className }) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      type={type}
-      className={className}
-      data-variant={variant}
-      data-testid="button"
-    >
-      {children}
-    </button>
-  ),
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    variant,
+    type,
+    className,
+    "data-testid": dataTestId,
+  }) => {
+    let testId = dataTestId;
+    if (!testId && type === "submit") testId = "submit-button";
+    if (!testId && variant === "outline") testId = "cancel-button";
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        type={type}
+        className={className}
+        data-variant={variant}
+        data-testid={testId || "button"}
+      >
+        {children}
+      </button>
+    );
+  },
 }));
 
 jest.mock("@/components/ui/dialog", () => ({
@@ -109,7 +122,7 @@ describe("ListFormComponentテスト", () => {
     expect(screen.getByTestId("switch-isPublic")).toBeChecked();
 
     // ボタンのテキストが正しいことを確認
-    expect(screen.getByTestId("button")).toHaveTextContent("保存");
+    expect(screen.getByTestId("submit-button")).toHaveTextContent("保存");
   });
 
   it("入力フィールドの変更が状態に反映されること", () => {
@@ -187,7 +200,7 @@ describe("ListFormComponentテスト", () => {
     fireEvent.click(screen.getByTestId("switch-isPublic"));
 
     // フォームを送信
-    fireEvent.submit(screen.getByTestId("button").closest("form"));
+    fireEvent.submit(screen.getByTestId("submit-button").closest("form"));
 
     // onSubmitが正しい値で呼ばれることを確認
     await waitFor(() => {
@@ -209,8 +222,8 @@ describe("ListFormComponentテスト", () => {
     );
 
     // 送信ボタンが無効化されていることを確認
-    expect(screen.getByTestId("button")).toBeDisabled();
-    expect(screen.getByTestId("button")).toHaveTextContent("処理中...");
+    expect(screen.getByTestId("submit-button")).toBeDisabled();
+    expect(screen.getByTestId("submit-button")).toHaveTextContent("処理中...");
   });
 
   it("キャンセルボタンが表示され、クリックでonCancelが呼ばれること", () => {
@@ -226,7 +239,7 @@ describe("ListFormComponentテスト", () => {
     );
 
     // キャンセルボタンを取得してクリック
-    const cancelButton = screen.getAllByTestId("button")[0]; // 最初のボタンがキャンセルボタン
+    const cancelButton = screen.getAllByTestId("cancel-button")[0]; // 最初のボタンがキャンセルボタン
     fireEvent.click(cancelButton);
 
     // onCancelが呼ばれることを確認

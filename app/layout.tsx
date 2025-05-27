@@ -1,12 +1,12 @@
-import Footer from "@/app/components/ui/Footer";
-import Header from "@/app/components/ui/Header";
+import Footer from "@/components/ui/Footer";
+import Header from "@/components/ui/Header";
 import { Toaster } from "@/components/ui/toaster";
 import { logoutUser } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/server";
+import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
 import "./globals.css";
-import "leaflet/dist/leaflet.css";
 
 const inter = Inter({
   subsets: ["latin"],

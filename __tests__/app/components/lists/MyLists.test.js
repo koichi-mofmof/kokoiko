@@ -1,10 +1,10 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { MyLists } from "../../../../app/lists/_components/MyLists";
+import { MyLists } from "@/app/components/lists/MyLists";
 import "@testing-library/jest-dom";
 
 // PlaceListGridコンポーネントをモック
-jest.mock("@/app/components/common/PlaceListGrid", () => ({
+jest.mock("@/components/ui/placelist-grid", () => ({
   PlaceListGrid: ({ initialLists, getLinkHref, renderCollaborators }) => (
     <div data-testid="place-list-grid">
       <div data-testid="lists-count">{initialLists.length}</div>
@@ -126,9 +126,9 @@ jest.mock("lucide-react", () => ({
 }));
 
 // CreateListModalをモック
-jest.mock("../../../../app/lists/_components/CreateListModal", () => ({
-  CreateListModal: () => (
-    <button data-testid="mock-create-list-modal">モックリスト作成</button>
+jest.mock("@/app/components/lists/CreateListModal", () => ({
+  CreateListModal: ({ isOpen, onClose, onSuccess }) => (
+    <div data-testid="create-list-modal">CreateListModal</div>
   ),
 }));
 

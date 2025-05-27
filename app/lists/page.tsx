@@ -1,7 +1,7 @@
 import { List } from "lucide-react";
-import { ErrorMessageToast } from "./_components/ErrorMessageToast";
-import { MyLists } from "./_components/MyLists";
-import { MyPageDataLoader } from "./_components/MyPageDataLoader";
+import { ErrorMessageToast } from "@/app/components/lists/ErrorMessageToast";
+import { MyLists } from "@/app/components/lists/MyLists";
+import { MyPageDataLoader } from "@/app/components/lists/MyPageDataLoader";
 
 export default async function MyPage() {
   const { myListsForClient, error } = await MyPageDataLoader();

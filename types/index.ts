@@ -67,7 +67,23 @@ export interface PlaceList {
 }
 
 /**
- * ランキングに表示する場所情報
+ * モックデータ用のプレイスリストグループ型
+ * PlaceListとの違い: ownerId, places必須, ranking系プロパティの型が異なる
+ */
+export interface PlaceListGroup {
+  id: string;
+  name: string;
+  description?: string;
+  ownerId: string;
+  places: Place[];
+  sharedUserIds?: string[];
+  ranking?: RankedPlace[]; // ランキング情報 (オプショナル)
+  rankingTitle?: string; // ランキングのタイトル
+  rankingDescription?: string; // ランキングの説明 (オプショナル)
+}
+
+/**
+ * ランキングに表示する場所情報（PlaceList, PlaceListGroup共通）
  */
 export interface RankedPlace {
   placeId: string;

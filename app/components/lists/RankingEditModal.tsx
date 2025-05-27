@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateRankingAction } from "@/lib/actions/rankingActions";
-import { PlaceListGroup, RankedPlace } from "@/lib/mockData";
+import { PlaceListGroup, RankedPlace, Place } from "@/types";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -39,7 +39,7 @@ export default function RankingEditModal({
   const initialRankedPlaces: RankedPlace[] =
     list.ranking && list.ranking.length > 0
       ? list.places
-          .map((p) => {
+          .map((p: Place) => {
             const existingRank = list.ranking?.find(
               (rp) => rp.placeId === p.id
             );
@@ -47,7 +47,7 @@ export default function RankingEditModal({
               ? { ...existingRank }
               : { placeId: p.id, rank: 0, comment: "" }; // rank 0 は未ランク扱い
           })
-          .sort((a, b) => {
+          .sort((a: RankedPlace, b: RankedPlace) => {
             // 既存のrank順、なければ末尾
             const rankA =
               list.ranking?.find((r) => r.placeId === a.placeId)?.rank ||
@@ -74,7 +74,7 @@ export default function RankingEditModal({
     const newInitialRankedPlaces: RankedPlace[] =
       list.ranking && list.ranking.length > 0
         ? list.places
-            .map((p) => {
+            .map((p: Place) => {
               const existingRank = list.ranking?.find(
                 (rp) => rp.placeId === p.id
               );
@@ -82,7 +82,7 @@ export default function RankingEditModal({
                 ? { ...existingRank }
                 : { placeId: p.id, rank: 0, comment: "" };
             })
-            .sort((a, b) => {
+            .sort((a: RankedPlace, b: RankedPlace) => {
               const rankA =
                 list.ranking?.find((r) => r.placeId === a.placeId)?.rank ||
                 Infinity;
@@ -134,7 +134,7 @@ export default function RankingEditModal({
     setIsSaving(true);
     const finalRankedPlaces = currentPlaces
       .filter((p) => p.rank > 0)
-      .sort((a, b) => a.rank - b.rank)
+      .sort((a: RankedPlace, b: RankedPlace) => a.rank - b.rank)
       .map((p, index) => ({ ...p, rank: index + 1 }));
 
     try {

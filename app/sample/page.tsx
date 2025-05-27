@@ -1,6 +1,6 @@
+import { SamplePageDataLoader } from "@/app/components/sample/SamplePageDataLoader";
+import { SearchableSampleList } from "@/app/components/sample/SearchableSampleList";
 import { List } from "lucide-react";
-import { SearchableSampleList } from "./_components/SearchableSampleList";
-import { SamplePageDataLoader } from "./_components/SamplePageDataLoader";
 
 export default async function SampleListPage() {
   const { initialSampleLists } = await SamplePageDataLoader();

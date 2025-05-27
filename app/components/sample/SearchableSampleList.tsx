@@ -3,9 +3,9 @@
 import {
   PlaceListGrid,
   renderLabeledCollaborators,
-} from "@/app/components/common/PlaceListGrid";
+} from "@/components/ui/placelist-grid";
 import { Input } from "@/components/ui/input";
-import type { PlaceListGroup } from "@/lib/mockData";
+import type { PlaceListGroup } from "@/types";
 import type { Place, User } from "@/types";
 import { useState, useMemo } from "react";
 

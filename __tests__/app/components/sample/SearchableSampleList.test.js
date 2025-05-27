@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { SearchableSampleList } from "../../../../app/sample/_components/SearchableSampleList";
+import { SearchableSampleList } from "@/app/components/sample/SearchableSampleList";
 import "@testing-library/jest-dom";
 
 // 必要なコンポーネントをモック

@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { CreateListModal } from "../../../../app/lists/_components/CreateListModal";
+import { CreateListModal } from "@/app/components/lists/CreateListModal";
 import "@testing-library/jest-dom";
 
 // createList関数をモック
@@ -103,7 +103,7 @@ jest.mock("@/components/ui/tooltip", () => ({
 }));
 
 // ListFormComponentをモック
-jest.mock("../../../../app/lists/_components/ListFormComponent", () => ({
+jest.mock("@/app/components/lists/ListFormComponent", () => ({
   ListFormComponent: ({
     onSubmit,
     submitButtonText,
@@ -111,33 +111,29 @@ jest.mock("../../../../app/lists/_components/ListFormComponent", () => ({
     showCancelButton,
     onCancel,
     cancelButtonText,
-  }) => {
-    const handleSubmit = () => {
-      onSubmit({
-        name: "テストリスト",
-        description: "テスト説明",
-        isPublic: false,
-      });
-    };
-    return (
-      <div data-testid="list-form">
-        <input data-testid="list-name-input" placeholder="リスト名" />
-        <textarea data-testid="list-description-input" placeholder="説明" />
-        <button
-          data-testid="submit-button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "処理中..." : submitButtonText}
+  }) => (
+    <div data-testid="list-form-component">
+      <button
+        data-testid="submit-button"
+        onClick={() =>
+          onSubmit &&
+          onSubmit({
+            name: "テストリスト",
+            description: "テスト説明",
+            isPublic: false,
+          })
+        }
+        disabled={isSubmitting}
+      >
+        {submitButtonText || "送信"}
+      </button>
+      {showCancelButton && (
+        <button data-testid="cancel-button" onClick={onCancel}>
+          {cancelButtonText || "キャンセル"}
         </button>
-        {showCancelButton && (
-          <button data-testid="cancel-button" onClick={onCancel}>
-            {cancelButtonText}
-          </button>
-        )}
-      </div>
-    );
-  },
+      )}
+    </div>
+  ),
 }));
 
 jest.mock("lucide-react", () => ({
@@ -169,7 +165,7 @@ describe("CreateListModalコンポーネントテスト", () => {
     expect(dialogTitle).toHaveTextContent("新しいリストを作成");
 
     // フォームが表示されることを確認
-    const listForm = screen.getByTestId("list-form");
+    const listForm = screen.getByTestId("list-form-component");
     expect(listForm).toBeInTheDocument();
   });
 

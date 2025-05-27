@@ -7,8 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RankedPlace } from "@/lib/mockData";
-import { Place } from "@/types";
+import { Place, RankedPlace } from "@/types";
 import { Award, Crown, ExternalLink, MapPin, Tag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

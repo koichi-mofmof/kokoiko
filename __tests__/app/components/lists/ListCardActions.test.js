@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { ListCardActions } from "../../../../app/lists/_components/ListCardActions";
+import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import "@testing-library/jest-dom";
 
 // deleteListアクションをモック
@@ -22,41 +22,61 @@ jest.mock("@/lib/actions/lists", () => ({
 // });
 
 // EditListDialogとDeleteListDialogをモック
-jest.mock("../../../../app/lists/_components/EditListDialog", () => ({
-  EditListDialog: ({ isOpen, onClose, list, onSuccess }) => {
-    if (!isOpen) return null;
-    return (
-      <div
-        data-testid="edit-list-dialog"
-        data-open={isOpen}
-        data-list-id={list.id}
-        onClick={onClose}
-      >
-        Edit List Dialog
-      </div>
-    );
-  },
-}));
+jest.mock("@/app/components/lists/EditListDialog", () => {
+  return {
+    EditListDialog: ({ isOpen, onClose, list, onSuccess }) => {
+      const [open, setOpen] = React.useState(isOpen);
+      React.useEffect(() => {
+        setOpen(isOpen);
+      }, [isOpen]);
+      if (!open) return null;
+      return (
+        <div
+          data-testid="edit-list-dialog"
+          data-open={open}
+          data-list-id={list.id}
+          onClick={() => {
+            setOpen(false);
+            onClose && onClose();
+          }}
+        >
+          EditListDialog
+          <button>Close Dialog In Mock</button>
+        </div>
+      );
+    },
+  };
+});
 
-jest.mock("../../../../app/lists/_components/DeleteListDialog", () => ({
-  DeleteListDialog: ({ isOpen, onClose, listId, listName, onConfirm }) => {
-    if (!isOpen) return null;
-    return (
-      <div
-        data-testid="delete-list-dialog"
-        data-open={isOpen}
-        data-list-id={listId}
-        data-list-name={listName}
-      >
-        <button data-testid="confirm-delete-button-in-mock" onClick={onConfirm}>
-          Confirm Delete In Mock
-        </button>
-        <button onClick={onClose}>Close Dialog In Mock</button>
-        Delete List Dialog
-      </div>
-    );
-  },
-}));
+jest.mock("@/app/components/lists/DeleteListDialog", () => {
+  return {
+    DeleteListDialog: ({ isOpen, onClose, listId, listName, onConfirm }) => {
+      const [open, setOpen] = React.useState(isOpen);
+      if (!open) return null;
+      return (
+        <div data-testid="delete-list-dialog">
+          <button
+            data-testid="confirm-delete-button-in-mock"
+            onClick={() => {
+              onConfirm && onConfirm();
+            }}
+          >
+            Confirm Delete In Mock
+          </button>
+          <button
+            onClick={() => {
+              setOpen(false);
+              onClose && onClose();
+            }}
+          >
+            Close Dialog In Mock
+          </button>
+          DeleteListDialog
+        </div>
+      );
+    },
+  };
+});
 
 // UIコンポーネントをモック
 jest.mock("@/components/ui/button", () => ({

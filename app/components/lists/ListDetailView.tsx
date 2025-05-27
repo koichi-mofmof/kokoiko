@@ -1,8 +1,8 @@
 "use client";
 
 import PlaceList from "@/app/components/places/PlaceList";
-import FilterBar from "@/app/components/ui/FilterBar";
-import ViewToggle from "@/app/components/ui/ViewToggle";
+import FilterBar from "@/components/ui/FilterBar";
+import ViewToggle from "@/components/ui/ViewToggle";
 import RankingView from "@/app/components/lists/RankingView";
 import { FilterOptions, Place, ViewMode } from "@/types";
 import { useEffect, useMemo, useState } from "react";

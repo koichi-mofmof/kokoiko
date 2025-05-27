@@ -1,7 +1,7 @@
 "use client";
 
 import { Place } from "@/types"; // Place型をインポート
-import { RankedPlace } from "@/lib/mockData"; // 型定義をインポート. PlaceListGroupは不要なので削除
+import { RankedPlace } from "@/types"; // 型定義をインポート. PlaceListGroupは不要なので削除
 import RankingCard from "./RankingCard"; // コメントアウトを解除
 
 interface RankingDisplayProps {

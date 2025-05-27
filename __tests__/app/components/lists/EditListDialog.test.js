@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { EditListDialog } from "../../../../app/lists/_components/EditListDialog";
+import { EditListDialog } from "@/app/components/lists/EditListDialog";
 import "@testing-library/jest-dom";
 
 // updateList関数をモック
@@ -44,7 +44,7 @@ jest.mock("@/components/ui/dialog", () => ({
 }));
 
 // ListFormComponentをモック
-jest.mock("../../../../app/lists/_components/ListFormComponent", () => ({
+jest.mock("@/app/components/lists/ListFormComponent", () => ({
   ListFormComponent: ({
     initialData,
     onSubmit,
@@ -53,32 +53,30 @@ jest.mock("../../../../app/lists/_components/ListFormComponent", () => ({
     showCancelButton,
     onCancel,
     cancelButtonText,
-  }) => {
-    const handleSubmit = () => {
-      onSubmit({
-        name: initialData.name + " (更新)",
-        description: initialData.description + " (更新)",
-        isPublic: !initialData.isPublic,
-      });
-    };
-    return (
-      <div data-testid="list-form" data-submitting={isSubmitting}>
-        <div data-testid="form-initial-data">{JSON.stringify(initialData)}</div>
-        <button
-          data-testid="submit-button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "処理中..." : submitButtonText}
+  }) => (
+    <div data-testid="list-form-component">
+      <div data-testid="form-initial-data">{JSON.stringify(initialData)}</div>
+      <button
+        data-testid="submit-button"
+        onClick={() =>
+          onSubmit &&
+          onSubmit({
+            name: "テストリスト (更新)",
+            description: "テスト説明 (更新)",
+            isPublic: true,
+          })
+        }
+        disabled={isSubmitting}
+      >
+        {submitButtonText || "送信"}
+      </button>
+      {showCancelButton && (
+        <button data-testid="cancel-button" onClick={onCancel}>
+          {cancelButtonText || "キャンセル"}
         </button>
-        {showCancelButton && (
-          <button data-testid="cancel-button" onClick={onCancel}>
-            {cancelButtonText}
-          </button>
-        )}
-      </div>
-    );
-  },
+      )}
+    </div>
+  ),
 }));
 
 describe("EditListDialogコンポーネントテスト", () => {

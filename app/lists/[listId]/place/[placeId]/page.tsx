@@ -1,5 +1,5 @@
-import AddCommentForm from "@/app/lists/_components/AddCommentForm";
-import CommentItem from "@/app/lists/_components/CommentItem";
+import AddCommentForm from "@/app/components/lists/AddCommentForm";
+import CommentItem from "@/app/components/lists/CommentItem";
 import EditPlaceDialogButton from "@/app/components/places/EditPlaceDialogButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";

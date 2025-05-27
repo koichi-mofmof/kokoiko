@@ -1,6 +1,6 @@
 "use client";
 
-import { ListCardActions } from "@/app/lists/_components/ListCardActions";
+import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,9 +21,6 @@ import { Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-/**
- * リスト表示用の共通型定義
- */
 export type ListDisplayItem = {
   id: string;
   name: string;
@@ -50,17 +47,13 @@ export type PlaceListGridProps<T extends ListDisplayItem> = {
   className?: string;
 };
 
-const MAX_AVATARS_DISPLAYED = 5; // 表示するアバターの最大数
+const MAX_AVATARS_DISPLAYED = 5;
 
-/**
- * 作成者・共同編集者ラベル付きアバター表示
- */
 export function renderLabeledCollaborators<T extends ListDisplayItem>(
   list: T,
   displayedCollaborators: User[],
   remainingCount: number
 ) {
-  // 作成者と共同編集者を分離
   const owners = displayedCollaborators.filter((user) => user.isOwner);
   const members = displayedCollaborators.filter((user) => !user.isOwner);
 
@@ -68,7 +61,6 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
     <div className="flex items-center">
       {displayedCollaborators && displayedCollaborators.length > 0 ? (
         <div className="flex flex-wrap gap-2 mr-2">
-          {/* 作成者の表示 - 従来通り個別に表示 */}
           {owners.map((owner) => (
             <Tooltip key={owner.id}>
               <TooltipTrigger asChild>
@@ -94,8 +86,6 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
               </TooltipContent>
             </Tooltip>
           ))}
-
-          {/* 共同編集者の表示 - グループ化して表示 */}
           {members.length > 0 && (
             <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm">
               <span className="text-neutral-700 mr-1">共同編集者</span>
@@ -127,7 +117,6 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
               </div>
             </div>
           )}
-
           {remainingCount > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -154,9 +143,6 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
   );
 }
 
-/**
- * オーバーラップスタイルのアバター表示
- */
 export function renderOverlappingCollaborators<T extends ListDisplayItem>(
   list: T,
   displayedCollaborators: User[],
@@ -216,9 +202,6 @@ export function renderOverlappingCollaborators<T extends ListDisplayItem>(
   );
 }
 
-/**
- * 場所リスト表示用の共通グリッドコンポーネント
- */
 export function PlaceListGrid<T extends ListDisplayItem>({
   initialLists,
   getLinkHref,
@@ -239,11 +222,9 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                 .slice(0, 4)
                 .map((place) => place.imageUrl as string);
 
-              // コラボレーター情報を表示するためのデータ準備
               const displayedCollaborators = list.collaborators
                 ? [...(list.collaborators || [])]
                     .sort((a, b) => {
-                      // 作成者を先頭に持ってくる
                       if (a.isOwner && !b.isOwner) return -1;
                       if (!a.isOwner && b.isOwner) return 1;
                       return 0;
@@ -318,7 +299,7 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                               )}
                             </div>
                           ))}
-                          {placeImages.length === 3 && ( // 3枚の時に右下を空ける場合
+                          {placeImages.length === 3 && (
                             <div className="col-span-1 row-span-1 bg-neutral-200"></div>
                           )}
                         </div>
@@ -327,13 +308,10 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                           <ImageIcon className="h-12 w-12 text-neutral-400" />
                         </div>
                       )}
-
-                      {/* ListCardActionsの追加 - 常に表示し、内部で活性/非活性を制御 */}
                       <ListCardActions
                         list={list as unknown as MyListForClient}
                       />
                     </div>
-
                     <CardContent className="p-4 flex flex-col flex-grow">
                       <div className="mb-3">
                         <CardTitle className="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2 group-hover:text-primary-700">

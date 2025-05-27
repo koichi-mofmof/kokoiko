@@ -1,9 +1,9 @@
 "use client";
 
-import { CtaButton } from "@/app/components/common/CtaButton";
+import { CtaButton } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { ArrowDown, Check, MapPin, Tag, Users, X } from "lucide-react";
+import { ArrowDown, Check, MapPin, Tag, User, Users, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -85,7 +85,7 @@ export default function Home() {
                 あの人と共有
               </span>
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto md:mx-0">
+            <p className="mt-6 text-sm md:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto md:mx-0">
               カフェ、レストラン、ホテル、観光スポット...
               <br />
               気になる場所を保存して、大切な人と共有できます。
@@ -126,14 +126,14 @@ export default function Home() {
       </section>
 
       {/* Feature Section */}
-      <section ref={featuresRef} className="py-16 bg-white relative">
+      <section ref={featuresRef} className="py-8 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="lg:text-center mb-20"
+            className="lg:text-center mb-16"
           >
             <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
               特徴
@@ -149,14 +149,14 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="mt-10">
+          <div className="mt-6">
             <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="pt-8 h-full"
+                className="pt-4 h-full"
               >
                 <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
                   <div className="-mt-8">
@@ -180,7 +180,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="pt-8 h-full"
+                className="pt-4 h-full"
               >
                 <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
                   <div className="-mt-8">
@@ -204,7 +204,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="pt-8 h-full"
+                className="pt-4 h-full"
               >
                 <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
                   <div className="-mt-8">
@@ -235,7 +235,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="lg:text-center mb-20"
+            className="lg:text-center mb-16"
           >
             <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
               使用例
@@ -333,7 +333,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* User Voice Section */}
       <section className="py-16 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -341,7 +341,116 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="lg:text-center mb-20"
+            className="lg:text-center mb-16"
+          >
+            <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
+              ユーザーの声
+            </h2>
+            <p className="mt-2 text-2xl sm:text-4xl leading-8 font-bold text-neutral-900">
+              みんなの体験談
+            </p>
+            <p className="mt-6 max-w-2xl sm:text-lg text-neutral-500 lg:mx-auto">
+              実際に使っているユーザーの声をご紹介します。
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+            {/* 1人目 */}
+            <Card className="flex flex-col h-full shadow-md border border-primary-200">
+              <CardHeader className="flex flex-row items-center gap-4 pt-6 pb-2">
+                <div className="rounded-full bg-primary-100 border border-primary-400 flex items-center justify-center w-12 h-12">
+                  <User
+                    className="text-primary-500 w-7 h-7"
+                    aria-label="Aさんのアイコン"
+                  />
+                </div>
+                <div>
+                  <div className="font-bold text-neutral-800">Aさん</div>
+                  <div className="text-xs text-neutral-500">
+                    趣味：カフェ巡り
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-2 pb-6 px-6">
+                <p className="text-neutral-700 text-sm">
+                  友達同士で行きたいお店をリストアップし合えるので、
+                  <span className="text-primary-600 font-bold drop-shadow-md">
+                    ランチのお店決めがすごく楽に
+                  </span>
+                  なりました。
+                  <br />
+                  「次はここに行こうね！」とみんなでワクワクしながら計画しています。
+                </p>
+              </CardContent>
+            </Card>
+            {/* 2人目 */}
+            <Card className="flex flex-col h-full shadow-md border border-neutral-200">
+              <CardHeader className="flex flex-row items-center gap-4 pt-6 pb-2">
+                <div className="rounded-full bg-neutral-100 border border-neutral-400 flex items-center justify-center w-12 h-12">
+                  <User
+                    className="text-neutral-500 w-7 h-7"
+                    aria-label="Bさんのアイコン"
+                  />
+                </div>
+                <div>
+                  <div className="font-bold text-neutral-800">Bさん</div>
+                  <div className="text-xs text-neutral-500">
+                    デートプランに活用
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-2 pb-6 px-6">
+                <p className="text-neutral-700 text-sm">
+                  行きたい場所をパートナーと一緒にリスト化して、
+                  <span className="text-primary-600 font-bold drop-shadow-md">
+                    デートの計画がとてもスムーズに
+                  </span>
+                  なりました。
+                  <br />
+                  「次はここに行こう！」と話し合うのが楽しいです。
+                </p>
+              </CardContent>
+            </Card>
+            {/* 3人目 */}
+            <Card className="flex flex-col h-full shadow-md border border-amber-300">
+              <CardHeader className="flex flex-row items-center gap-4 pt-6 pb-2">
+                <div className="rounded-full bg-amber-100 border border-amber-400 flex items-center justify-center w-12 h-12">
+                  <User
+                    className="text-amber-500 w-7 h-7"
+                    aria-label="Cさんのアイコン"
+                  />
+                </div>
+                <div>
+                  <div className="font-bold text-neutral-800">Cさん</div>
+                  <div className="text-xs text-neutral-500">
+                    趣味：食べ歩き・発信
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-2 pb-6 px-6">
+                <p className="text-neutral-700 text-sm">
+                  ブログで紹介したお店をリストにして公開したら、
+                  <span className="text-primary-600 font-bold drop-shadow-md">
+                    読者さんから「便利！」とコメント
+                  </span>
+                  をもらいました。
+                  <br />
+                  自分のおすすめを簡単にまとめられて助かっています。
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-16 bg-gradient-to-b from-neutral-50 to-neutral-100 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="lg:text-center mb-16"
           >
             <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
               料金プラン
@@ -414,7 +523,10 @@ export default function Home() {
                     <span className="text-base sm:text-lg font-bold mr-2">
                       月額
                     </span>
-                    480円
+                    500
+                    <span className="text-base sm:text-lg font-bold ml-1">
+                      円
+                    </span>
                   </div>
                   <div className="text-xs sm:text-sm text-neutral-500">
                     すべての機能を無制限で
@@ -456,16 +568,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-br from-neutral-100 to-neutral-200 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30">
-          <Image
-            src="https://images.pexels.com/photos/4429428/pexels-photo-4429428.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-            alt="地図背景"
-            fill
-            style={{ objectFit: "cover" }}
-            className="opacity-10"
-          />
-        </div>
+      <section className="py-16 bg-white relative overflow-hidden">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

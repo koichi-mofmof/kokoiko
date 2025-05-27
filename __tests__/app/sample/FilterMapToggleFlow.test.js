@@ -31,45 +31,24 @@ const mockPlaces = [
 ];
 
 // フィルターバーコンポーネントをモック
-jest.mock("@/app/components/ui/FilterBar", () => ({
+jest.mock("@/components/ui/FilterBar", () => ({
   FilterBar: ({ onFilterChange }) => (
     <div data-testid="filter-bar">
       <input
         data-testid="filter-input"
-        placeholder="キーワードで検索"
-        onChange={(e) => onFilterChange({ keyword: e.target.value })}
+        onChange={(e) => onFilterChange({ tags: [e.target.value] })}
       />
-      <select
-        data-testid="filter-tag"
-        onChange={(e) => onFilterChange({ tag: e.target.value })}
-      >
-        <option value="">タグを選択</option>
-        <option value="観光">観光</option>
-        <option value="展望台">展望台</option>
-        <option value="寺院">寺院</option>
-      </select>
     </div>
   ),
 }));
 
 // ビュー切替コンポーネントをモック
-jest.mock("@/app/components/ui/ViewToggle", () => ({
-  ViewToggle: ({ onViewChange, currentView }) => (
+jest.mock("@/components/ui/ViewToggle", () => ({
+  ViewToggle: ({ onViewChange }) => (
     <div data-testid="view-toggle">
-      <button
-        data-testid="list-view-button"
-        className={currentView === "list" ? "active" : ""}
-        onClick={() => onViewChange("list")}
-      >
-        リスト
-      </button>
-      <button
-        data-testid="map-view-button"
-        className={currentView === "map" ? "active" : ""}
-        onClick={() => onViewChange("map")}
-      >
-        マップ
-      </button>
+      <button onClick={() => onViewChange("list")}>リスト</button>
+      <button onClick={() => onViewChange("map")}>マップ</button>
+      <button onClick={() => onViewChange("ranking")}>ランキング</button>
     </div>
   ),
 }));

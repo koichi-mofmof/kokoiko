@@ -105,6 +105,10 @@ export default function AccountSettingsPage() {
             if (!handleClientValidation()) return;
             const newFormData = new FormData();
             newFormData.append(
+              "currentPassword",
+              formData.get("currentPassword") as string
+            );
+            newFormData.append(
               "newPassword",
               formData.get("newPassword") as string
             );
@@ -127,7 +131,10 @@ export default function AccountSettingsPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className={`w-full ${
-                  clientValidationErrors.currentPassword ? "border-red-500" : ""
+                  clientValidationErrors.currentPassword ||
+                  state?.errors?.some((e) => e.field === "currentPassword")
+                    ? "border-red-500"
+                    : ""
                 }`}
                 required // UI上は必須のまま
               />
@@ -136,6 +143,17 @@ export default function AccountSettingsPage() {
                   {error}
                 </p>
               ))}
+              {/* サーバーエラーも表示 */}
+              {state?.errors
+                ?.filter((e) => e.field === "currentPassword")
+                .map((error, index) => (
+                  <p
+                    key={"server-" + index}
+                    className="mt-1 text-sm text-red-500"
+                  >
+                    {error.message}
+                  </p>
+                ))}
             </div>
 
             <div>

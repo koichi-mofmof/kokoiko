@@ -1,4 +1,4 @@
-import { ParticipantAvatars } from "@/app/components/common/ParticipantAvatars";
+import { ParticipantAvatars } from "@/components/ui/avatar";
 import ListDetailView from "@/app/components/lists/ListDetailView";
 import type { MyListForClient } from "@/lib/dal/lists";
 import { getListDetails } from "@/lib/dal/lists";

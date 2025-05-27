@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { DeleteListDialog } from "../../../../app/lists/_components/DeleteListDialog";
+import { DeleteListDialog } from "@/app/components/lists/DeleteListDialog";
 import "@testing-library/jest-dom";
 
 // deleteList関数をモック

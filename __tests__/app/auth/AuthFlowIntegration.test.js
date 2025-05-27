@@ -1,4 +1,4 @@
-import Header from "@/app/components/ui/Header";
+import Header from "@/components/ui/Header";
 import { useToast } from "@/hooks/use-toast";
 import { loginWithCredentials, logoutUser } from "@/lib/actions/auth";
 import "@testing-library/jest-dom";

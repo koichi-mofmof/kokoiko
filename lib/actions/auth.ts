@@ -267,7 +267,26 @@ export async function updateUserPassword(
     };
   }
 
+  const currentPassword = formData.get("currentPassword") as string;
   const newPassword = formData.get("newPassword") as string;
+
+  // 2. 現在のパスワードで再認証
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password: currentPassword,
+  });
+  if (signInError) {
+    return {
+      success: false,
+      message: "現在のパスワードが正しくありません。",
+      errors: [
+        {
+          field: "currentPassword",
+          message: "現在のパスワードが正しくありません。",
+        },
+      ],
+    };
+  }
 
   // サーバーサイドでも新しいパスワードのみをバリデーション
   const validationResult = newPasswordSchema.safeParse({
@@ -287,14 +306,12 @@ export async function updateUserPassword(
     };
   }
 
-  // 2. パスワードを更新 (認証済みユーザーとして実行)
+  // 3. パスワードを更新 (認証済みユーザーとして実行)
   const { error: updateError } = await supabase.auth.updateUser({
     password: validationResult.data.newPassword,
   });
 
   if (updateError) {
-    // updateError.message には "New password should be different from the old password."
-    // のようなメッセージが含まれる場合があるため、これを活用できる
     let errorMessage = `パスワードの更新に失敗しました。`;
     if (updateError.message.includes("New password should be different")) {
       errorMessage =
@@ -306,7 +323,6 @@ export async function updateUserPassword(
 
     return {
       success: false,
-      // message: `パスワードの更新に失敗しました: ${updateError.message}`,
       message: errorMessage,
     };
   }

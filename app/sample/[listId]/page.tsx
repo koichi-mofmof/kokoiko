@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getPlaceListDetails, mockUsers } from "@/lib/mockData";
-import { ParticipantAvatars } from "@/app/components/common/ParticipantAvatars";
+import { ParticipantAvatars } from "@/components/ui/avatar";
 
 interface SampleListDetailPageProps {
   params: Promise<{ listId: string }>;

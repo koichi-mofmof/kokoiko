@@ -1,4 +1,4 @@
-import { Place, User } from "@/types";
+import { Place, PlaceListGroup, User } from "@/types";
 
 // --- Mock Users --- (Define users first to use their IDs)
 export const mockUsers: User[] = [
@@ -442,25 +442,6 @@ export const mockPlaces: Place[] = [
 ];
 
 // --- Mock Place List Groups ---
-// (Define the lists using the places above)
-export interface PlaceListGroup {
-  id: string;
-  name: string;
-  description?: string;
-  ownerId: string;
-  places: Place[];
-  sharedUserIds?: string[];
-  ranking?: RankedPlace[]; // ランキング情報 (オプショナル)
-  rankingTitle?: string; // ランキングのタイトル
-  rankingDescription?: string; // ランキングの説明 (オプショナル)
-}
-
-// Define RankedPlace interface
-export interface RankedPlace {
-  placeId: string; // mockPlaces の id
-  rank: number;
-  comment?: string; // ユーザーが追加できる短いコメント
-}
 
 // Filter indoor places from mockPlaces
 const indoorDatePlaces = mockPlaces.filter((place) =>
