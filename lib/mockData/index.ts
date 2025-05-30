@@ -484,7 +484,7 @@ const favoriteSaunaPlaces = mockPlaces.filter((place) =>
 
 export const mockPlaceLists: PlaceListGroup[] = [
   {
-    id: "indoor-date",
+    id: "sample-indoor-date",
     name: "デートスポット（雨の日用）",
     description: "雨の日でも楽しめる屋内デートスポット",
     ownerId: mockUsers[0].id,
@@ -512,7 +512,7 @@ export const mockPlaceLists: PlaceListGroup[] = [
     ],
   },
   {
-    id: "sunny-day",
+    id: "sample-sunny-day",
     name: "デートスポット（晴れた日用）",
     description: "天気の良い日に行きたい屋外デートスポット",
     ownerId: mockUsers[0].id,
@@ -555,7 +555,7 @@ export const mockPlaceLists: PlaceListGroup[] = [
     ],
   },
   {
-    id: "osaka-trip",
+    id: "sample-osaka-trip",
     name: "大阪旅行",
     description: "大阪満喫プラン",
     ownerId: mockUsers[0].id,
@@ -599,7 +599,7 @@ export const mockPlaceLists: PlaceListGroup[] = [
     ],
   },
   {
-    id: "favorite-saunas",
+    id: "sample-favorite-saunas",
     name: "お気に入りサウナ",
     description: "至福のととのいを提供する厳選サウナリスト",
     ownerId: mockUsers[0].id,

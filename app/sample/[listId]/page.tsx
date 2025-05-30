@@ -54,7 +54,7 @@ export default async function SampleListDetailPage({
       </div>
 
       <div className="mb-4">
-        <h1 className="text-2xl font-medium text-neutral-900">
+        <h1 className="text-xl font-medium text-neutral-900">
           {listDetails.name}
         </h1>
         {listDetails.description && (

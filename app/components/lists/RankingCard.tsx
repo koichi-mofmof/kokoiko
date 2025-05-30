@@ -1,207 +1,210 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Place, RankedPlace } from "@/types";
-import { Award, Crown, ExternalLink, MapPin, Tag } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { ArrowRight, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React from "react";
 
 interface RankingCardProps {
   rankedPlace: RankedPlace;
   place: Place;
+  listId?: string;
+  isSample?: boolean;
 }
 
-export default function RankingCard({ rankedPlace, place }: RankingCardProps) {
+// TOP3のスタイル定義をさらに強化
+const rankStyles = [
+  {
+    textColor: "text-amber-500",
+    textSize: "text-xl",
+    bgGradient: "bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-600",
+    lightGradient: "bg-gradient-to-br from-yellow-100 via-amber-50 to-white",
+    shadowColor: "shadow-amber-300/40",
+    borderColor: "border-amber-400",
+    glowColor: "from-amber-300/30",
+  },
+  {
+    textColor: "text-slate-600",
+    textSize: "text-xl",
+    bgGradient: "bg-gradient-to-br from-slate-300 via-slate-400 to-slate-600",
+    lightGradient: "bg-gradient-to-br from-slate-100 via-slate-50 to-white",
+    shadowColor: "shadow-slate-300/40",
+    borderColor: "border-slate-400",
+    glowColor: "from-slate-300/30",
+  },
+  {
+    textColor: "text-orange-600",
+    textSize: "text-xl",
+    bgGradient:
+      "bg-gradient-to-br from-orange-300 via-orange-400 to-orange-600",
+    lightGradient: "bg-gradient-to-br from-orange-100 via-orange-50 to-white",
+    shadowColor: "shadow-orange-300/40",
+    borderColor: "border-orange-400",
+    glowColor: "from-orange-300/30",
+  },
+];
+
+export default function RankingCard({
+  rankedPlace,
+  place,
+  listId,
+  isSample,
+}: RankingCardProps) {
+  const router = useRouter();
   const isTopThree = rankedPlace.rank <= 3;
+  const rankIdx = rankedPlace.rank - 1;
 
-  const getRankBadgeStyle = (rank: number): string => {
-    switch (rank) {
-      case 1:
-        return "bg-yellow-500 text-white shadow-sm";
-      case 2:
-        return "bg-slate-500 text-white shadow-sm";
-      case 3:
-        return "bg-amber-600 text-white shadow-sm";
-      default:
-        return "";
-    }
+  const handleDetailClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!listId) return;
+    const url = isSample
+      ? `/sample/${listId}/place/${place.id}`
+      : `/lists/${listId}/place/${place.id}`;
+    router.push(url);
   };
 
-  const getRankCommentBorderStyle = (rank: number): string => {
-    switch (rank) {
-      case 1:
-        return "border-yellow-500 dark:border-yellow-600";
-      case 2:
-        return "border-slate-500 dark:border-slate-600";
-      case 3:
-        return "border-amber-600 dark:border-amber-600";
-      default:
-        return "border-neutral-300 dark:border-neutral-600";
-    }
-  };
-
-  if (isTopThree) {
-    return (
-      <Card
-        className={`overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl relative hover:scale-[1.01]`}
-      >
-        <div
-          className={`absolute -top-0.5 -left-0.5 w-[70px] h-[70px] overflow-hidden z-10`}
-        >
+  return (
+    <Card
+      role="article"
+      className={`relative group flex flex-col overflow-hidden rounded-2xl transition-all duration-300 ease-in-out 
+      ${
+        isTopThree
+          ? `${rankStyles[rankIdx].lightGradient} ring-1 ${rankStyles[rankIdx].borderColor} ${rankStyles[rankIdx].shadowColor}`
+          : "bg-white dark:bg-neutral-900 hover:bg-gradient-to-b hover:from-gray-50 hover:to-white dark:hover:from-neutral-800 dark:hover:to-neutral-900"
+      }
+      hover:shadow-xl hover:-translate-y-1 text-card-foreground
+      ${
+        isTopThree
+          ? `shadow-lg ${rankStyles[rankIdx].shadowColor}`
+          : "shadow-md"
+      }`}
+      tabIndex={0}
+      aria-label={`${rankedPlace.rank}位: ${place.name}`}
+    >
+      {/* --- 高級感のある装飾エフェクト --- */}
+      {isTopThree && (
+        <>
           <div
-            className={`absolute top-[18px] -left-[22px] w-[95px] transform -rotate-45 text-center py-1 text-sm font-bold tracking-normal ${getRankBadgeStyle(
-              rankedPlace.rank
-            )}`}
-          >
-            {rankedPlace.rank === 1 && (
-              <Crown className="inline-block h-3.5 w-3.5 mb-px mr-0.5" />
-            )}
-            {rankedPlace.rank}位
-          </div>
-        </div>
+            className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-20 blur-3xl ${rankStyles[rankIdx].bgGradient}`}
+            aria-hidden="true"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/5 dark:to-black/5 z-0"
+            aria-hidden="true"
+          />
+        </>
+      )}
 
-        <CardHeader className="p-0 relative aspect-[16/9] w-full">
-          {place.imageUrl ? (
-            <>
-              <Image
-                src={place.imageUrl}
-                alt={place.name}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent group-hover:from-black/40 transition-colors duration-300"></div>
-            </>
-          ) : (
-            <div className="w-full h-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center rounded-t-xl">
-              <Award className="w-16 h-16 text-neutral-300 dark:text-neutral-600 opacity-80" />
-            </div>
-          )}
-        </CardHeader>
-
-        <CardContent className="p-4 space-y-2.5">
-          <CardTitle
-            className="text-lg font-semibold text-neutral-800 dark:text-neutral-100 truncate"
-            title={place.name}
+      {/* --- ランキング表示（さらに洗練） --- */}
+      <div className="absolute top-4 left-4 flex items-center z-10">
+        {isTopThree ? (
+          <div
+            className={`flex items-center justify-center w-14 h-14 rounded-full 
+          ${rankStyles[rankIdx].bgGradient} shadow-lg ${rankStyles[rankIdx].shadowColor}
+          before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-white/20 before:z-0`}
           >
-            {place.name}
-          </CardTitle>
-          {place.address && (
-            <div className="flex items-start text-neutral-500 dark:text-neutral-400">
-              <MapPin className="h-4 w-4 text-neutral-500 dark:text-neutral-400 mt-0.5 flex-shrink-0 mr-1.5" />
-              <CardDescription className="text-sm text-neutral-600 dark:text-neutral-400 ml-0 line-clamp-1">
-                {place.address}
-              </CardDescription>
-            </div>
-          )}
-          {rankedPlace.comment && (
-            <div
-              className={`mt-2.5 pl-3 py-2 border-l-4 ${getRankCommentBorderStyle(
-                rankedPlace.rank
-              )} bg-neutral-50 dark:bg-neutral-800/60 rounded-r-md`}
-            >
-              <p className="italic text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                &quot;{rankedPlace.comment}&quot;
-              </p>
-            </div>
-          )}
-          {place.tags && place.tags.length > 0 && (
-            <div className="pt-1.5 flex flex-wrap gap-1.5">
-              {place.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
-                >
-                  <Tag className="h-3 w-3 mr-1 opacity-70" />
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          )}
-          {/* Google Maps Link Start */}
-          {place.googleMapsUrl && (
-            <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-700/60">
-              <Link
-                href={place.googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 transition-colors dark:text-primary-500 dark:hover:text-primary-400"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ExternalLink className="h-4 w-4 mr-1.5" />
-                Google マップで開く
-              </Link>
-            </div>
-          )}
-          {/* Google Maps Link End */}
-        </CardContent>
-      </Card>
-    );
-  } else {
-    return (
-      <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700/70 rounded-lg group">
-        <CardContent className="p-3.5 space-y-2">
-          <div className="flex items-center">
-            <span className="flex-shrink-0 inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-semibold mr-2.5 bg-neutral-700 text-white dark:bg-neutral-400 dark:text-neutral-900 shadow-sm">
+            <span className="relative text-white text-2xl font-black drop-shadow-md">
               {rankedPlace.rank}
             </span>
-            <CardTitle
-              className="text-base font-medium text-neutral-700 dark:text-neutral-200 truncate"
-              title={place.name}
-            >
-              {place.name}
-            </CardTitle>
           </div>
-          {place.address && (
-            <div className="flex items-start text-xs text-neutral-500/90 dark:text-neutral-400/90">
-              <MapPin className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400 mt-px flex-shrink-0 mr-1" />
-              <span className="text-sm text-neutral-600 dark:text-neutral-400 ml-0 line-clamp-1">
-                {place.address}
-              </span>
+        ) : (
+          <div className="flex items-center justify-center w-9 h-9 rounded-full bg-neutral-600 dark:bg-neutral-800">
+            <span className="text-lg font-medium text-neutral-50 dark:text-gray-400">
+              {rankedPlace.rank}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <CardContent
+        className={`relative flex flex-1 flex-col p-6 pt-16 z-10 ${
+          isTopThree ? "pt-20" : ""
+        }`}
+      >
+        {/* --- 場所名 --- */}
+        <h3
+          className={`mb-2 font-semibold leading-tight truncate 
+          ${
+            isTopThree
+              ? `${rankStyles[rankIdx].textColor} ${rankStyles[rankIdx].textSize}`
+              : "text-neutral-600 text-base"
+          }`}
+          title={place.name}
+        >
+          {place.name}
+        </h3>
+
+        {/* --- 住所 --- */}
+        {place.address && (
+          <div
+            className={`flex items-center ${
+              isTopThree ? "text-sm" : "text-neutral-600 text-xs"
+            }`}
+          >
+            <MapPin className="mr-1 h-4 w-4 flex-shrink-0" />
+            <span className="truncate" title={place.address}>
+              {place.address}
+            </span>
+          </div>
+        )}
+
+        {/* --- ランキングコメント--- */}
+        {rankedPlace.comment && (
+          <div
+            className={`my-4 py-2 px-4 
+          ${
+            isTopThree
+              ? `text-sm bg-gradient-to-r ${rankStyles[rankIdx].glowColor} to-transparent/5 backdrop-blur-sm border-l-4 ${rankStyles[rankIdx].borderColor}`
+              : "text-xs bg-neutral-50 dark:bg-neutral-800/50 border-l-4 border-neutral-200 dark:border-neutral-700"
+          } 
+          shadow-sm`}
+          >
+            <div className="flex items-start">
+              <div className="italic leading-relaxed whitespace-pre-line">
+                {(rankedPlace.comment ?? "")
+                  .split("\n")
+                  .map((line, idx, arr) => (
+                    <React.Fragment key={idx}>
+                      {line}
+                      {idx !== arr.length - 1 && <br />}
+                    </React.Fragment>
+                  ))}
+              </div>
             </div>
-          )}
-          {rankedPlace.comment && (
-            <p className="text-xs text-neutral-500/90 dark:text-neutral-400/90 italic pt-1.5 border-t border-neutral-200/70 dark:border-neutral-700/60 mt-2">
-              &ldquo;{rankedPlace.comment}&rdquo;
-            </p>
-          )}
-          {place.tags && place.tags.length > 0 && (
-            <div className="pt-1.5 flex flex-wrap gap-1">
-              {place.tags.slice(0, 2).map((tag) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
-                >
-                  <Tag className="h-3 w-3 mr-1 opacity-70" />
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          )}
-          {/* Google Maps Link Start */}
-          {place.googleMapsUrl && (
-            <div className="pt-2.5 mt-2.5 border-t border-neutral-200/70 dark:border-neutral-700/60">
-              <Link
-                href={place.googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-xs text-primary-600 hover:text-primary-700 transition-colors dark:text-primary-500 dark:hover:text-primary-400"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                Google マップで開く
-              </Link>
-            </div>
-          )}
-          {/* Google Maps Link End */}
-        </CardContent>
-      </Card>
-    );
-  }
+          </div>
+        )}
+
+        <div className="flex-grow" />
+
+        {/* --- 詳細を見るボタン（モダンでおしゃれなデザイン） --- */}
+        <div className="mt-auto text-right">
+          <Button
+            variant={isTopThree ? "outline" : "ghost"}
+            size="sm"
+            onClick={handleDetailClick}
+            tabIndex={0}
+            aria-label="詳細を見る"
+            className={`group text-sm font-medium rounded-full items-center ${
+              isTopThree
+                ? `border ${rankStyles[rankIdx].borderColor} ${
+                    rankStyles[rankIdx].textColor
+                  } hover:bg-gradient-to-r hover:from-transparent hover:to-${
+                    rankStyles[rankIdx].textColor.split("-")[1]
+                  }-50`
+                : "text-neutral-600 hover:text-neutral-700"
+            }`}
+          >
+            詳細を見る
+            {isTopThree ? (
+              <ArrowRight className="ml-1.5 h-4 w-4 transform transition-all" />
+            ) : (
+              <ArrowRight className="ml-1.5 h-4 w-4 transform transition-transform" />
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

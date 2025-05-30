@@ -1,9 +1,10 @@
-import { ParticipantAvatars } from "@/components/ui/avatar";
+import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
+import { ParticipantAvatars } from "@/components/ui/avatar";
 import type { MyListForClient } from "@/lib/dal/lists";
 import { getListDetails } from "@/lib/dal/lists";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -54,9 +55,28 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           </Link>
         </div>
 
-        <div className="mb-1">
-          <h1 className="text-xl font-semibold text-neutral-900">
+        <div className="mb-1 relative">
+          <h1 className="text-lg sm:text-xl font-semibold text-neutral-900 flex items-center gap-2">
             {listDetails.name}
+            {typeof listDetails.is_public === "boolean" ? (
+              <span className="ml-1">
+                <span
+                  aria-label={
+                    listDetails.is_public ? "公開リスト" : "非公開リスト"
+                  }
+                  title={listDetails.is_public ? "公開リスト" : "非公開リスト"}
+                >
+                  {listDetails.is_public ? (
+                    <LockKeyholeOpen className="h-5 w-5 text-primary-500" />
+                  ) : (
+                    <LockKeyhole className="h-5 w-5 text-neutral-400" />
+                  )}
+                </span>
+              </span>
+            ) : null}
+            <div className="absolute right-0 top-0">
+              <ListCardActions list={listDetails} />
+            </div>
           </h1>
           {listDetails.description && (
             <p className="mt-1 text-sm text-neutral-500">

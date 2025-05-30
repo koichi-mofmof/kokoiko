@@ -40,20 +40,19 @@ export async function createList(formData: FormData) {
   const { name, description, isPublic } = validation.data;
 
   try {
-    // リストの作成
-    const { data: newList, error: insertError } = await supabase
-      .from("place_lists")
-      .insert({
-        name,
-        description,
-        is_public: isPublic,
-        created_by: user.id,
-      })
-      .select()
-      .single();
+    // RPCでリストの作成
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "create_place_list",
+      {
+        p_name: name,
+        p_description: description,
+        p_is_public: isPublic,
+        p_created_by: user.id,
+      }
+    );
 
-    if (insertError) {
-      console.error("リスト作成エラー:", insertError);
+    if (rpcError || !rpcData) {
+      console.error("リスト作成エラー(RPC):", rpcError);
       return {
         success: false,
         error: "リストの作成中にエラーが発生しました",
@@ -64,7 +63,7 @@ export async function createList(formData: FormData) {
     revalidatePath("/lists");
     return {
       success: true,
-      listId: newList.id,
+      listId: rpcData.id || rpcData,
     };
   } catch (error) {
     console.error("予期せぬエラー:", error);
@@ -110,26 +109,24 @@ export async function updateList(formData: {
   const { id, name, description, isPublic } = validation.data;
 
   try {
-    // リストの更新処理
-    const { data, error: updateError } = await supabase
-      .from("place_lists")
-      .update({
-        name,
-        description: description || null,
-        is_public: isPublic,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("created_by", user.id)
-      .select()
-      .single();
+    // RPCでリストの更新
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "update_place_list",
+      {
+        p_id: id,
+        p_name: name,
+        p_description: description || null,
+        p_is_public: isPublic,
+        p_user_id: user.id,
+      }
+    );
 
-    if (updateError) {
-      console.error("リスト更新エラー:", updateError);
+    if (rpcError) {
+      console.error("リスト更新エラー(RPC):", rpcError);
       return {
         success: false,
         error: `リストの更新中にエラーが発生しました: ${
-          updateError.message || "不明なエラー"
+          rpcError.message || "不明なエラー"
         }`,
       };
     }
@@ -138,7 +135,10 @@ export async function updateList(formData: {
     revalidatePath("/lists");
     return {
       success: true,
-      list: data,
+      list: {
+        id: rpcData.id,
+        name: rpcData.name,
+      },
     };
   } catch (error) {
     console.error("予期せぬエラー:", error);
@@ -174,77 +174,14 @@ export async function deleteList(listId: string) {
   }
 
   try {
-    // トランザクション的に扱うため、順番に削除を実行
+    // RPCでリスト削除
+    const { error: rpcError } = await supabase.rpc("delete_place_list", {
+      p_id: listId,
+      p_user_id: user.id,
+    });
 
-    // 1. リスト共有トークンの削除
-    const { error: tokenDeleteError } = await supabase
-      .from("list_share_tokens")
-      .delete()
-      .eq("list_id", listId);
-
-    if (tokenDeleteError) {
-      console.error("共有トークン削除エラー:", tokenDeleteError);
-      // エラーがあっても処理継続（主要なデータではないため）
-    }
-
-    // 2. リスト共有設定の削除
-    const { error: shareDeleteError } = await supabase
-      .from("shared_lists")
-      .delete()
-      .eq("list_id", listId);
-
-    if (shareDeleteError) {
-      console.error("共有設定削除エラー:", shareDeleteError);
-      // エラーがあっても処理継続
-    }
-
-    // 3. リスト内の場所に関連するタグの削除
-    // list_place_idsを取得してからlist_place_tagsを削除
-    const { data: listPlaces } = await supabase
-      .from("list_places")
-      .select("id")
-      .eq("list_id", listId);
-
-    if (listPlaces && listPlaces.length > 0) {
-      const listPlaceIds = listPlaces.map((place) => place.id);
-
-      // list_place_tagsの削除
-      if (listPlaceIds.length > 0) {
-        const { error: tagDeleteError } = await supabase
-          .from("list_place_tags")
-          .delete()
-          .in("list_place_id", listPlaceIds);
-
-        if (tagDeleteError) {
-          console.error("場所タグ削除エラー:", tagDeleteError);
-          // エラーがあっても処理継続
-        }
-      }
-    }
-
-    // 4. リスト内の場所の削除
-    const { error: placeDeleteError } = await supabase
-      .from("list_places")
-      .delete()
-      .eq("list_id", listId);
-
-    if (placeDeleteError) {
-      console.error("リスト内場所削除エラー:", placeDeleteError);
-      return {
-        success: false,
-        error: "リスト内の場所削除中にエラーが発生しました",
-      };
-    }
-
-    // 5. リスト自体の削除
-    const { error: deleteError } = await supabase
-      .from("place_lists")
-      .delete()
-      .eq("id", listId)
-      .eq("created_by", user.id);
-
-    if (deleteError) {
-      console.error("リスト削除エラー:", deleteError);
+    if (rpcError) {
+      console.error("リスト削除エラー(RPC):", rpcError);
       return {
         success: false,
         error: "リストの削除中にエラーが発生しました",

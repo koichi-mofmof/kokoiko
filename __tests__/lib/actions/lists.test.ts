@@ -12,9 +12,11 @@ jest.mock("next/cache", () => ({
 }));
 
 const mockFrom = jest.fn();
+const mockRpc = jest.fn();
 jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(() => ({
     from: mockFrom,
+    rpc: mockRpc,
     auth: {
       getUser: jest.fn().mockResolvedValue({
         data: { user: { id: "test-user-id" } },
@@ -27,6 +29,7 @@ jest.mock("@/lib/supabase/server", () => ({
 describe("リスト関連のサーバーアクション", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRpc.mockReset();
     // mockFrom のデフォルト実装を設定
     const defaultTableMock = {
       insert: jest.fn().mockReturnThis(),
@@ -61,6 +64,10 @@ describe("リスト関連のサーバーアクション", () => {
 
   describe("createList関数", () => {
     it("正常にリストが作成された場合に成功レスポンスを返すこと", async () => {
+      mockRpc.mockResolvedValueOnce({
+        data: { id: "new-list-id" },
+        error: null,
+      });
       // スパバースクライアントのモック設定
       // const { createClient } = require("@/lib/supabase/server"); // 不要
 
@@ -153,6 +160,13 @@ describe("リスト関連のサーバーアクション", () => {
 
   describe("updateList関数", () => {
     it("正常にリストが更新された場合に成功レスポンスを返すこと", async () => {
+      mockRpc.mockResolvedValueOnce({
+        data: {
+          id: "123e4567-e89b-12d3-a456-426614174000",
+          name: "更新済みリスト",
+        },
+        error: null,
+      });
       // スパバースクライアントのモック設定
       // const { createClient } = require("@/lib/supabase/server"); // mockFrom を直接使うのでこれは不要になる
 
@@ -280,6 +294,7 @@ describe("リスト関連のサーバーアクション", () => {
 
   describe("deleteList関数", () => {
     it("正常にリストが削除された場合に成功レスポンスを返すこと", async () => {
+      mockRpc.mockResolvedValueOnce({ data: { success: true }, error: null });
       const mockSuccess = { error: null };
       const mockSelectSuccess = { data: [{ id: "lp1" }], error: null }; // list_places の select 用 (空でないデータ)
       const mockSelectEmptySuccess = { data: [], error: null }; // list_places の select 用 (空データ)
@@ -417,7 +432,7 @@ describe("リスト関連のサーバーアクション", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain(
-        "リスト内の場所削除中にエラーが発生しました"
+        "リスト削除中に予期せぬエラーが発生しました"
       );
     });
   });

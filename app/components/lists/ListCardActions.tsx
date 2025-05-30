@@ -61,7 +61,7 @@ export function ListCardActions({
                 ref={buttonRef}
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full shadow-sm z-10 ${
+                className={`h-8 w-8 absolute top-2 right-2 ${
                   !hasPermission ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 onClick={handleClick}

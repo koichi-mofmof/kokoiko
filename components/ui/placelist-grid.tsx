@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { MyListForClient } from "@/lib/dal/lists";
 import type { Place, User } from "@/types";
-import { Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
+import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import Link from "next/link";
 
 export type ListDisplayItem = {
@@ -217,11 +216,6 @@ export function PlaceListGrid<T extends ListDisplayItem>({
         {displayLists.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayLists.map((list) => {
-              const placeImages = list.places
-                .filter((place) => place.imageUrl)
-                .slice(0, 4)
-                .map((place) => place.imageUrl as string);
-
               const displayedCollaborators = list.collaborators
                 ? [...(list.collaborators || [])]
                     .sort((a, b) => {
@@ -242,80 +236,38 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                   href={getLinkHref(list)}
                   className="block group"
                 >
-                  <Card className="overflow-hidden h-full flex flex-col transition-all duration-200 ease-in-out group-hover:shadow-lg group-hover:-translate-y-1">
-                    <div className="relative w-full h-40 bg-neutral-200 overflow-hidden">
-                      {placeImages.length > 0 ? (
-                        <div
-                          className={`grid w-full h-full ${
-                            placeImages.length === 1
-                              ? "grid-cols-1 grid-rows-1"
-                              : placeImages.length === 2
-                              ? "grid-cols-2 grid-rows-1"
-                              : placeImages.length === 3
-                              ? "grid-cols-2 grid-rows-2"
-                              : "grid-cols-2 grid-rows-2"
-                          }`}
-                        >
-                          {placeImages.map((imgUrl, index) => (
-                            <div
-                              key={index}
-                              className={`relative
-                                ${
-                                  placeImages.length === 1
-                                    ? "col-span-1 row-span-1"
-                                    : ""
-                                }
-                                ${
-                                  placeImages.length === 2
-                                    ? "col-span-1 row-span-1"
-                                    : ""
-                                }
-                                ${
-                                  placeImages.length === 3 && index === 0
-                                    ? "col-span-2 row-span-1"
-                                    : ""
-                                }
-                                ${
-                                  placeImages.length === 3 && index !== 0
-                                    ? "col-span-1 row-span-1"
-                                    : ""
-                                }
-                                ${
-                                  placeImages.length >= 4
-                                    ? "col-span-1 row-span-1"
-                                    : ""
-                                }
-                              `}
-                            >
-                              {imgUrl && (
-                                <Image
-                                  src={imgUrl}
-                                  alt={`${list.name} Spot Image ${index + 1}`}
-                                  fill
-                                  style={{ objectFit: "cover" }}
-                                  className="transition-transform duration-300 ease-in-out group-hover:scale-105"
-                                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 17vw"
-                                />
-                              )}
-                            </div>
-                          ))}
-                          {placeImages.length === 3 && (
-                            <div className="col-span-1 row-span-1 bg-neutral-200"></div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-300">
-                          <ImageIcon className="h-12 w-12 text-neutral-400" />
-                        </div>
-                      )}
+                  <Card className="overflow-hidden h-full flex flex-col transition-all duration-200 ease-in-out group-hover:shadow-lg group-hover:-translate-y-1 relative">
+                    <div className="absolute top-2 right-2 z-10">
                       <ListCardActions
                         list={list as unknown as MyListForClient}
                       />
                     </div>
                     <CardContent className="p-4 flex flex-col flex-grow">
                       <div className="mb-3">
-                        <CardTitle className="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2 group-hover:text-primary-700">
+                        <CardTitle className="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2 group-hover:text-primary-700 flex items-center gap-2">
                           {list.name}
+                          {typeof list.is_public === "boolean" ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  aria-label={
+                                    list.is_public
+                                      ? "公開リスト"
+                                      : "非公開リスト"
+                                  }
+                                >
+                                  {list.is_public ? (
+                                    <LockKeyholeOpen className="h-4 w-4 text-primary-500" />
+                                  ) : (
+                                    <LockKeyhole className="h-4 w-4 text-neutral-400" />
+                                  )}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" align="center">
+                                {list.is_public ? "公開リスト" : "非公開リスト"}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : null}
                         </CardTitle>
                         {list.description && (
                           <CardDescription className="text-sm text-neutral-600 line-clamp-2">

@@ -145,7 +145,7 @@ export default function ListDetailView({
 
       {/* Ranking View */}
       <div className={`${viewMode === "ranking" ? "block" : "hidden"}`}>
-        <RankingView listId={listId} />
+        <RankingView listId={listId} places={places} />
       </div>
 
       {/* Places Not Found Message */}
