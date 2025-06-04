@@ -54,7 +54,12 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
   remainingCount: number
 ) {
   const owners = displayedCollaborators.filter((user) => user.isOwner);
-  const members = displayedCollaborators.filter((user) => !user.isOwner);
+  const members = displayedCollaborators.filter(
+    (user) => !user.isOwner && user.permission === "edit"
+  );
+  const viewers = displayedCollaborators.filter(
+    (user) => !user.isOwner && user.permission === "view"
+  );
 
   return (
     <div className="flex items-center">
@@ -110,6 +115,37 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
                       className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
                     >
                       {member.name}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </div>
+          )}
+          {viewers.length > 0 && (
+            <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm">
+              <span className="text-neutral-700 mr-1">閲覧者</span>
+              <div className="flex -space-x-1">
+                {viewers.map((viewer) => (
+                  <Tooltip key={viewer.id}>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-5 w-5 border border-white">
+                        <AvatarImage
+                          src={viewer.avatarUrl || undefined}
+                          alt={viewer.name || "User"}
+                        />
+                        <AvatarFallback className="text-[10px]">
+                          {viewer.name
+                            ? viewer.name.slice(0, 1).toUpperCase()
+                            : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      align="center"
+                      className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
+                    >
+                      {viewer.name}
                     </TooltipContent>
                   </Tooltip>
                 ))}
@@ -244,7 +280,10 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                     </div>
                     <CardContent className="p-4 flex flex-col flex-grow">
                       <div className="mb-3">
-                        <CardTitle className="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2 group-hover:text-primary-700 flex items-center gap-2">
+                        <CardTitle
+                          className="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2 group-hover:text-primary-700 flex items-center gap-2"
+                          data-testid="list-name"
+                        >
                           {list.name}
                           {typeof list.is_public === "boolean" ? (
                             <Tooltip>

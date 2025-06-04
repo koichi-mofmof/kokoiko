@@ -1,11 +1,17 @@
 "use client";
 
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
   PlaceListGrid,
   renderLabeledCollaborators,
 } from "@/components/ui/placelist-grid";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -79,6 +85,17 @@ export function MyLists({ initialLists }: MyListsProps) {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
 
+  // 区分ごとにリストを分類
+  const ownerLists = processedLists.filter(
+    (list) => list.permission === "owner"
+  );
+  const editorLists = processedLists.filter(
+    (list) => list.permission === "edit"
+  );
+  const viewerLists = processedLists.filter(
+    (list) => list.permission === "view"
+  );
+
   return (
     <TooltipProvider>
       <div>
@@ -135,14 +152,82 @@ export function MyLists({ initialLists }: MyListsProps) {
 
         {initialLists.length > 0 ? (
           processedLists.length > 0 ? (
-            <PlaceListGrid
-              initialLists={processedLists.map((list) => ({
-                ...list,
-                is_public: list.is_public === null ? undefined : list.is_public,
-              }))}
-              getLinkHref={(list) => `/lists/${list.id}`}
-              renderCollaborators={renderLabeledCollaborators}
-            />
+            <div className="space-y-8">
+              {/* セクションごとにリストを表示（Accordion化） */}
+              <Accordion
+                type="multiple"
+                defaultValue={
+                  [
+                    ownerLists.length > 0 ? "owner" : null,
+                    editorLists.length > 0 ? "editor" : null,
+                    viewerLists.length > 0 ? "viewer" : null,
+                  ].filter(Boolean) as string[]
+                }
+                className="space-y-4"
+              >
+                {ownerLists.length > 0 && (
+                  <AccordionItem value="owner">
+                    <AccordionTrigger>
+                      自分が作成したリスト（{ownerLists.length}件）
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <PlaceListGrid
+                        initialLists={ownerLists.map((list) => ({
+                          ...list,
+                          is_public:
+                            list.is_public === null
+                              ? undefined
+                              : list.is_public,
+                        }))}
+                        getLinkHref={(list) => `/lists/${list.id}`}
+                        renderCollaborators={renderLabeledCollaborators}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+                {editorLists.length > 0 && (
+                  <AccordionItem value="editor">
+                    <AccordionTrigger>
+                      共同編集者として参加しているリスト（{editorLists.length}
+                      件）
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <PlaceListGrid
+                        initialLists={editorLists.map((list) => ({
+                          ...list,
+                          is_public:
+                            list.is_public === null
+                              ? undefined
+                              : list.is_public,
+                        }))}
+                        getLinkHref={(list) => `/lists/${list.id}`}
+                        renderCollaborators={renderLabeledCollaborators}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+                {viewerLists.length > 0 && (
+                  <AccordionItem value="viewer">
+                    <AccordionTrigger>
+                      閲覧者として招待されたリスト（{viewerLists.length}件）
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <PlaceListGrid
+                        initialLists={viewerLists.map((list) => ({
+                          ...list,
+                          is_public:
+                            list.is_public === null
+                              ? undefined
+                              : list.is_public,
+                        }))}
+                        getLinkHref={(list) => `/lists/${list.id}`}
+                        renderCollaborators={renderLabeledCollaborators}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+              </Accordion>
+            </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">
               検索条件に一致するリストはありません。

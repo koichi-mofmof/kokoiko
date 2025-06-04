@@ -8,14 +8,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MyListForClient } from "@/lib/dal/lists";
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  createShareLink,
+  deleteList,
+  fetchShareLinksForList,
+} from "@/lib/actions/lists";
+import { getListDetails, MyListForClient } from "@/lib/dal/lists";
+import type { Database } from "@/types/supabase";
+import { Edit, MoreHorizontal, Share2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { DeleteListDialog } from "./DeleteListDialog";
 import { EditListDialog } from "./EditListDialog";
-import { deleteList } from "@/lib/actions/lists";
-import { useToast } from "@/hooks/use-toast";
+import { ShareLinkIssuedDialog } from "./ShareLinkIssuedDialog";
+import { ShareSettingsDialog } from "./ShareSettingsDialog";
 
 type ListCardActionsProps = {
   list: MyListForClient;
@@ -24,31 +31,108 @@ type ListCardActionsProps = {
 };
 
 export function ListCardActions({
-  list,
+  list: initialList,
   className = "",
   onSuccess,
 }: ListCardActionsProps) {
+  const [list, setList] = useState(initialList);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [shareLinks, setShareLinks] = useState<
+    Partial<Database["public"]["Tables"]["list_share_tokens"]["Row"]>[]
+  >([]);
+  const [shareLinksLoading, setShareLinksLoading] = useState(false);
+  const [shareLinksError, setShareLinksError] = useState<string | null>(null);
+  const [isCreatingLink, setIsCreatingLink] = useState(false);
+  const [issuedShareUrl, setIssuedShareUrl] = useState<string | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const userId = initialList.created_by;
 
   // 権限に基づいたボタンの有効/無効状態を判定
-  const isOwner = list.permission === "owner";
-  const canEdit = isOwner || list.permission === "edit";
+  const isOwner = initialList.permission === "owner";
+  const canEdit = isOwner || initialList.permission === "edit";
   const hasPermission =
-    isOwner || list.permission === "edit" || list.permission === "view";
-
-  const handleEditSuccess = () => {
-    if (onSuccess) onSuccess();
-    else router.refresh();
-  };
+    isOwner ||
+    initialList.permission === "edit" ||
+    initialList.permission === "view";
 
   const handleClick = (e: React.MouseEvent) => {
     // Link要素内にあるため、イベントバブリングを防止
     e.preventDefault();
     e.stopPropagation();
+  };
+
+  // 共有リンク一覧取得
+  const loadShareLinks = async () => {
+    setShareLinksLoading(true);
+    setShareLinksError(null);
+    const res = await fetchShareLinksForList(initialList.id);
+    if (res.success && res.links) {
+      setShareLinks(res.links);
+    } else {
+      setShareLinksError(res.error || "取得に失敗しました");
+    }
+    setShareLinksLoading(false);
+  };
+
+  // 共有メンバー一覧再取得
+  const reloadCollaborators = async () => {
+    if (!initialList.id || !userId) return;
+    const newList = await getListDetails(initialList.id, userId);
+    if (newList) setList(newList);
+  };
+
+  // 共有リンク発行
+  const handleCreateShareLink = async (
+    formData: FormData,
+    reset?: () => void
+  ) => {
+    setIsCreatingLink(true);
+    try {
+      const permission = formData.get("permission") as "view" | "edit";
+      const result = await createShareLink({
+        listId: initialList.id,
+        permission,
+      });
+      if (result && result.success) {
+        if (reset) reset();
+        await loadShareLinks();
+        setIssuedShareUrl(result.shareUrl || "");
+        toast({
+          title: "共有リンクを発行しました",
+          description: "新しい共有リンクが作成されました。",
+        });
+      } else {
+        toast({
+          title: "共有リンクの発行に失敗しました",
+          description: result?.error || "予期せぬエラーが発生しました。",
+          variant: "destructive",
+        });
+      }
+    } catch (e) {
+      toast({
+        title: "共有リンクの発行に失敗しました",
+        description:
+          e instanceof Error ? e.message : "予期せぬエラーが発生しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingLink(false);
+    }
+  };
+
+  const handleCloseIssuedDialog = useCallback(() => {
+    setIssuedShareUrl(null);
+  }, []);
+
+  // 共有設定ダイアログを開くときに一覧を取得
+  const handleOpenShareDialog = async (e: React.MouseEvent) => {
+    handleClick(e);
+    await loadShareLinks();
+    setIsShareDialogOpen(true);
   };
 
   return (
@@ -87,6 +171,10 @@ export function ListCardActions({
                   <Edit className="h-4 w-4 mr-2" />
                   リストを編集
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleOpenShareDialog}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  共有設定
+                </DropdownMenuItem>
                 {isOwner && (
                   <>
                     <DropdownMenuSeparator />
@@ -114,7 +202,10 @@ export function ListCardActions({
           isOpen={isEditDialogOpen}
           onClose={() => setIsEditDialogOpen(false)}
           list={list}
-          onSuccess={handleEditSuccess}
+          onSuccess={() => {
+            setIsEditDialogOpen(false);
+            router.refresh();
+          }}
         />
       )}
 
@@ -134,11 +225,8 @@ export function ListCardActions({
                 description: `リスト「${list.name}」を削除しました。`,
               });
               setIsDeleteDialogOpen(false);
-              if (onSuccess) {
-                onSuccess();
-              } else {
-                router.refresh();
-              }
+              onSuccess?.();
+              router.push("/lists");
             } else {
               toast({
                 title: "削除失敗",
@@ -150,6 +238,30 @@ export function ListCardActions({
               setIsDeleteDialogOpen(false);
             }
           }}
+        />
+      )}
+
+      {/* 共有設定ダイアログ */}
+      {isShareDialogOpen && (
+        <ShareSettingsDialog
+          isOpen={isShareDialogOpen}
+          onClose={() => setIsShareDialogOpen(false)}
+          list={list}
+          links={shareLinks}
+          loading={shareLinksLoading}
+          error={shareLinksError}
+          onCreateLink={handleCreateShareLink}
+          isCreatingLink={isCreatingLink}
+          onReloadLinks={loadShareLinks}
+          onReloadCollaborators={reloadCollaborators}
+        />
+      )}
+
+      {/* 共有リンク発行後のダイアログ */}
+      {issuedShareUrl && (
+        <ShareLinkIssuedDialog
+          url={issuedShareUrl}
+          onClose={handleCloseIssuedDialog}
         />
       )}
     </>

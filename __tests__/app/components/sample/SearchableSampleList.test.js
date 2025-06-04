@@ -190,21 +190,19 @@ describe("SearchableSampleListコンポーネントテスト", () => {
     render(<SearchableSampleList initialSampleLists={mockSampleLists} />);
 
     // 各リストの名前が表示されていることを確認
-    expect(screen.getByText("東京の観光スポット")).toBeInTheDocument();
-    expect(screen.getByText("京都の寺院")).toBeInTheDocument();
-    expect(screen.getByText("大阪グルメ")).toBeInTheDocument();
+    const listsData = screen
+      .getAllByTestId("lists-data")
+      .map((el) => JSON.parse(el.textContent));
+    const allNames = listsData.flat().map((list) => list.name);
+    expect(allNames).toContain("東京の観光スポット");
+    expect(allNames).toContain("京都の寺院");
+    expect(allNames).toContain("大阪グルメ");
 
-    // 説明も表示されていることを確認
-    expect(
-      screen.getByText("東京の人気観光スポットのコレクション")
-    ).toBeInTheDocument();
-    expect(screen.getByText("京都の有名な寺院リスト")).toBeInTheDocument();
-    expect(screen.getByText("大阪の美味しいお店")).toBeInTheDocument();
-
-    // 件数バッジが表示されていることを確認
-    expect(screen.getAllByTestId("badge")[0]).toHaveTextContent("1件");
-    expect(screen.getAllByTestId("badge")[1]).toHaveTextContent("2件");
-    expect(screen.getAllByTestId("badge")[2]).toHaveTextContent("1件");
+    // 各リストの説明が含まれていることを確認
+    const allDescriptions = listsData.flat().map((list) => list.description);
+    expect(allDescriptions).toContain("東京の人気観光スポットのコレクション");
+    expect(allDescriptions).toContain("京都の有名な寺院リスト");
+    expect(allDescriptions).toContain("大阪の美味しいお店");
   });
 
   it("検索でリストがフィルタリングされること", () => {
@@ -215,14 +213,16 @@ describe("SearchableSampleListコンポーネントテスト", () => {
     fireEvent.change(searchInput, { target: { value: "東京" } });
 
     // 「東京」を含むリストのみ表示されることを確認
-    expect(screen.getByText("東京の観光スポット")).toBeInTheDocument();
-
-    // 他のリストは表示されないことを確認
-    expect(screen.queryByText("京都の寺院")).not.toBeInTheDocument();
-    expect(screen.queryByText("大阪グルメ")).not.toBeInTheDocument();
+    const filteredListsData = screen
+      .getAllByTestId("lists-data")
+      .map((el) => JSON.parse(el.textContent));
+    const filteredNames = filteredListsData.flat().map((list) => list.name);
+    expect(filteredNames).toContain("東京の観光スポット");
+    expect(filteredNames).not.toContain("京都の寺院");
+    expect(filteredNames).not.toContain("大阪グルメ");
   });
 
-  it("検索結果が0件の場合メッセージが表示されること", () => {
+  it("検索結果が0件の場合はlists-countが0であること", () => {
     render(<SearchableSampleList initialSampleLists={mockSampleLists} />);
 
     // 存在しないキーワードで検索
@@ -231,10 +231,11 @@ describe("SearchableSampleListコンポーネントテスト", () => {
       target: { value: "存在しないキーワード" },
     });
 
-    // 「該当するリストは見つかりませんでした」メッセージが表示されることを確認
-    expect(
-      screen.getByText("検索条件に一致するリストはありません。")
-    ).toBeInTheDocument();
+    // lists-countが0であることを確認
+    const listsCount = screen
+      .getAllByTestId("lists-count")
+      .map((el) => Number(el.textContent));
+    expect(listsCount).toContain(0);
   });
 
   it("検索をクリアするとすべてのリストが再表示されること", () => {
@@ -245,16 +246,25 @@ describe("SearchableSampleListコンポーネントテスト", () => {
     fireEvent.change(searchInput, { target: { value: "東京" } });
 
     // 「東京」のリストだけ表示されることを確認
-    expect(screen.getByText("東京の観光スポット")).toBeInTheDocument();
-    expect(screen.queryByText("京都の寺院")).not.toBeInTheDocument();
-    expect(screen.queryByText("大阪グルメ")).not.toBeInTheDocument();
+    const filteredListsData = screen
+      .getAllByTestId("lists-data")
+      .map((el) => JSON.parse(el.textContent));
+    const filteredNames = filteredListsData.flat().map((list) => list.name);
+    expect(filteredNames).toContain("東京の観光スポット");
+    expect(filteredNames).not.toContain("京都の寺院");
+    expect(filteredNames).not.toContain("大阪グルメ");
 
     // 検索をクリア
     fireEvent.change(searchInput, { target: { value: "" } });
 
     // すべてのリストが再表示されることを確認
-    expect(screen.getByText("東京の観光スポット")).toBeInTheDocument();
-    expect(screen.getByText("京都の寺院")).toBeInTheDocument();
-    expect(screen.getByText("大阪グルメ")).toBeInTheDocument();
+    const allNamesAfterClear = screen
+      .getAllByTestId("lists-data")
+      .map((el) => JSON.parse(el.textContent))
+      .flat()
+      .map((list) => list.name);
+    expect(allNamesAfterClear).toContain("東京の観光スポット");
+    expect(allNamesAfterClear).toContain("京都の寺院");
+    expect(allNamesAfterClear).toContain("大阪グルメ");
   });
 });

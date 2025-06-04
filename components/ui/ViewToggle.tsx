@@ -38,7 +38,7 @@ export default function ViewToggle({
           }`}
         />
         <span
-          className={`sm:inline ${
+          className={`sm:inline whitespace-nowrap ${
             currentView === "list" ? "inline" : "hidden"
           }`}
         >
@@ -62,7 +62,9 @@ export default function ViewToggle({
           }`}
         />
         <span
-          className={`sm:inline ${currentView === "map" ? "inline" : "hidden"}`}
+          className={`sm:inline whitespace-nowrap ${
+            currentView === "map" ? "inline" : "hidden"
+          }`}
         >
           マップ
         </span>
@@ -82,7 +84,7 @@ export default function ViewToggle({
           }`}
         />
         <span
-          className={`sm:inline ${
+          className={`sm:inline whitespace-nowrap ${
             currentView === "ranking" ? "inline" : "hidden"
           }`}
         >

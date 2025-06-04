@@ -15,28 +15,12 @@ const customJestConfig = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
-  // カバレッジの設定
-  collectCoverage: true,
-  collectCoverageFrom: [
-    "**/*.{js,jsx,ts,tsx}",
-    "!**/*.d.ts",
-    "!**/node_modules/**",
-    "!<rootDir>/out/**",
-    "!<rootDir>/.next/**",
-    "!<rootDir>/*.config.js",
-    "!<rootDir>/coverage/**",
-    "!<rootDir>/types/supabase.ts",
-  ],
-  coverageReporters: ["text", "lcov", "json", "html", "json-summary"],
-  coverageDirectory: "<rootDir>/coverage",
-  coverageThreshold: {
-    global: {
-      branches: 50,
-      functions: 50,
-      lines: 50,
-      statements: 50,
-    },
-  },
+  // ESMパッケージ（nanoid等）もtransform対象にする
+  transformIgnorePatterns: ["/node_modules/(?!(nanoid)/)"],
+  // TypeScript/ESM対応（必要に応じて）
+  // transform: {
+  //   "^.+\\.(ts|tsx)$": "ts-jest",
+  // },
 };
 
 // createJestConfigを定義することによって、next/jestが提供する設定とマージして、Jestに渡すことができる

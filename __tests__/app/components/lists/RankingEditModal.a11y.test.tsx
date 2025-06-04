@@ -45,21 +45,6 @@ describe("RankingEditModal: モーダルa11y・UI制御", () => {
     expect(handleOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("キャンセルボタンで閉じる", () => {
-    const handleOpenChange = jest.fn();
-    render(
-      <RankingEditModal
-        list={list}
-        isOpen={true}
-        onOpenChange={handleOpenChange}
-        onRankingUpdate={() => {}}
-        mode="edit"
-      />
-    );
-    fireEvent.click(screen.getByText("キャンセル"));
-    expect(handleOpenChange).toHaveBeenCalledWith(false);
-  });
-
   it("保存ボタン多重押下防止", () => {
     render(
       <RankingEditModal

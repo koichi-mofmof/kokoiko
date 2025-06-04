@@ -22,6 +22,7 @@ export interface User {
   email: string;
   avatarUrl?: string;
   isOwner?: boolean;
+  permission?: string;
 }
 
 export interface Group {

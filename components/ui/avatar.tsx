@@ -1,10 +1,5 @@
 "use client";
 
-import * as React from "react";
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
-
-import { cn } from "@/lib/utils";
-
 import {
   Tooltip,
   TooltipContent,
@@ -12,6 +7,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Collaborator } from "@/lib/dal/lists";
+import { cn } from "@/lib/utils";
+import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import * as React from "react";
 
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -58,6 +56,7 @@ AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 interface ParticipantAvatarsProps {
   owner: Collaborator;
   participants: Collaborator[];
+  viewers?: Collaborator[];
   maxDisplay?: number;
 }
 
@@ -77,6 +76,7 @@ const getInitials = (name: string): string => {
 export function ParticipantAvatars({
   owner,
   participants,
+  viewers = [],
   maxDisplay = 10,
 }: ParticipantAvatarsProps) {
   const otherParticipants = participants.filter((p) => p.id !== owner.id);
@@ -85,6 +85,9 @@ export function ParticipantAvatars({
     0,
     otherParticipants.length - (maxDisplay - 1)
   );
+
+  const displayViewers = viewers.slice(0, maxDisplay);
+  const remainingViewersCount = Math.max(0, viewers.length - maxDisplay);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -154,9 +157,54 @@ export function ParticipantAvatars({
             </div>
           </div>
         )}
+
+        {displayViewers.length > 0 && (
+          <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">
+            <span className="text-neutral-700 mr-1">閲覧者</span>
+            <div className="flex -space-x-1">
+              {displayViewers.map((viewer) => (
+                <Tooltip key={viewer.id}>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-5 w-5 border border-white">
+                      <AvatarImage src={viewer.avatarUrl} alt={viewer.name} />
+                      <AvatarFallback className="text-[10px]">
+                        {getInitials(viewer.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    align="center"
+                    className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
+                  >
+                    <p>{viewer.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+              {remainingViewersCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-5 w-5 border border-white">
+                      <AvatarFallback className="text-xs bg-neutral-200 text-neutral-600">
+                        +{remainingViewersCount}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    align="center"
+                    className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
+                  >
+                    <p>他{remainingViewersCount}人</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </TooltipProvider>
   );
 }
 
-export { Avatar, AvatarImage, AvatarFallback };
+export { Avatar, AvatarFallback, AvatarImage };

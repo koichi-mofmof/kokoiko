@@ -62,7 +62,7 @@ describe("RankingEditModal: コメント入力・編集", () => {
     );
     // 1位のコメントトリガーを開く
     fireEvent.click(screen.getAllByText("コメントを書く")[0]);
-    const textarea = screen.getByPlaceholderText("コメント（任意）");
+    const textarea = screen.getAllByPlaceholderText("コメント（任意）")[0];
     fireEvent.change(textarea, { target: { value: "最高のカフェ！" } });
     fireEvent.click(screen.getByText("ランキングを保存"));
     await waitFor(() => {
@@ -87,7 +87,7 @@ describe("RankingEditModal: コメント入力・編集", () => {
       />
     );
     fireEvent.click(screen.getAllByText("コメントを書く")[0]);
-    const textarea = screen.getByPlaceholderText("コメント（任意）");
+    const textarea = screen.getAllByPlaceholderText("コメント（任意）")[0];
     const longComment = "長文テスト\n改行テスト\n特殊文字: !@#￥%＆*()_+";
     fireEvent.change(textarea, { target: { value: longComment } });
     fireEvent.click(screen.getByText("ランキングを保存"));
@@ -120,7 +120,7 @@ describe("RankingEditModal: コメント入力・編集", () => {
       />
     );
     fireEvent.click(screen.getAllByText("コメントあり")[0]);
-    const textarea = screen.getByPlaceholderText("コメント（任意）");
+    const textarea = screen.getAllByPlaceholderText("コメント（任意）")[0];
     fireEvent.change(textarea, { target: { value: "編集後コメント" } });
     fireEvent.click(screen.getByText("ランキングを保存"));
     await waitFor(() => {

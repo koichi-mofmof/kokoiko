@@ -72,10 +72,14 @@ describe("ListDetailView", () => {
   ];
 
   it("初期表示で主要UI要素が表示される", () => {
-    render(<ListDetailView places={basePlaces} listId="list1" />);
+    render(
+      <ListDetailView places={basePlaces} listId="list1" permission="owner" />
+    );
     expect(screen.getByTestId("FilterBar")).toBeInTheDocument();
     expect(screen.getByTestId("ViewToggle")).toBeInTheDocument();
-    expect(screen.getByTestId("AddPlaceButtonClient")).toBeInTheDocument();
+    const addPlaceButtons = screen.getAllByTestId("AddPlaceButtonClient");
+    expect(addPlaceButtons.length).toBeGreaterThan(0);
+    addPlaceButtons.forEach((button) => expect(button).toBeInTheDocument());
     expect(screen.getByTestId("PlaceList")).toBeInTheDocument();
     // デフォルトはリストビュー
     const rankingDiv = screen.getByTestId("RankingView").parentElement;
@@ -84,7 +88,9 @@ describe("ListDetailView", () => {
   });
 
   it("ランキングビューに切り替えるとRankingViewが表示される", () => {
-    render(<ListDetailView places={basePlaces} listId="list1" />);
+    render(
+      <ListDetailView places={basePlaces} listId="list1" permission="owner" />
+    );
     fireEvent.click(screen.getByText("ランキング"));
     const rankingDiv = screen.getByTestId("RankingView").parentElement;
     expect(rankingDiv).toHaveClass("block");
@@ -95,13 +101,15 @@ describe("ListDetailView", () => {
   });
 
   it("マップビューに切り替えるとOpenStreetMapViewが表示される", () => {
-    render(<ListDetailView places={basePlaces} listId="list1" />);
+    render(
+      <ListDetailView places={basePlaces} listId="list1" permission="owner" />
+    );
     fireEvent.click(screen.getByText("マップ"));
     expect(screen.getByTestId("OpenStreetMapView")).toBeInTheDocument();
   });
 
   it("場所が0件の場合、未登録メッセージが表示される", () => {
-    render(<ListDetailView places={[]} listId="list1" />);
+    render(<ListDetailView places={[]} listId="list1" permission="owner" />);
     expect(
       screen.getByText(/このリストにはまだ場所が登録されていません/)
     ).toBeInTheDocument();
@@ -109,7 +117,9 @@ describe("ListDetailView", () => {
 
   it("フィルターで0件になった場合、フィルター条件に一致しないメッセージが表示される", () => {
     // 最初は2件→フィルターボタン押下でtagsが変わり0件になる
-    render(<ListDetailView places={basePlaces} listId="list1" />);
+    render(
+      <ListDetailView places={basePlaces} listId="list1" permission="owner" />
+    );
     fireEvent.click(screen.getByTestId("FilterBar"));
     expect(
       screen.getByText(/フィルター条件に一致する場所がありません/)

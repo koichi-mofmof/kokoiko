@@ -11,133 +11,6 @@ jest.mock("@/lib/actions/lists", () => ({
   deleteList: jest.fn(), // jest.fn()を直接モック実装として使用
 }));
 
-// React hooks をモック
-// jest.mock("react", () => {
-//   const originalReact = jest.requireActual("react");
-//   return {
-//     ...originalReact,
-//     useState: jest.fn((initial) => [initial, jest.fn()]),
-//     useRef: jest.fn(() => ({ current: null })),
-//   };
-// });
-
-// EditListDialogとDeleteListDialogをモック
-jest.mock("@/app/components/lists/EditListDialog", () => {
-  return {
-    EditListDialog: ({ isOpen, onClose, list, onSuccess }) => {
-      const [open, setOpen] = React.useState(isOpen);
-      React.useEffect(() => {
-        setOpen(isOpen);
-      }, [isOpen]);
-      if (!open) return null;
-      return (
-        <div
-          data-testid="edit-list-dialog"
-          data-open={open}
-          data-list-id={list.id}
-          onClick={() => {
-            setOpen(false);
-            onClose && onClose();
-          }}
-        >
-          EditListDialog
-          <button>Close Dialog In Mock</button>
-        </div>
-      );
-    },
-  };
-});
-
-jest.mock("@/app/components/lists/DeleteListDialog", () => {
-  return {
-    DeleteListDialog: ({ isOpen, onClose, listId, listName, onConfirm }) => {
-      const [open, setOpen] = React.useState(isOpen);
-      if (!open) return null;
-      return (
-        <div data-testid="delete-list-dialog">
-          <button
-            data-testid="confirm-delete-button-in-mock"
-            onClick={() => {
-              onConfirm && onConfirm();
-            }}
-          >
-            Confirm Delete In Mock
-          </button>
-          <button
-            onClick={() => {
-              setOpen(false);
-              onClose && onClose();
-            }}
-          >
-            Close Dialog In Mock
-          </button>
-          DeleteListDialog
-        </div>
-      );
-    },
-  };
-});
-
-// UIコンポーネントをモック
-jest.mock("@/components/ui/button", () => ({
-  Button: ({
-    children,
-    onClick,
-    size,
-    variant,
-    className,
-    "aria-label": ariaLabel,
-  }) => (
-    <button
-      data-testid="action-button"
-      onClick={onClick}
-      data-size={size}
-      data-variant={variant}
-      className={className}
-      aria-label={ariaLabel}
-    >
-      {children}
-    </button>
-  ),
-}));
-
-jest.mock("@/components/ui/dropdown-menu", () => ({
-  DropdownMenu: ({ children }) => (
-    <div data-testid="dropdown-menu">{children}</div>
-  ),
-  DropdownMenuContent: ({ children, align, className, onClick }) => (
-    <div
-      data-testid="dropdown-menu-content"
-      data-align={align}
-      className={className}
-      onClick={onClick}
-    >
-      {children}
-    </div>
-  ),
-  DropdownMenuItem: ({ children, onClick, className }) => {
-    const testId = children.toString().includes("削除")
-      ? "delete-menu-item"
-      : "edit-menu-item";
-
-    return (
-      <button data-testid={testId} onClick={onClick} className={className}>
-        {children}
-      </button>
-    );
-  },
-  DropdownMenuSeparator: () => <div data-testid="dropdown-menu-separator" />,
-  DropdownMenuTrigger: ({ children, asChild }) => (
-    <div
-      data-testid="dropdown-menu-trigger"
-      data-as-child={asChild}
-      onClick={(e) => e.preventDefault()}
-    >
-      {children}
-    </div>
-  ),
-}));
-
 // next/navigationのモック
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({
@@ -151,6 +24,7 @@ jest.mock("lucide-react", () => ({
   Edit: () => <span data-testid="edit-icon">編集アイコン</span>,
   MoreHorizontal: () => <span data-testid="more-icon">詳細アイコン</span>,
   Trash2: () => <span data-testid="trash-icon">削除アイコン</span>,
+  Share2: () => <span data-testid="share-icon">共有アイコン</span>,
 }));
 
 // toastをモック
@@ -159,6 +33,105 @@ jest.mock("@/hooks/use-toast", () => ({
   useToast: () => ({
     toast: mockToast,
   }),
+}));
+
+// ListCardActions が依存するダイアログコンポーネントのモック
+jest.mock("@/app/components/lists/EditListDialog", () => ({
+  EditListDialog: ({ isOpen, onClose, list, onSuccess }) =>
+    isOpen ? (
+      <div
+        data-testid="edit-list-dialog"
+        data-open={isOpen.toString()}
+        data-list-id={list.id}
+      >
+        EditListDialog for {list.name}
+        <button onClick={onClose}>Close</button>
+        <button onClick={onSuccess}>Save</button>
+      </div>
+    ) : null,
+}));
+jest.mock("@/app/components/lists/DeleteListDialog", () => ({
+  DeleteListDialog: ({ isOpen, onClose, listName, onConfirm }) =>
+    isOpen ? (
+      <div data-testid="delete-list-dialog">
+        DeleteListDialog for {listName}
+        <button onClick={onClose}>Cancel</button>
+        <button onClick={onConfirm}>Confirm Delete</button>
+      </div>
+    ) : null,
+}));
+jest.mock("@/app/components/lists/ShareSettingsDialog", () => ({
+  ShareSettingsDialog: ({ isOpen, onClose, list, onSuccess }) =>
+    isOpen ? (
+      <div data-testid="share-settings-dialog">
+        ShareSettingsDialog for {list.name}
+        <button onClick={onClose}>Close</button>
+        <button onClick={onSuccess}>Save Settings</button>
+      </div>
+    ) : null,
+}));
+jest.mock("@/app/components/lists/ShareLinkIssuedDialog", () => ({
+  ShareLinkIssuedDialog: ({ isOpen, onClose, shareUrl }) =>
+    isOpen ? (
+      <div data-testid="share-link-issued-dialog">
+        ShareLinkIssuedDialog with URL: {shareUrl}
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null,
+}));
+
+// ShareSettingsDialog が依存するダイアログのモック
+jest.mock("@/app/components/lists/DeleteShareLinkDialog", () => ({
+  DeleteShareLinkDialog: ({ isOpen, onClose, onConfirm, linkName }) =>
+    isOpen ? (
+      <div data-testid="delete-share-link-dialog">
+        DeleteShareLinkDialog for {linkName}
+        <button onClick={onClose}>Close</button>
+        <button onClick={onConfirm}>Confirm Delete Share Link</button>
+      </div>
+    ) : null,
+}));
+jest.mock("@/app/components/lists/EditShareLinkDialog", () => ({
+  EditShareLinkDialog: ({
+    isOpen,
+    onClose,
+    onSave,
+    link,
+    currentPermission,
+    currentActive,
+  }) =>
+    isOpen ? (
+      <div data-testid="edit-share-link-dialog">
+        EditShareLinkDialog for token: {link?.token}
+        <button onClick={onClose}>Close</button>
+        <button onClick={onSave}>Save Share Link</button>
+      </div>
+    ) : null,
+}));
+
+// ListFormComponent のモックを追加
+jest.mock("@/app/components/lists/ListFormComponent", () => ({
+  ListFormComponent: ({ onSubmit, onCancel, submitButtonText }) => (
+    <form
+      data-testid="list-form-component"
+      onSubmit={(e) => {
+        e.preventDefault();
+        // 簡単なフォームデータを作成して onSubmit を呼び出す
+        const formData = new FormData();
+        formData.append("name", "Mock Form Name");
+        formData.append("description", "Mock Form Description");
+        formData.append("isPublic", "false");
+        onSubmit(formData); // ListFormData を期待するが、テストではFormDataで代用
+      }}
+    >
+      <button type="submit">{submitButtonText || "送信"}</button>
+      {onCancel && (
+        <button type="button" onClick={onCancel}>
+          キャンセル
+        </button>
+      )}
+    </form>
+  ),
 }));
 
 describe("ListCardActionsコンポーネントテスト", () => {
@@ -184,7 +157,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     name: "読み取り専用リスト",
     description: "説明",
     created_by: "other-user-id",
-    permission: "read", // 読み取り権限のみ
+    permission: "view", // "read" から "view" に修正
   };
 
   beforeEach(() => {
@@ -198,7 +171,6 @@ describe("ListCardActionsコンポーネントテスト", () => {
     expect(
       screen.getByRole("button", { name: "リストアクション" })
     ).toBeInTheDocument();
-    expect(screen.getByTestId("action-button")).toBeInTheDocument();
     expect(screen.getByTestId("more-icon")).toBeInTheDocument();
   });
 
@@ -209,8 +181,9 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // メニューアイテムが表示されることを確認
-    expect(screen.getByTestId("edit-menu-item")).toBeInTheDocument();
-    expect(screen.getByTestId("delete-menu-item")).toBeInTheDocument();
+    expect(screen.getByText("リストを編集")).toBeInTheDocument();
+    expect(screen.getByText("共有設定")).toBeInTheDocument();
+    expect(screen.getByText("リストを削除")).toBeInTheDocument();
   });
 
   it("所有リストの場合、編集と削除の両方のメニューが表示されること", () => {
@@ -220,8 +193,8 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // 編集と削除の両方のメニューが表示されることを確認
-    expect(screen.getByTestId("edit-menu-item")).toBeInTheDocument();
-    expect(screen.getByTestId("delete-menu-item")).toBeInTheDocument();
+    expect(screen.getByText("リストを編集")).toBeInTheDocument();
+    expect(screen.getByText("リストを削除")).toBeInTheDocument();
     expect(screen.getByTestId("dropdown-menu-separator")).toBeInTheDocument();
   });
 
@@ -232,10 +205,11 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // 編集メニューが表示されることを確認
-    expect(screen.getByTestId("edit-menu-item")).toBeInTheDocument();
+    expect(screen.getByText("リストを編集")).toBeInTheDocument();
+    expect(screen.getByText("共有設定")).toBeInTheDocument();
 
     // 削除メニューは表示されないことを確認
-    expect(screen.queryByTestId("delete-menu-item")).toBeNull();
+    expect(screen.queryByText("リストを削除")).toBeNull();
     expect(screen.queryByTestId("dropdown-menu-separator")).toBeNull();
   });
 
@@ -246,7 +220,6 @@ describe("ListCardActionsコンポーネントテスト", () => {
     expect(
       screen.queryByRole("button", { name: "リストアクション" })
     ).toBeNull();
-    expect(screen.queryByTestId("action-button")).toBeNull();
   });
 
   it("編集メニューをクリックすると編集ダイアログが表示されること", async () => {
@@ -256,7 +229,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // 編集メニューをクリック
-    fireEvent.click(screen.getByTestId("edit-menu-item"));
+    fireEvent.click(screen.getByText("リストを編集"));
 
     // 編集ダイアログが表示されることを確認
     await waitFor(() => {
@@ -279,7 +252,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // 削除メニューをクリック
-    fireEvent.click(screen.getByTestId("delete-menu-item"));
+    fireEvent.click(screen.getByText("リストを削除"));
 
     // 削除ダイアログが表示されることを確認
     await waitFor(() => {
@@ -294,7 +267,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // 編集メニューをクリック
-    fireEvent.click(screen.getByTestId("edit-menu-item"));
+    fireEvent.click(screen.getByText("リストを編集"));
 
     // 編集ダイアログが表示されることを確認
     await waitFor(() => {
@@ -302,7 +275,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     });
 
     // ダイアログをクリックして閉じる
-    fireEvent.click(screen.getByTestId("edit-list-dialog"));
+    fireEvent.click(screen.getByText("Close"));
 
     // ダイアログが再表示されないことを確認
     expect(screen.queryByTestId("edit-list-dialog")).toBeNull();
@@ -315,7 +288,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // 削除メニューをクリック
-    fireEvent.click(screen.getByTestId("delete-menu-item"));
+    fireEvent.click(screen.getByText("リストを削除"));
 
     // 削除ダイアログが表示されることを確認
     await waitFor(() => {
@@ -323,7 +296,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     });
 
     // ダイアログをクリックして閉じる
-    fireEvent.click(screen.getByText("Close Dialog In Mock"));
+    fireEvent.click(screen.getByText("Cancel"));
 
     // ダイアログが再表示されないことを確認
     expect(screen.queryByTestId("delete-list-dialog")).toBeNull();
@@ -346,8 +319,8 @@ describe("ListCardActionsコンポーネントテスト", () => {
       screen.getByRole("button", { name: "リストアクション" })
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
-    expect(screen.getByTestId("edit-menu-item")).toBeInTheDocument();
-    expect(screen.queryByTestId("delete-menu-item")).toBeNull();
+    expect(screen.getByText("リストを編集")).toBeInTheDocument();
+    expect(screen.queryByText("リストを削除")).toBeNull();
 
     // 読み取り専用リストに変更して再レンダリング
     rerender(<ListCardActions list={mockReadOnlyList} />);
@@ -365,7 +338,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
 
     // 編集メニューをクリック
-    fireEvent.click(screen.getByTestId("edit-menu-item"));
+    fireEvent.click(screen.getByText("リストを編集"));
 
     // 編集ダイアログが表示されることを確認
     await waitFor(() => {
@@ -377,7 +350,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     });
 
     // ダイアログをクリックして閉じる
-    fireEvent.click(screen.getByTestId("edit-list-dialog"));
+    fireEvent.click(screen.getByText("Close"));
 
     // ダイアログが閉じることをテストする
     // EditListDialogのモックはクリック時にonCloseを呼び出すように設定されている
@@ -399,7 +372,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     // メニュートリガーをクリック
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
     // 削除メニューをクリック
-    fireEvent.click(screen.getByTestId("delete-menu-item"));
+    fireEvent.click(screen.getByText("リストを削除"));
 
     // 削除ダイアログが表示されるのを待つ
     await waitFor(() => {
@@ -407,7 +380,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
     });
 
     // 削除ダイアログ内の確認ボタンをクリック
-    fireEvent.click(screen.getByTestId("confirm-delete-button-in-mock"));
+    fireEvent.click(screen.getByText("Confirm Delete"));
 
     // deleteListが正しいIDで呼ばれたことを確認
     await waitFor(() => {
@@ -445,13 +418,13 @@ describe("ListCardActionsコンポーネントテスト", () => {
     // メニュートリガーをクリック
     fireEvent.click(screen.getByRole("button", { name: "リストアクション" }));
     // 削除メニューをクリック
-    fireEvent.click(screen.getByTestId("delete-menu-item"));
+    fireEvent.click(screen.getByText("リストを削除"));
 
     await waitFor(() => {
       expect(screen.getByTestId("delete-list-dialog")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTestId("confirm-delete-button-in-mock"));
+    fireEvent.click(screen.getByText("Confirm Delete"));
 
     await waitFor(() => {
       expect(mockedDeleteListAction).toHaveBeenCalledWith(mockOwnedList.id); // 呼び出し確認の対象を修正

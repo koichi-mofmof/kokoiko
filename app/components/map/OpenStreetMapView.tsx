@@ -159,7 +159,7 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   }, [initialCenter, initialZoom]);
 
   return (
-    <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden z-10">
+    <div className="relative w-full h-full min-h-[250px] rounded-lg overflow-hidden z-10">
       <MapContainer
         center={currentCenter}
         zoom={currentZoom}

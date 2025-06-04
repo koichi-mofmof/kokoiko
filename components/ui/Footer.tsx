@@ -19,6 +19,7 @@ export default function Footer({ currentUser }: FooterProps) {
                   width={24}
                   height={24}
                   className="filter brightness-0 invert"
+                  priority
                 />
                 <span className="text-xl font-semibold font-quicksand text-neutral-100">
                   ClippyMap

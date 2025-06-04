@@ -40,6 +40,7 @@ export default function AddPlaceButtonClient({
         className="h-10 w-10 rounded-full shadow-lg md:hidden"
         aria-label="場所を追加 (スマートフォン)"
         onClick={() => setOpen(true)}
+        data-testid="AddPlaceButtonClient"
       >
         <Plus />
       </Button>
@@ -48,6 +49,7 @@ export default function AddPlaceButtonClient({
         className="hidden md:inline-flex items-center shadow-md"
         aria-label="場所を追加 (PC)"
         onClick={() => setOpen(true)}
+        data-testid="AddPlaceButtonClient"
       >
         <Plus className="h-5 w-5 mr-2" />
         場所を追加

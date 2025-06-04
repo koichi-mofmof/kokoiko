@@ -11,11 +11,13 @@ import RankingEditModal from "./RankingEditModal";
 interface RankingViewProps {
   listId: string;
   places?: Place[];
+  permission?: string;
 }
 
 export default function RankingView({
   listId,
   places: parentPlaces,
+  permission,
 }: RankingViewProps) {
   const [ranking, setRanking] = useState<RankedPlace[]>([]);
   const [places, setPlaces] = useState<Place[]>(parentPlaces || []);
@@ -135,20 +137,24 @@ export default function RankingView({
             listId={listId}
             isSample={isSample}
           />
-          <div className="mt-6 text-center">
-            <Button onClick={() => setIsEditModalOpen(true)}>
-              ランキングを編集
-            </Button>
-          </div>
+          {(permission === "edit" || permission === "owner") && (
+            <div className="mt-6 text-center">
+              <Button onClick={() => setIsEditModalOpen(true)}>
+                ランキングを編集
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="text-center py-10">
           <p className="text-sm md:text-base text-muted-foreground mb-4">
             このリストにはまだランキングが作成されていません。
           </p>
-          <Button onClick={() => setIsEditModalOpen(true)}>
-            ランキングを作成
-          </Button>
+          {(permission === "edit" || permission === "owner") && (
+            <Button onClick={() => setIsEditModalOpen(true)}>
+              ランキングを作成
+            </Button>
+          )}
         </div>
       )}
       {isEditModalOpen && (

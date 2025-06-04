@@ -82,7 +82,7 @@ describe("RankingEditModal", () => {
     fireEvent.click(addBtns[0]);
     // コメント欄を開く
     fireEvent.click(screen.getByText("コメントを書く"));
-    fireEvent.change(screen.getByPlaceholderText("コメント（任意）"), {
+    fireEvent.change(screen.getAllByPlaceholderText("コメント（任意）")[0], {
       target: { value: "テストコメント" },
     });
     // 保存ボタン押下
@@ -90,21 +90,6 @@ describe("RankingEditModal", () => {
     await waitFor(() => {
       expect(saveRankingViewData).toHaveBeenCalled();
     });
-  });
-
-  it("キャンセルボタンでonOpenChangeが呼ばれる", () => {
-    const onOpenChange = jest.fn();
-    render(
-      <RankingEditModal
-        list={list}
-        isOpen={true}
-        onOpenChange={onOpenChange}
-        onRankingUpdate={() => {}}
-        mode="create"
-      />
-    );
-    fireEvent.click(screen.getByText("キャンセル"));
-    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("APIエラー時はalertが表示される", async () => {

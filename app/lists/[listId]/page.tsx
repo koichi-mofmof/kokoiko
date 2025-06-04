@@ -1,6 +1,7 @@
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
 import { ParticipantAvatars } from "@/components/ui/avatar";
+import NoAccess from "@/components/ui/NoAccess";
 import type { MyListForClient } from "@/lib/dal/lists";
 import { getListDetails } from "@/lib/dal/lists";
 import { createClient } from "@/lib/supabase/server";
@@ -31,11 +32,16 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
   );
 
   if (!listDetails) {
-    notFound();
+    return <NoAccess />;
   }
 
   const owner = listDetails.collaborators.find((c) => c.isOwner);
-  const otherParticipants = listDetails.collaborators.filter((c) => !c.isOwner);
+  const otherParticipants = listDetails.collaborators.filter(
+    (c) => !c.isOwner && c.permission === "edit"
+  );
+  const viewers = listDetails.collaborators.filter(
+    (c) => !c.isOwner && c.permission === "view"
+  );
 
   if (!owner) {
     console.error("Owner not found in collaborators for list:", listId);
@@ -86,7 +92,11 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
         </div>
 
         <div className="mb-4 flex justify-between">
-          <ParticipantAvatars owner={owner} participants={otherParticipants} />
+          <ParticipantAvatars
+            owner={owner}
+            participants={otherParticipants}
+            viewers={viewers}
+          />
         </div>
 
         <Suspense
@@ -94,7 +104,11 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
             <div className="text-center p-8">リスト詳細を読み込み中...</div>
           }
         >
-          <ListDetailView places={listDetails.places} listId={listId} />
+          <ListDetailView
+            places={listDetails.places}
+            listId={listId}
+            permission={listDetails.permission}
+          />
         </Suspense>
       </div>
     </>

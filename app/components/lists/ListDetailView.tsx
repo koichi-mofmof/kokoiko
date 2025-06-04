@@ -1,18 +1,19 @@
 "use client";
 
+import RankingView from "@/app/components/lists/RankingView";
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/components/ui/FilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
-import RankingView from "@/app/components/lists/RankingView";
 import { FilterOptions, Place, ViewMode } from "@/types";
-import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
 import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
 
 interface ListDetailViewProps {
   places: Place[];
   listId: string;
   isSample?: boolean;
+  permission?: string;
 }
 
 // OpenStreetMapView を動的にインポートし、SSRを無効にする
@@ -32,6 +33,7 @@ export default function ListDetailView({
   places,
   listId,
   isSample,
+  permission,
 }: ListDetailViewProps) {
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>(places);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -99,29 +101,30 @@ export default function ListDetailView({
 
   return (
     <div>
-      <div
-        className={`flex items-center mb-4
-          ${
-            viewMode === "ranking"
-              ? isSample
-                ? "justify-end"
-                : "justify-center"
-              : "justify-between"
-          }`}
-      >
-        {viewMode !== "ranking" && (
-          <FilterBar
-            onFilterChange={setFilters}
-            initialFilters={filters}
-            availableTags={availableTags}
-            availablePrefectures={availablePrefectures}
-          />
-        )}
-        <ViewToggle currentView={viewMode} onViewChange={handleViewChange} />
-
-        {viewMode !== "ranking" && !isSample && (
-          <AddPlaceButtonClient listId={listId} />
-        )}
+      <div className="inline-flex items-center justify-between mb-4 w-full">
+        {/* 左：FilterBar */}
+        <div className="flex justify-start">
+          {viewMode !== "ranking" && (
+            <FilterBar
+              onFilterChange={setFilters}
+              initialFilters={filters}
+              availableTags={availableTags}
+              availablePrefectures={availablePrefectures}
+            />
+          )}
+        </div>
+        {/* 中央：ビュートグル */}
+        <div className="flex justify-center">
+          <ViewToggle currentView={viewMode} onViewChange={handleViewChange} />
+        </div>
+        {/* 右：場所を追加ボタン */}
+        <div className="flex justify-end">
+          {viewMode !== "ranking" &&
+            !isSample &&
+            (permission === "edit" || permission === "owner") && (
+              <AddPlaceButtonClient listId={listId} />
+            )}
+        </div>
       </div>
 
       {/* List View */}
@@ -145,7 +148,7 @@ export default function ListDetailView({
 
       {/* Ranking View */}
       <div className={`${viewMode === "ranking" ? "block" : "hidden"}`}>
-        <RankingView listId={listId} places={places} />
+        <RankingView listId={listId} places={places} permission={permission} />
       </div>
 
       {/* Places Not Found Message */}

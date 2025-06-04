@@ -43,5 +43,5 @@ next-env.d.ts
 # cursor
 .cursor
 
-# table design explanation
-table_design_explanation.md
+# docs
+/docs/*

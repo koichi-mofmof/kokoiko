@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient } from "@/lib/supabase/server";
 import { getStoragePublicUrl } from "@/lib/supabase/storage";
 import type { Place, User } from "@/types";
@@ -145,27 +147,22 @@ async function fetchPlacesForList(
  * @param ownerId - リストのオーナーID。コラボレーター情報にisOwnerフラグを設定するために使用されます。
  * @returns 指定されたリストのコラボレーターの配列 (Collaborator[])。
  */
-async function fetchCollaboratorsForList(
+export async function fetchCollaboratorsForList(
   supabase: SupabaseClient<Database>,
   listId: string,
   ownerId: string
 ): Promise<Collaborator[]> {
   try {
-    const { data: sharedData, error: sharedError } = await supabase
+    const { data: shared } = await supabase
       .from("shared_lists")
       .select("shared_with_user_id, permission")
       .eq("list_id", listId);
 
-    if (sharedError) {
-      console.error("Error fetching shared users:", sharedError);
+    if (!shared || shared.length === 0) {
       return [];
     }
 
-    if (!sharedData || sharedData.length === 0) {
-      return [];
-    }
-
-    const userIds = sharedData.map((shared) => shared.shared_with_user_id);
+    const userIds = shared.map((shared) => shared.shared_with_user_id);
 
     const { data: userData, error: userError } = await supabase
       .from("profiles")
@@ -182,7 +179,7 @@ async function fetchCollaboratorsForList(
         const avatarUrl = user.avatar_url
           ? await getStoragePublicUrl(user.avatar_url)
           : undefined;
-        const sharedInfo = sharedData.find(
+        const sharedInfo = shared.find(
           (s) => s.shared_with_user_id === user.id
         );
         return {
@@ -370,18 +367,72 @@ export async function getListDetails(
       .single();
 
     if (listError || !listData) {
-      console.error(
+      console.warn(
         `Error fetching list details for listId ${listId}:`,
         listError
       );
       return null;
     }
 
-    // 2. Fetch places for the list
+    // 2. アクセス権限チェック
+    let permission: string = "view"; // デフォルトはviewに統一
+    let hasAccess = false;
+
+    if (listData.is_public) {
+      // 公開リスト: 誰でもアクセス可
+      hasAccess = true;
+      if (listData.created_by === userId) {
+        permission = "owner";
+      } else {
+        // shared_listsでedit権限があればpermissionを上書き
+        const { data: sharedEntry } = await supabase
+          .from("shared_lists")
+          .select("permission")
+          .eq("list_id", listId)
+          .eq("shared_with_user_id", userId)
+          .single();
+        if (sharedEntry && sharedEntry.permission === "edit") {
+          permission = "edit";
+        } else {
+          permission = "view";
+        }
+      }
+    } else {
+      // 非公開リスト: オーナーまたはshared_listsでview/edit権限が必要
+      if (listData.created_by === userId) {
+        hasAccess = true;
+        permission = "owner";
+      } else {
+        // shared_listsを参照
+        const { data: sharedEntry } = await supabase
+          .from("shared_lists")
+          .select("permission")
+          .eq("list_id", listId)
+          .eq("shared_with_user_id", userId)
+          .single();
+        if (
+          sharedEntry &&
+          (sharedEntry.permission === "view" ||
+            sharedEntry.permission === "edit")
+        ) {
+          hasAccess = true;
+          permission = sharedEntry.permission;
+        }
+      }
+    }
+
+    if (!hasAccess) {
+      // アクセス権限なし
+      console.warn(
+        `User ${userId} attempted to access list ${listId} without permission.`
+      );
+      return null;
+    }
+
+    // 3. Fetch places for the list
     const places = await fetchPlacesForList(supabase, listId, userId);
 
-    // 3. Fetch collaborators
-    // ownerId for fetchCollaboratorsForList is listData.created_by
+    // 4. Fetch collaborators
     const collaboratorsWithoutOwner = await fetchCollaboratorsForList(
       supabase,
       listId,
@@ -389,11 +440,9 @@ export async function getListDetails(
     );
 
     let ownerProfile: Collaborator | undefined;
-    // Try to find owner in collaborators first (if they are also a shared user explicitly)
     ownerProfile = collaboratorsWithoutOwner.find(
-      (c) => c.id === listData.created_by && c.isOwner // isOwner might be set by fetchCollaboratorsForList if ownerId matches
+      (c) => c.id === listData.created_by && c.isOwner
     );
-
     if (!ownerProfile && listData.created_by) {
       const { data: ownerDataFromProfiles } = await supabase
         .from("profiles")
@@ -409,36 +458,28 @@ export async function getListDetails(
           name: ownerDataFromProfiles.display_name || "",
           email: "",
           avatarUrl,
-          isOwner: true, // Explicitly set isOwner
+          isOwner: true,
         };
       }
     }
-
     const finalCollaborators: Collaborator[] = ownerProfile
       ? [
           ownerProfile,
           ...collaboratorsWithoutOwner.filter(
-            // Ensure owner is not duplicated if already present in collaboratorsWithoutOwner (e.g. shared with self)
             (c) => c.id !== listData.created_by
           ),
         ]
       : [...collaboratorsWithoutOwner];
-
-    // Ensure current user's profile is in collaborators if they are the creator but not explicitly shared with
-    // This logic is similar to fetchMyPageData to ensure consistency
     if (
       listData.created_by === userId &&
       !finalCollaborators.some((c) => c.id === userId && c.isOwner)
     ) {
-      // If current user is owner and not in finalCollaborators as owner, fetch their profile and add/update.
       const currentUserAsOwnerInCollaborators = finalCollaborators.find(
         (c) => c.id === userId
       );
       if (currentUserAsOwnerInCollaborators) {
-        // User is a collaborator, ensure isOwner is true
         currentUserAsOwnerInCollaborators.isOwner = true;
       } else {
-        // User is not in collaborators, fetch profile and add as owner
         const { data: currentUserProfileData } = await supabase
           .from("profiles")
           .select("id, display_name, avatar_url")
@@ -455,49 +496,10 @@ export async function getListDetails(
             avatarUrl,
             isOwner: true,
           };
-          finalCollaborators.unshift(currentUserAsOwner); // Add to the beginning
+          finalCollaborators.unshift(currentUserAsOwner);
         }
       }
     }
-
-    // 4. Determine user's permission for the list
-    let permission: string = "viewer"; // Default permission
-
-    if (listData.created_by === userId) {
-      permission = "owner";
-    } else {
-      const { data: sharedEntry, error: sharedError } = await supabase
-        .from("shared_lists")
-        .select("permission")
-        .eq("list_id", listId)
-        .eq("shared_with_user_id", userId)
-        .single();
-
-      if (sharedError && sharedError.code !== "PGRST116") {
-        // PGRST116: Row not found, which is fine
-        console.error("Error fetching shared_lists entry:", sharedError);
-        // Potentially return null or handle error appropriately
-      }
-      if (sharedEntry) {
-        permission = sharedEntry.permission; // 'edit' or 'view'
-      } else {
-        // If not owner and not explicitly shared, check if list is public
-        if (!listData.is_public) {
-          // Not owner, not shared, and not public - user should not see this list.
-          // This case should ideally be caught by RLS or a higher-level check.
-          // For now, returning null as if the list doesn't exist for this user.
-          console.warn(
-            `User ${userId} attempted to access non-public, unshared list ${listId}`
-          );
-          return null;
-        }
-        // For public lists, non-owners/non-collaborators are viewers
-        permission = "viewer";
-      }
-    }
-
-    // RLS should prevent access if not owner, not shared, and list is not public.
-    // If code reaches here for a private list the user shouldn't see, it's an issue.
 
     return {
       id: listData.id,

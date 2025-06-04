@@ -48,7 +48,11 @@ export async function SamplePageDataLoader(): Promise<{
 
     const collaborators = [
       ...(owner ? [{ ...owner, isOwner: true }] : []),
-      ...sharedUsers.map((user) => ({ ...user, isOwner: false })),
+      ...sharedUsers.map((user) => ({
+        ...user,
+        isOwner: false,
+        permission: "edit",
+      })),
     ];
 
     const placeCount = list.places?.length || 0;
