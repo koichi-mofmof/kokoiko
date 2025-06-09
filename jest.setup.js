@@ -1,3 +1,10 @@
+// 環境変数の設定
+process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test";
+process.env.SUPABASE_SERVICE_ROLE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-service-role";
+
 // jest-dom adds custom jest matchers for asserting on DOM nodes.
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
@@ -30,10 +37,28 @@ jest.mock("next/headers", () => ({
       }
       return undefined;
     }),
+    getAll: jest.fn(() => []),
     has: jest.fn(),
     set: jest.fn(),
     delete: jest.fn(),
   }),
+}));
+
+// Supabaseサーバークライアントをモック
+jest.mock("@/lib/supabase/server", () => ({
+  createClient: jest.fn().mockImplementation(() => ({
+    auth: {
+      getUser: jest.fn().mockResolvedValue({
+        data: {
+          user: { id: "test-user-id", email: "test@example.com" },
+        },
+        error: null,
+      }),
+    },
+    from: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+  })),
 }));
 
 // テスト前にMSWのサーバーを起動

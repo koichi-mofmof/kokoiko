@@ -4,7 +4,7 @@ import { CtaButton } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { motion } from "framer-motion";
-import { ArrowDown, Check, MapPin, Tag, User, Users, X } from "lucide-react";
+import { ArrowDown, Check, MapPin, Tag, User, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -47,7 +47,7 @@ export default function Home() {
   return (
     <main>
       {/* Hero Section with Background Image */}
-      <section className="relative px-4 pb-24 sm:px-6 sm:pt-20 sm:pb-36 lg:px-8 overflow-hidden min-h-[90svh] sm:min-h-[97svh] flex items-center">
+      <section className="relative px-4 pb-24 sm:px-6 sm:pt-20 sm:pb-36 lg:px-8 overflow-hidden min-h-[90svh] sm:min-h-[96svh] flex items-center">
         {/* Background Image with Gradient Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           {backgroundImages.map((src, index) => (

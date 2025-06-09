@@ -62,7 +62,18 @@ export function ShareSettingsDialog({
   links: Partial<Database["public"]["Tables"]["list_share_tokens"]["Row"]>[];
   loading: boolean;
   error: string | null;
-  onCreateLink: (formData: FormData, reset?: () => void) => Promise<any>;
+  onCreateLink: (
+    formData: FormData,
+    reset?: () => void
+  ) => Promise<
+    | {
+        success: boolean;
+        error?: string;
+        upgradeRecommended?: boolean;
+        sharedListNames?: string[];
+      }
+    | { success: false; error: string }
+  >;
   onReloadLinks: () => Promise<void>;
   onReloadCollaborators: () => Promise<void>;
   isCreatingLink: boolean;
@@ -95,7 +106,6 @@ export function ShareSettingsDialog({
     >
   >({});
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [sharedListNames, setSharedListNames] = useState<string[]>([]);
 
@@ -127,10 +137,16 @@ export function ShareSettingsDialog({
     const result = await onCreateLink(formData, () => {
       formRef.current?.reset();
     });
-    if (result && result.upgradeRecommended) {
-      setUpgradeError(result.error || "フリープランの上限に達しています。");
+    if (
+      result &&
+      typeof result === "object" &&
+      "upgradeRecommended" in result &&
+      result.upgradeRecommended
+    ) {
       setShowUpgradeDialog(true);
-      setSharedListNames(result.sharedListNames || []);
+      setSharedListNames(
+        (result as { sharedListNames?: string[] }).sharedListNames || []
+      );
     }
   };
 

@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import AddPlaceButtonClient from "@/app/components/places/AddPlaceButtonClient";
+import { MockSubscriptionProvider } from "../../../mocks/MockSubscriptionProvider";
 
 // AddPlaceFormをモック
 jest.mock(
@@ -19,11 +20,16 @@ jest.mock(
     }
 );
 
+// ヘルパー関数
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(<MockSubscriptionProvider>{ui}</MockSubscriptionProvider>);
+};
+
 describe("AddPlaceButtonClient", () => {
   const listId = "test-list-1";
 
   it("スマホ・PC両方の追加ボタンが表示される", () => {
-    render(<AddPlaceButtonClient listId={listId} />);
+    renderWithProviders(<AddPlaceButtonClient listId={listId} />);
     expect(
       screen.getByRole("button", { name: /場所を追加 \(スマートフォン\)/ })
     ).toBeInTheDocument();
@@ -33,7 +39,7 @@ describe("AddPlaceButtonClient", () => {
   });
 
   it("PCボタン押下でダイアログが開き、AddPlaceFormが表示される", () => {
-    render(<AddPlaceButtonClient listId={listId} />);
+    renderWithProviders(<AddPlaceButtonClient listId={listId} />);
     fireEvent.click(screen.getByRole("button", { name: /場所を追加 \(PC\)/ }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("新しい場所をリストに追加")).toBeInTheDocument();
@@ -42,7 +48,7 @@ describe("AddPlaceButtonClient", () => {
   });
 
   it("スマホボタン押下でもダイアログが開く", () => {
-    render(<AddPlaceButtonClient listId={listId} />);
+    renderWithProviders(<AddPlaceButtonClient listId={listId} />);
     fireEvent.click(
       screen.getByRole("button", { name: /場所を追加 \(スマートフォン\)/ })
     );
@@ -50,7 +56,7 @@ describe("AddPlaceButtonClient", () => {
   });
 
   it("AddPlaceFormのonPlaceRegisteredでダイアログが閉じる", () => {
-    render(<AddPlaceButtonClient listId={listId} />);
+    renderWithProviders(<AddPlaceButtonClient listId={listId} />);
     fireEvent.click(screen.getByRole("button", { name: /場所を追加 \(PC\)/ }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     fireEvent.click(screen.getByText("登録完了"));
@@ -58,7 +64,7 @@ describe("AddPlaceButtonClient", () => {
   });
 
   it("ダイアログがrole=dialogかつタイトルが正しく表示される", () => {
-    render(<AddPlaceButtonClient listId={listId} />);
+    renderWithProviders(<AddPlaceButtonClient listId={listId} />);
     fireEvent.click(screen.getByRole("button", { name: /場所を追加 \(PC\)/ }));
     const dialog = screen.getByRole("dialog");
     expect(dialog).toBeInTheDocument();

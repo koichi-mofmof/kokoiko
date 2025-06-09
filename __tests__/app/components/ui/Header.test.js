@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import Header from "@/components/ui/Header";
 import "@testing-library/jest-dom";
+import { MockSubscriptionProvider } from "../../../mocks/MockSubscriptionProvider";
 
 // RadixUIのドロップダウンメニューをモックする
 jest.mock("@/components/ui/dropdown-menu", () => ({
@@ -22,10 +23,18 @@ jest.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenuSeparator: () => <hr data-testid="dropdown-separator" />,
 }));
 
+// Headerコンポーネントをラップする関数
+const renderWithProviders = (ui, options = {}) => {
+  return render(
+    <MockSubscriptionProvider>{ui}</MockSubscriptionProvider>,
+    options
+  );
+};
+
 describe("Headerコンポーネントテスト", () => {
   // 未ログイン状態のヘッダーをテスト
   it("未ログイン状態では「ログイン」ボタンが表示されること", () => {
-    render(<Header currentUser={null} />);
+    renderWithProviders(<Header currentUser={null} />);
 
     // ClippyMapロゴテキストが表示される
     expect(screen.getByText("ClippyMap")).toBeInTheDocument();
@@ -46,7 +55,7 @@ describe("Headerコンポーネントテスト", () => {
       avatarUrl: null, // アバター画像なし
     };
 
-    render(<Header currentUser={mockUser} />);
+    renderWithProviders(<Header currentUser={mockUser} />);
 
     // ClippyMapロゴが表示される
     expect(screen.getByText("ClippyMap")).toBeInTheDocument();
@@ -70,7 +79,7 @@ describe("Headerコンポーネントテスト", () => {
       avatarUrl: "https://example.com/avatar.jpg",
     };
 
-    render(<Header currentUser={mockUser} />);
+    renderWithProviders(<Header currentUser={mockUser} />);
 
     // Avatarコンポーネントが表示されることを確認
     // ドロップダウントリガーが存在することを確認
@@ -89,7 +98,7 @@ describe("Headerコンポーネントテスト", () => {
       email: "test@example.com",
     };
 
-    const { container } = render(
+    const { container } = renderWithProviders(
       <Header currentUser={mockUser} onLogout={mockLogout} />
     );
 

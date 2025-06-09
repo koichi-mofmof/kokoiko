@@ -17,6 +17,14 @@ const customJestConfig = {
   },
   // ESMパッケージ（nanoid等）もtransform対象にする
   transformIgnorePatterns: ["/node_modules/(?!(nanoid)/)"],
+  // Playwrightテストを無視
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/tests/",
+    "/.next/",
+    "/playwright-report/",
+    "/test-results/",
+  ],
   // TypeScript/ESM対応（必要に応じて）
   // transform: {
   //   "^.+\\.(ts|tsx)$": "ts-jest",

@@ -19,7 +19,7 @@ const Row = ({
 
 export default function TokushohoPage() {
   return (
-    <div className="bg-neutral-50 min-h-screen py-8">
+    <div className="bg-neutral-50 py-8">
       <div className="max-w-3xl w-full mx-auto p-4 sm:p-6">
         <Card className="overflow-hidden">
           <CardHeader className="bg-neutral-100/80">

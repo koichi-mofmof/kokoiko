@@ -1,6 +1,9 @@
 "use server";
 
+import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
+import { getActiveSubscription } from "@/lib/dal/subscriptions";
 import { createClient } from "@/lib/supabase/server";
+import { getRegisteredPlacesCountThisMonth } from "@/lib/utils/subscription-utils";
 import {
   AddCommentInput,
   AddCommentSchema,
@@ -15,10 +18,6 @@ import {
 import { ListPlaceComment } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getActiveSubscription } from "@/lib/dal/subscriptions";
-import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
-import { fetchMyPageData } from "@/lib/dal/lists";
-import { getRegisteredPlacesCountThisMonth } from "@/lib/utils/subscription-utils";
 
 export type PlaceToRegisterType = z.infer<typeof PlaceToRegisterSchema>;
 

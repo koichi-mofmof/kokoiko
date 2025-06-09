@@ -1,10 +1,14 @@
 import { registerPlaceToListAction } from "@/lib/actions/place-actions";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveSubscription } from "@/lib/dal/subscriptions";
+import { getRegisteredPlacesCountThisMonth } from "@/lib/utils/subscription-utils";
 
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
 }));
 jest.mock("@/lib/supabase/server");
+jest.mock("@/lib/dal/subscriptions");
+jest.mock("@/lib/utils/subscription-utils");
 
 describe("registerPlaceToListAction: 地点登録サーバーアクション", () => {
   const validInput = {
@@ -17,6 +21,9 @@ describe("registerPlaceToListAction: 地点登録サーバーアクション", (
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // サブスクリプション関連のモックをデフォルト値に設定
+    (getActiveSubscription as jest.Mock).mockResolvedValue(null);
+    (getRegisteredPlacesCountThisMonth as jest.Mock).mockResolvedValue(0);
   });
 
   it("認証されていない場合はエラーを返すこと", async () => {
@@ -33,6 +40,7 @@ describe("registerPlaceToListAction: 地点登録サーバーアクション", (
       auth: {
         getUser: async () => ({ data: { user: { id: "user1" } }, error: null }),
       },
+      rpc: jest.fn().mockResolvedValue({ data: "new-id", error: null }),
     });
     // listIdがUUIDでない
     const invalidInput = { ...validInput, listId: "not-a-uuid" };
@@ -43,44 +51,46 @@ describe("registerPlaceToListAction: 地点登録サーバーアクション", (
   });
 
   it("重複登録時はエラーを返すこと", async () => {
-    (createClient as jest.Mock).mockResolvedValue({
+    const mockSupabase = {
       auth: {
         getUser: async () => ({ data: { user: { id: "user1" } }, error: null }),
       },
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({
-                data: { id: "exists" },
-                error: null,
-              }),
-            }),
-          }),
+      from: jest.fn().mockImplementation(() => ({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: { id: "exists" },
+          error: null,
         }),
-      }),
-    });
+      })),
+      rpc: jest.fn(),
+    };
+
+    (createClient as jest.Mock).mockResolvedValue(mockSupabase);
     const result = await registerPlaceToListAction(prevState, validInput);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/既にこのリストに登録/);
   });
 
   it("正常系: 新規登録が成功すること", async () => {
-    (createClient as jest.Mock).mockResolvedValue({
+    const mockSupabase = {
       auth: {
         getUser: async () => ({ data: { user: { id: "user1" } }, error: null }),
       },
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: null, error: null }),
-            }),
-          }),
+      from: jest.fn().mockImplementation(() => ({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: null,
+          error: null,
         }),
-      }),
-      rpc: async () => ({ data: "new-list-place-id", error: null }),
-    });
+      })),
+      rpc: jest
+        .fn()
+        .mockResolvedValue({ data: "new-list-place-id", error: null }),
+    };
+
+    (createClient as jest.Mock).mockResolvedValue(mockSupabase);
     const result = await registerPlaceToListAction(prevState, validInput);
     expect(result.success).toBe(true);
     expect(result.listPlaceId).toBe("new-list-place-id");
@@ -88,24 +98,25 @@ describe("registerPlaceToListAction: 地点登録サーバーアクション", (
   });
 
   it("RPCエラー時はエラーを返すこと", async () => {
-    (createClient as jest.Mock).mockResolvedValue({
+    const mockSupabase = {
       auth: {
         getUser: async () => ({ data: { user: { id: "user1" } }, error: null }),
       },
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: null, error: null }),
-            }),
-          }),
+      from: jest.fn().mockImplementation(() => ({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: null,
+          error: null,
         }),
-      }),
-      rpc: async () => ({
+      })),
+      rpc: jest.fn().mockResolvedValue({
         data: null,
         error: { message: "Failed to upsert place" },
       }),
-    });
+    };
+
+    (createClient as jest.Mock).mockResolvedValue(mockSupabase);
     const result = await registerPlaceToListAction(prevState, validInput);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/保存処理中/);

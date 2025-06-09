@@ -15,7 +15,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { Check } from "lucide-react";
-import { useState, ReactNode } from "react";
+import { ReactNode, useState } from "react";
 
 type UpgradePlanDialogProps = {
   trigger?: ReactNode;
@@ -83,8 +83,12 @@ export function UpgradePlanDialog({
         setError(data.error || "セッション作成に失敗しました");
         setLoading(false);
       }
-    } catch (e: any) {
-      setError(e.message || "不明なエラーが発生しました");
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message || "不明なエラーが発生しました");
+      } else {
+        setError("不明なエラーが発生しました");
+      }
       setLoading(false);
     }
   };
