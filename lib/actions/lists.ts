@@ -1,9 +1,11 @@
 "use server";
 
+import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { createClient } from "@/lib/supabase/server";
+import { getSharedListCount } from "@/lib/utils/subscription-utils";
 import { createListSchema, updateListSchema } from "@/lib/validators/list";
-import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
+import { revalidatePath } from "next/cache";
 
 // リスト作成アクション
 export async function createList(formData: FormData) {
@@ -421,6 +423,39 @@ export async function createShareLink({
       .single();
     if (ownerProfile && ownerProfile.display_name) {
       ownerName = ownerProfile.display_name;
+    }
+  }
+  // フリープランの共有リスト数上限チェック
+  // サブスクリプション情報取得
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", user.id)
+    .in("status", ["active", "trialing"])
+    .order("current_period_end", { ascending: false })
+    .limit(1)
+    .single();
+  const isPremium =
+    subscription &&
+    (subscription.status === "active" || subscription.status === "trialing");
+  if (!isPremium) {
+    // 共通ユーティリティで判定
+    const { count: sharedCount, sharedListNames } = await getSharedListCount(
+      supabase,
+      user.id,
+      listId
+    );
+    if (sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS) {
+      return {
+        success: false,
+        error: `フリープランでは共有できるリストは${
+          SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS
+        }件までです。\n\n現在共有中のリスト: ${sharedListNames.join(
+          ", "
+        )}\n\nプレミアムプランにアップグレードすると、無制限に共有できます。`,
+        upgradeRecommended: true,
+        sharedListNames,
+      };
     }
   }
   // 共有リンク発行

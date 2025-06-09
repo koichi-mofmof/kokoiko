@@ -1,6 +1,7 @@
 import Footer from "@/components/ui/Footer";
 import Header from "@/components/ui/Header";
 import { Toaster } from "@/components/ui/toaster";
+import { SubscriptionProvider } from "@/contexts/SubscriptionProvider";
 import { logoutUser } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/server";
 import "leaflet/dist/leaflet.css";
@@ -71,21 +72,23 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}
       >
-        <Header
-          currentUser={
-            user
-              ? {
-                  id: user.id,
-                  name: displayName || "User",
-                  email: user.email || "",
-                  avatarUrl,
-                }
-              : null
-          }
-          onLogout={logoutUser}
-        />
-        <div className="flex-grow">{children}</div>
-        <Footer currentUser={user ? { id: user.id } : null} />
+        <SubscriptionProvider>
+          <Header
+            currentUser={
+              user
+                ? {
+                    id: user.id,
+                    name: displayName || "User",
+                    email: user.email || "",
+                    avatarUrl,
+                  }
+                : null
+            }
+            onLogout={logoutUser}
+          />
+          <main className="flex-grow">{children}</main>
+          <Footer currentUser={user ? { id: user.id } : null} />
+        </SubscriptionProvider>
         <Toaster />
       </body>
     </html>

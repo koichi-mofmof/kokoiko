@@ -15,6 +15,10 @@ import {
 import { ListPlaceComment } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getActiveSubscription } from "@/lib/dal/subscriptions";
+import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
+import { fetchMyPageData } from "@/lib/dal/lists";
+import { getRegisteredPlacesCountThisMonth } from "@/lib/utils/subscription-utils";
 
 export type PlaceToRegisterType = z.infer<typeof PlaceToRegisterSchema>;
 
@@ -43,6 +47,27 @@ export async function registerPlaceToListAction(
 
   if (authError || !user) {
     return { success: false, error: "認証が必要です。" };
+  }
+
+  // ★追加: サブスクリプション情報取得＆今月の登録数チェック
+  const sub = await getActiveSubscription(user.id);
+  const isPremium =
+    sub && (sub.status === "active" || sub.status === "trialing");
+  const maxPlaces = isPremium
+    ? SUBSCRIPTION_LIMITS.premium.MAX_PLACES_PER_MONTH
+    : SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH;
+  if (!isPremium) {
+    // 今月の登録済み地点数をカウント（共通ユーティリティ利用）
+    const count = await getRegisteredPlacesCountThisMonth(supabase, user.id);
+    if (maxPlaces !== null && count >= maxPlaces) {
+      return {
+        success: false,
+        error:
+          "フリープランの地点登録上限（" +
+          maxPlaces +
+          "件/月）に達しています。\nプレミアムプランにアップグレードすると無制限に登録できます。\n\n→ プランのアップグレードはこちらからご検討ください。",
+      };
+    }
   }
 
   // 2. 入力データのバリデーション

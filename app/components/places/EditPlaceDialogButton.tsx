@@ -1,12 +1,6 @@
 "use client";
 import EditPlaceForm from "@/app/components/places/EditPlaceForm";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -17,17 +11,24 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSubscription } from "@/hooks/use-subscription";
 import { useToast } from "@/hooks/use-toast";
 import { deleteListPlaceAction } from "@/lib/actions/place-actions";
 import { Place } from "@/types";
 import { Edit, MoreVertical, Trash2 } from "lucide-react";
-import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 export default function EditPlaceDialogButton({
   place,
@@ -41,6 +42,7 @@ export default function EditPlaceDialogButton({
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { refreshSubscription } = useSubscription();
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const handleDeleteClick = () => {
@@ -67,6 +69,7 @@ export default function EditPlaceDialogButton({
 
       if (result?.success) {
         toast({ title: "成功", description: result.success });
+        await refreshSubscription();
         setOpen(false);
         router.push(`/lists/${listId}`);
       } else if (result?.error) {

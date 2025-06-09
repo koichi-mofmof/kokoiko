@@ -20,7 +20,7 @@ export function Tabs() {
     },
     {
       href: "/settings/billing",
-      label: "支払い設定",
+      label: "サブスクリプション設定",
       icon: <CreditCard className="w-5 h-5" />,
     },
   ];

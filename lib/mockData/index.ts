@@ -39,25 +39,6 @@ export const mockUsers: User[] = [
 export const mockPlaces: Place[] = [
   // Existing Date Spots (Indices 10-11)
   {
-    id: "date-spot-001",
-    name: "彫刻の森美術館",
-    address: "神奈川県足柄下郡箱根町ニノ平1121",
-    googleMapsUrl: "https://maps.app.goo.gl/rj3EVEiGCzv4pMjc9",
-    latitude: 35.2482,
-    longitude: 139.0484,
-    tags: [
-      { id: "美術館", name: "美術館" },
-      { id: "アート", name: "アート" },
-      { id: "自然", name: "自然" },
-    ],
-    createdAt: new Date("2024-04-01T10:00:00Z"),
-    updatedAt: new Date("2024-04-01T10:00:00Z"),
-    visited: "not_visited",
-    createdBy: mockUsers[0].id,
-    rating: 5,
-    googlePlaceId: "ChIJ9ZI1kZJ8GGARiT4eW9f0x3o",
-  },
-  {
     id: "date-spot-002",
     name: "横浜中華街",
     address: "神奈川県横浜市中区山下町",
@@ -161,25 +142,6 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJq9q-S9SAImARZ2Lw0C5D0F8",
   },
   {
-    id: "date-spot-007",
-    name: "三鷹の森ジブリ美術館",
-    address: "東京都三鷹市下連雀1-1-83",
-    googleMapsUrl: "https://maps.app.goo.gl/eq5df1pVHto4TsrM6",
-    latitude: 35.6963,
-    longitude: 139.5703,
-    tags: [
-      { id: "美術館", name: "美術館" },
-      { id: "ジブリ", name: "ジブリ" },
-      { id: "アニメ", name: "アニメ" },
-    ],
-    createdAt: new Date("2024-08-01T14:00:00Z"),
-    updatedAt: new Date("2024-08-01T14:00:00Z"),
-    visited: "visited",
-    createdBy: mockUsers[0].id,
-    rating: 5,
-    googlePlaceId: "ChIJsZ-C21T9GGAR7r0ZtU9v1zQ",
-  },
-  {
     id: "date-spot-008",
     name: "よみうりランド",
     address: "東京都稲城市矢野口4015-1",
@@ -197,27 +159,6 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[1].id,
     rating: 4,
     googlePlaceId: "ChIJ_c9Z2Tj4GGARf-5I9T5W0tI",
-  },
-  {
-    id: "date-spot-009",
-    name: "サンシャイン水族館",
-    address:
-      "東京都豊島区東池袋3-1 サンシャインシティ ワールドインポートマートビル 屋上",
-    googleMapsUrl: "https://maps.app.goo.gl/Dwpprqd5or9Z2cp66",
-    latitude: 35.7293,
-    longitude: 139.719,
-    tags: [
-      { id: "水族館", name: "水族館" },
-      { id: "動物", name: "動物" },
-    ],
-    createdAt: new Date("2024-09-01T13:00:00Z"),
-    updatedAt: new Date("2024-09-01T13:00:00Z"),
-    visited: "not_visited",
-    createdBy: mockUsers[0].id,
-    rating: 4,
-    googlePlaceId: "ChIJ4fyhqtuMGGARr36dO0Y6kL8",
-    imageUrl:
-      "https://images.pexels.com/photos/3699434/pexels-photo-3699434.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
   },
   {
     id: "date-spot-010",
@@ -442,16 +383,6 @@ export const mockPlaces: Place[] = [
 ];
 
 // --- Mock Place List Groups ---
-
-// Filter indoor places from mockPlaces
-const indoorDatePlaces = mockPlaces.filter((place) =>
-  [
-    "date-spot-001", // 彫刻の森美術館
-    "date-spot-007", // 三鷹の森ジブリ美術館
-    "date-spot-009", // サンシャイン水族館
-  ].includes(place.id)
-);
-
 // Filter sunny day places from mockPlaces
 const sunnyDayPlaces = mockPlaces.filter((place) =>
   [
@@ -484,36 +415,8 @@ const favoriteSaunaPlaces = mockPlaces.filter((place) =>
 
 export const mockPlaceLists: PlaceListGroup[] = [
   {
-    id: "sample-indoor-date",
-    name: "デートスポット（雨の日用）",
-    description: "雨の日でも楽しめる屋内デートスポット",
-    ownerId: mockUsers[0].id,
-    places: indoorDatePlaces,
-    sharedUserIds: [mockUsers[0].id, mockUsers[2].id],
-    rankingTitle: "雨の日でも安心！まったりデートランキング",
-    rankingDescription:
-      "急な雨でも大丈夫！インドアで楽しめる、二人のおすすめスポットを集めました。",
-    ranking: [
-      {
-        placeId: "date-spot-001",
-        rank: 1,
-        comment: "アートに触れる静かな時間。ピカソ作品は必見！",
-      },
-      {
-        placeId: "date-spot-009",
-        rank: 2,
-        comment: "天空のペンギンに癒される。意外と広い！",
-      },
-      {
-        placeId: "date-spot-007",
-        rank: 3,
-        comment: "ジブリの世界にどっぷり浸れる。予約頑張った甲斐あり！",
-      },
-    ],
-  },
-  {
     id: "sample-sunny-day",
-    name: "デートスポット（晴れた日用）",
+    name: "デートスポット",
     description: "天気の良い日に行きたい屋外デートスポット",
     ownerId: mockUsers[0].id,
     places: sunnyDayPlaces,
@@ -657,25 +560,6 @@ mockPlaces.forEach((place) => {
 });
 
 export const mockListPlaceComments = [
-  // 彫刻の森美術館（not_visited）
-  {
-    id: "c1",
-    list_place_id: "list-place-date-spot-001",
-    user_id: mockUsers[0].id,
-    comment:
-      "ピカソ館の展示がずっと気になっています。次の美術館巡りで絶対行きたい！",
-    created_at: "2024-06-01T10:00:00Z",
-    updated_at: "2024-06-01T10:00:00Z",
-  },
-  {
-    id: "c2",
-    list_place_id: "list-place-date-spot-001",
-    user_id: mockUsers[2].id,
-    comment:
-      "屋外の彫刻と自然のコラボが素敵そう。晴れた日にのんびり散歩したいです。",
-    created_at: "2024-06-01T11:00:00Z",
-    updated_at: "2024-06-01T11:00:00Z",
-  },
   // 横浜中華街（visited）
   {
     id: "c3",
@@ -762,24 +646,6 @@ export const mockListPlaceComments = [
     created_at: "2024-06-06T11:00:00Z",
     updated_at: "2024-06-06T11:00:00Z",
   },
-  // 三鷹の森ジブリ美術館（visited）
-  {
-    id: "c13",
-    list_place_id: "list-place-date-spot-007",
-    user_id: mockUsers[0].id,
-    comment:
-      "ジブリの世界観にどっぷり浸れます。屋上のロボット兵と写真を撮りました！",
-    created_at: "2024-06-07T10:00:00Z",
-    updated_at: "2024-06-07T10:00:00Z",
-  },
-  {
-    id: "c14",
-    list_place_id: "list-place-date-spot-007",
-    user_id: mockUsers[2].id,
-    comment: "予約が大変だけど、内部の展示が本当に素晴らしかったです。",
-    created_at: "2024-06-07T11:00:00Z",
-    updated_at: "2024-06-07T11:00:00Z",
-  },
   // よみうりランド（visited）
   {
     id: "c15",
@@ -796,23 +662,6 @@ export const mockListPlaceComments = [
     comment: "冬のジュエルミネーションはカップルにおすすめです。",
     created_at: "2024-06-08T11:00:00Z",
     updated_at: "2024-06-08T11:00:00Z",
-  },
-  // サンシャイン水族館（not_visited）
-  {
-    id: "c17",
-    list_place_id: "list-place-date-spot-009",
-    user_id: mockUsers[0].id,
-    comment: "天空のペンギンを見て癒されたい。都会の真ん中の水族館は新鮮！",
-    created_at: "2024-06-09T10:00:00Z",
-    updated_at: "2024-06-09T10:00:00Z",
-  },
-  {
-    id: "c18",
-    list_place_id: "list-place-date-spot-009",
-    user_id: mockUsers[2].id,
-    comment: "夜の水族館イベントが気になっています。次のデートで行きたい。",
-    created_at: "2024-06-09T11:00:00Z",
-    updated_at: "2024-06-09T11:00:00Z",
   },
   // 川越氷川神社（not_visited）
   {

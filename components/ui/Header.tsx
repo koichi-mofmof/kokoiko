@@ -1,5 +1,7 @@
 "use client";
 
+import { SubscriptionStatus } from "@/app/components/billing/SubscriptionStatus";
+import { UpgradePlanDialog } from "@/app/components/billing/UpgradePlanDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +12,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSubscription } from "@/hooks/use-subscription";
+import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { createClient } from "@/lib/supabase/client";
 import { List, LogIn, LogOut, Settings, User } from "lucide-react";
 import Image from "next/image";
@@ -28,6 +33,25 @@ interface HeaderProps {
 
 const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
   const [currentUser, setCurrentUser] = useState(initialUser);
+  const [isClient, setIsClient] = useState(false);
+  const {
+    plan: subscriptionPlan,
+    registeredPlacesThisMonth,
+    maxPlaces,
+    sharedListCount,
+    loading: planLoading,
+    isPremium,
+  } = useSubscription();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const plan =
+    subscriptionPlan === "premium" ? "プレミアムプラン" : "フリープラン";
+  const maxSharedLists = isPremium
+    ? null
+    : SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS;
 
   // プロフィール情報の再取得（useCallbackでラップ）
   const refreshUserProfile = useCallback(async () => {
@@ -100,15 +124,22 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
               className="text-primary-500"
               priority
             />
-            <span className="ml-2 text-xl font-semibold font-quicksand">
+            <span className="ml-2 sm:text-xl font-semibold font-quicksand">
               <span className="text-primary-600">ClippyMap</span>
             </span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="flex items-center space-x-8">
-          {currentUser ? (
+        <nav className="flex items-center space-x-6">
+          {!isClient ? (
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-8 w-24 hidden md:block" />
+              <Skeleton className="h-8 w-36 hidden md:block" />
+              <Skeleton className="h-8 w-36 hidden md:block" />
+              <Skeleton className="h-9 w-9 rounded-full" />
+            </div>
+          ) : currentUser ? (
             <>
               {/* PC表示時のみヘッダーにマイリスト一覧を表示 */}
               <Link
@@ -117,6 +148,28 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
               >
                 マイリスト一覧
               </Link>
+              {/* PC表示用のSubscriptionStatus & Upgrade Button */}
+              <div className="hidden md:flex items-center space-x-4">
+                <div className="w-36">
+                  <SubscriptionStatus
+                    label="今月の地点登録数"
+                    currentValue={registeredPlacesThisMonth}
+                    maxValue={maxPlaces}
+                    loading={planLoading}
+                  />
+                </div>
+                <div className="w-36">
+                  <SubscriptionStatus
+                    label="共有リスト数"
+                    currentValue={sharedListCount}
+                    maxValue={maxSharedLists}
+                    loading={planLoading}
+                  />
+                </div>
+                {subscriptionPlan === "free" && !planLoading && (
+                  <UpgradePlanDialog />
+                )}
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center space-x-2 outline-none focus:ring-2 focus:ring-primary-500 px-1 py-1 rounded-md hover:bg-neutral-100 transition">
@@ -136,26 +189,65 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-9 w-9 border border-neutral-300 flex items-center justify-center">
-                        {currentUser.avatarUrl ? (
-                          <AvatarImage
-                            src={currentUser.avatarUrl}
-                            alt={currentUser.name}
-                          />
-                        ) : (
-                          <AvatarFallback>
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
+                    <div className="flex flex-col space-y-3">
+                      {/* ユーザー情報 */}
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-9 w-9 border border-neutral-300 flex items-center justify-center">
+                          {currentUser.avatarUrl ? (
+                            <AvatarImage
+                              src={currentUser.avatarUrl}
+                              alt={currentUser.name}
+                            />
+                          ) : (
+                            <AvatarFallback>
+                              <User className="h-5 w-5" />
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <p className="text-sm font-medium leading-none">
+                            {currentUser.name}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground pt-1.5">
+                            {currentUser.email}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* PC用プラン表示 (ドロップダウン内) */}
+                      <div className="hidden md:block pt-1">
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {planLoading ? "取得中..." : `現在のプラン：${plan}`}
+                        </p>
+                        {subscriptionPlan === "free" && !planLoading && (
+                          <div className="pt-2">
+                            <UpgradePlanDialog />
+                          </div>
                         )}
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <p className="text-sm font-medium leading-none">
-                          {currentUser.name}
+                      </div>
+
+                      {/* スマートフォン用プラン・ステータス表示 */}
+                      <div className="md:hidden space-y-3">
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {planLoading ? "取得中..." : `現在のプラン：${plan}`}
                         </p>
-                        <p className="text-xs leading-none text-muted-foreground pt-1.5">
-                          {currentUser.email}
-                        </p>
+                        <div className="space-y-2">
+                          <SubscriptionStatus
+                            label="今月の地点登録数"
+                            currentValue={registeredPlacesThisMonth}
+                            maxValue={maxPlaces}
+                            loading={planLoading}
+                          />
+                          <SubscriptionStatus
+                            label="共有リスト数"
+                            currentValue={sharedListCount}
+                            maxValue={maxSharedLists}
+                            loading={planLoading}
+                          />
+                        </div>
+                        {subscriptionPlan === "free" && !planLoading && (
+                          <UpgradePlanDialog />
+                        )}
                       </div>
                     </div>
                   </DropdownMenuLabel>

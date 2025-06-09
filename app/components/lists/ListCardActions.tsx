@@ -105,6 +105,9 @@ export function ListCardActions({
           title: "共有リンクを発行しました",
           description: "新しい共有リンクが作成されました。",
         });
+      } else if (result && result.upgradeRecommended) {
+        // フリープラン上限時は返却のみ（トーストは出さない）
+        return result;
       } else {
         toast({
           title: "共有リンクの発行に失敗しました",
@@ -112,6 +115,7 @@ export function ListCardActions({
           variant: "destructive",
         });
       }
+      return result;
     } catch (e) {
       toast({
         title: "共有リンクの発行に失敗しました",
@@ -119,6 +123,7 @@ export function ListCardActions({
           e instanceof Error ? e.message : "予期せぬエラーが発生しました。",
         variant: "destructive",
       });
+      return { success: false, error: "予期せぬエラーが発生しました。" };
     } finally {
       setIsCreatingLink(false);
     }

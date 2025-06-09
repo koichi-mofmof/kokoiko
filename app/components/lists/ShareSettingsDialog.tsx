@@ -1,5 +1,16 @@
 "use client";
 
+import { UpgradePlanDialog } from "@/app/components/billing/UpgradePlanDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,31 +27,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSubscription } from "@/hooks/use-subscription";
 import { toast } from "@/hooks/use-toast";
+import {
+  removeCollaboratorFromSharedList,
+  updateCollaboratorPermissionOnSharedList,
+} from "@/lib/actions/lists";
 import {
   deleteShareLinkAction,
   updateShareLinkAction,
 } from "@/lib/actions/share-actions";
 import { MyListForClient } from "@/lib/dal/lists";
 import type { Database } from "@/types/supabase";
-import { CheckCircle2, Copy, Share2, XCircle } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { CheckCircle2, Copy, Info, Share2, XCircle } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { DeleteShareLinkDialog } from "./DeleteShareLinkDialog";
 import { EditShareLinkDialog } from "./EditShareLinkDialog";
-import {
-  updateCollaboratorPermissionOnSharedList,
-  removeCollaboratorFromSharedList,
-} from "@/lib/actions/lists";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 export function ShareSettingsDialog({
   isOpen,
@@ -60,11 +62,12 @@ export function ShareSettingsDialog({
   links: Partial<Database["public"]["Tables"]["list_share_tokens"]["Row"]>[];
   loading: boolean;
   error: string | null;
-  onCreateLink: (formData: FormData, reset?: () => void) => Promise<void>;
+  onCreateLink: (formData: FormData, reset?: () => void) => Promise<any>;
   onReloadLinks: () => Promise<void>;
   onReloadCollaborators: () => Promise<void>;
   isCreatingLink: boolean;
 }) {
+  const { refreshSubscription } = useSubscription();
   // フォームリセット用ref
   const formRef = React.useRef<HTMLFormElement>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
@@ -91,6 +94,10 @@ export function ShareSettingsDialog({
       }
     >
   >({});
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [sharedListNames, setSharedListNames] = useState<string[]>([]);
 
   // collaboratorsが変わるたびに初期化
   useEffect(() => {
@@ -117,9 +124,14 @@ export function ShareSettingsDialog({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    await onCreateLink(formData, () => {
+    const result = await onCreateLink(formData, () => {
       formRef.current?.reset();
     });
+    if (result && result.upgradeRecommended) {
+      setUpgradeError(result.error || "フリープランの上限に達しています。");
+      setShowUpgradeDialog(true);
+      setSharedListNames(result.sharedListNames || []);
+    }
   };
 
   // 編集開始
@@ -143,6 +155,7 @@ export function ShareSettingsDialog({
       setEditTarget(null);
       await onReloadLinks();
       toast({ title: "共有リンクを更新しました" });
+      await refreshSubscription();
     } else {
       toast({
         title: "更新に失敗しました",
@@ -166,9 +179,73 @@ export function ShareSettingsDialog({
       setDeleteTarget(null);
       await onReloadLinks();
       toast({ title: "共有リンクを削除しました" });
+      await refreshSubscription();
     } else {
       toast({
         title: "削除に失敗しました",
+        description: res.error || "エラーが発生しました",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // 権限の変更を保存
+  const handleSavePermission = async (memberId: string) => {
+    setMemberStates((prev) => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], loading: true },
+    }));
+    const res = await updateCollaboratorPermissionOnSharedList({
+      listId: list.id,
+      targetUserId: memberId,
+      newPermission: memberStates[memberId].localPermission as "view" | "edit",
+    });
+    setMemberStates((prev) => ({
+      ...prev,
+      [memberId]: {
+        ...prev[memberId],
+        loading: false,
+        permissionChanged: false,
+      },
+    }));
+    if (res.success) {
+      toast({ title: "権限を変更しました" });
+      await onReloadCollaborators();
+      await refreshSubscription();
+    } else {
+      toast({
+        title: "権限変更に失敗しました",
+        description: res.error || "エラーが発生しました",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // メンバーを削除
+  const handleRemove = async (memberId: string) => {
+    setMemberStates((prev) => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], loading: true },
+    }));
+    const res = await removeCollaboratorFromSharedList({
+      listId: list.id,
+      targetUserId: memberId,
+    });
+    setMemberStates((prev) => ({
+      ...prev,
+      [memberId]: {
+        ...prev[memberId],
+        loading: false,
+        showConfirm: false,
+      },
+    }));
+    if (res.success) {
+      toast({ title: "共有を解除しました" });
+      await onReloadCollaborators();
+      await refreshSubscription();
+    } else {
+      toast({
+        title: "共有解除に失敗しました",
         description: res.error || "エラーが発生しました",
         variant: "destructive",
       });
@@ -222,8 +299,58 @@ export function ShareSettingsDialog({
             共有リンクを発行
           </Button>
         </form>
+        {showUpgradeDialog && (
+          <div className="mt-4 mb-2 flex flex-col items-center">
+            <div className="w-full max-w-md bg-yellow-50 border border-yellow-300 rounded-lg p-4 flex flex-col items-center text-center shadow-sm">
+              <div className="flex items-center justify-center mb-2">
+                <Info className="w-6 h-6 text-primary-500 mr-2" />
+                <span className="font-semibold text-yellow-900 text-base">
+                  共有リスト数の上限に達しました！
+                </span>
+              </div>
+              <div className="text-sm text-yellow-900 mb-3 text-left">
+                <span>
+                  フリープランでは共有できるリストは{" "}
+                  <span className="font-bold">1件まで</span> です。
+                </span>
+                <br />
+                {sharedListNames.length > 0 && (
+                  <div className="mt-2 ml-4">
+                    <span>現在共有中のリスト:</span>
+                    <ul className="list-disc list-inside mt-1 ml-5">
+                      {sharedListNames.map((name, idx) => (
+                        <li key={idx}>{name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="mt-2">
+                  <span className="font-semibold text-primary-700">
+                    プレミアムプラン
+                  </span>
+                  にアップグレードすると、
+                  <span className="font-bold">無制限</span>
+                  にリストを共有できます。
+                </div>
+              </div>
+              <UpgradePlanDialog
+                trigger={
+                  <Button
+                    variant="default"
+                    className="w-full max-w-xs mt-1"
+                    onClick={() => setUpgradeDialogOpen(true)}
+                  >
+                    今すぐアップグレード
+                  </Button>
+                }
+                open={upgradeDialogOpen}
+                onOpenChange={setUpgradeDialogOpen}
+              />
+            </div>
+          </div>
+        )}
         {/* 共有リンク一覧表示 */}
-        <div className="mt-8">
+        <div className="mt-4">
           <h3 className="text-sm font-semibold mb-2">発行済み共有リンク</h3>
           {loading ? (
             <div className="text-xs text-neutral-400">読み込み中...</div>
@@ -358,7 +485,7 @@ export function ShareSettingsDialog({
           )}
         </div>
         {/* 共有メンバー管理セクション */}
-        <div className="mt-8">
+        <div className="mt-4">
           <h3 className="font-semibold mb-2 text-sm">共有メンバー管理</h3>
           <div className="flex flex-col gap-2">
             {list.collaborators && list.collaborators.length > 0 ? (
@@ -381,63 +508,12 @@ export function ShareSettingsDialog({
                   }));
                 };
                 // 権限保存
-                const handleSavePermission = async () => {
-                  setMemberStates((prev) => ({
-                    ...prev,
-                    [member.id]: { ...prev[member.id], loading: true },
-                  }));
-                  const res = await updateCollaboratorPermissionOnSharedList({
-                    listId: list.id,
-                    targetUserId: member.id,
-                    newPermission: state.localPermission as "view" | "edit",
-                  });
-                  setMemberStates((prev) => ({
-                    ...prev,
-                    [member.id]: {
-                      ...prev[member.id],
-                      loading: false,
-                      permissionChanged: false,
-                    },
-                  }));
-                  if (res.success) {
-                    toast({ title: "権限を変更しました" });
-                    await onReloadCollaborators();
-                  } else {
-                    toast({
-                      title: "権限変更に失敗しました",
-                      description: res.error || "エラーが発生しました",
-                      variant: "destructive",
-                    });
-                  }
+                const handleSavePermissionClick = async () => {
+                  await handleSavePermission(member.id);
                 };
                 // 解除実行
-                const handleRemove = async () => {
-                  setMemberStates((prev) => ({
-                    ...prev,
-                    [member.id]: { ...prev[member.id], loading: true },
-                  }));
-                  const res = await removeCollaboratorFromSharedList({
-                    listId: list.id,
-                    targetUserId: member.id,
-                  });
-                  setMemberStates((prev) => ({
-                    ...prev,
-                    [member.id]: {
-                      ...prev[member.id],
-                      loading: false,
-                      showConfirm: false,
-                    },
-                  }));
-                  if (res.success) {
-                    toast({ title: "共有を解除しました" });
-                    await onReloadCollaborators();
-                  } else {
-                    toast({
-                      title: "共有解除に失敗しました",
-                      description: res.error || "エラーが発生しました",
-                      variant: "destructive",
-                    });
-                  }
+                const handleRemoveClick = async () => {
+                  await handleRemove(member.id);
                 };
                 return (
                   <div
@@ -487,9 +563,9 @@ export function ShareSettingsDialog({
                             size="sm"
                             className="h-8 text-xs px-3 min-w-[90px] flex-shrink-0"
                             disabled={state.loading}
-                            onClick={handleSavePermission}
+                            onClick={handleSavePermissionClick}
                           >
-                            変更を保存
+                            {state.loading ? "保存中..." : "保存"}
                           </Button>
                         )}
                         <AlertDialog
@@ -539,7 +615,7 @@ export function ShareSettingsDialog({
                               </AlertDialogCancel>
                               <AlertDialogAction
                                 disabled={state.loading}
-                                onClick={handleRemove}
+                                onClick={handleRemoveClick}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
                                 解除する

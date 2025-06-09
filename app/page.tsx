@@ -2,6 +2,7 @@
 
 import { CtaButton } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { motion } from "framer-motion";
 import { ArrowDown, Check, MapPin, Tag, User, Users, X } from "lucide-react";
 import Image from "next/image";
@@ -469,12 +470,12 @@ export default function Home() {
                 <CardHeader className="text-center px-4 pt-9 pb-3 sm:px-6 sm:pt-10">
                   <CardTitle className="text-xl sm:text-2xl font-bold text-neutral-700 mb-1 sm:mb-2">
                     フリープラン
+                    <div className="mt-1 text-xs sm:text-sm text-neutral-500 font-normal">
+                      まずはお試し
+                    </div>
                   </CardTitle>
                   <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 mb-0.5 sm:mb-1">
                     無料
-                  </div>
-                  <div className="text-xs sm:text-sm text-neutral-500">
-                    まずはお試し
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col gap-2 mt-2 border-t border-neutral-100 pt-4 pb-6 px-4 sm:px-6">
@@ -484,18 +485,21 @@ export default function Home() {
                         <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                       </div>
                       登録地点数：
-                      <span className="font-semibold ml-1">累計20件まで</span>
-                    </li>
-                    <li className="flex items-center">
-                      <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                        <X className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
-                      </div>
-                      共同編集者の招待：
-                      <span className="font-semibold text-neutral-600 ml-1">
-                        不可
+                      <span className="font-semibold ml-1">
+                        毎月{SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH}
+                        件まで
                       </span>
                     </li>
                     <li className="flex items-center">
+                      <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                      </div>
+                      共有可能なリスト数：
+                      <span className="font-semibold ml-1">
+                        {SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS}件まで
+                      </span>
+                    </li>
+                    {/* <li className="flex items-center">
                       <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                         <X className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                       </div>
@@ -503,7 +507,7 @@ export default function Home() {
                       <span className="font-semibold text-neutral-600 ml-1">
                         あり
                       </span>
-                    </li>
+                    </li> */}
                   </ul>
                 </CardContent>
               </Card>
@@ -518,6 +522,9 @@ export default function Home() {
                 <CardHeader className="text-center px-4 pt-9 pb-3 sm:px-6 sm:pt-10">
                   <CardTitle className="text-xl sm:text-2xl font-bold text-primary-700 mb-1 sm:mb-2">
                     プレミアムプラン
+                    <div className="mt-1 text-xs sm:text-sm text-neutral-500 font-normal">
+                      すべての機能を無制限で
+                    </div>
                   </CardTitle>
                   <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 mb-0.5 sm:mb-1">
                     <span className="text-base sm:text-lg font-bold mr-2">
@@ -527,9 +534,18 @@ export default function Home() {
                     <span className="text-base sm:text-lg font-bold ml-1">
                       円
                     </span>
+                    <span className="text-xs ml-1">（税込）</span>
                   </div>
                   <div className="text-xs sm:text-sm text-neutral-500">
-                    すべての機能を無制限で
+                    または
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 mb-0.5 sm:mb-1">
+                    <div className="text-base text-neutral-500 text-center">
+                      <span className="text-sm mr-2">年額</span>4,200
+                      <span className="text-sm ml-1">円</span>
+                      <span className="text-xs ml-1">（税込）</span>
+                      <span className="text-xs ml-1">※1か月あたり350円</span>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col gap-2 mt-2 border-t border-primary-200 pt-4 pb-6 px-4 sm:px-6">
@@ -545,12 +561,10 @@ export default function Home() {
                       <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                         <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                       </div>
-                      共同編集者の招待：
-                      <span className="font-semibold text-neutral-600 ml-1">
-                        可
-                      </span>
+                      共有可能なリスト数：
+                      <span className="font-semibold ml-1">無制限</span>
                     </li>
-                    <li className="flex items-center">
+                    {/* <li className="flex items-center">
                       <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                         <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                       </div>
@@ -558,6 +572,12 @@ export default function Home() {
                       <span className="font-semibold text-neutral-600 ml-1">
                         なし
                       </span>
+                    </li> */}
+                    <li className="flex items-center">
+                      <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                      </div>
+                      14日間無料トライアル付き
                     </li>
                   </ul>
                 </CardContent>
