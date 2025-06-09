@@ -54,7 +54,11 @@ export function LoginForm() {
   return (
     <div className="space-y-4">
       {/* メール/パスワードログインフォーム */}
-      <form action={dispatch} className="space-y-4">
+      <form
+        action={dispatch}
+        className="space-y-4"
+        data-testid="credentials-login-form"
+      >
         <div className="space-y-2">
           <Label htmlFor="email">メールアドレス</Label>
           <Input

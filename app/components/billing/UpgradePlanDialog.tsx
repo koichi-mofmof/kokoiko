@@ -95,7 +95,11 @@ export function UpgradePlanDialog({
         <div onClick={() => onOpenChange?.(true)}>{trigger}</div>
       ) : (
         <DialogTrigger asChild>
-          <Button variant="secondary" size="sm">
+          <Button
+            variant="secondary"
+            size="sm"
+            data-testid="upgrade-dialog-trigger"
+          >
             アップグレード
           </Button>
         </DialogTrigger>
@@ -114,6 +118,7 @@ export function UpgradePlanDialog({
           <TabsList className="flex mb-4 border-b bg-transparent p-0">
             <TabsTrigger
               value="monthly"
+              data-testid="plan-tab-monthly"
               className={`flex-1 py-2 text-center text-sm font-medium border-b-2 transition-colors ${
                 plan === "monthly"
                   ? "border-primary text-primary"
@@ -124,6 +129,7 @@ export function UpgradePlanDialog({
             </TabsTrigger>
             <TabsTrigger
               value="yearly"
+              data-testid="plan-tab-yearly"
               className={`flex-1 py-2 text-center text-sm font-medium border-b-2 transition-colors ${
                 plan === "yearly"
                   ? "border-primary text-primary"
@@ -249,6 +255,7 @@ export function UpgradePlanDialog({
             className="w-full"
             onClick={handleCheckout}
             disabled={loading}
+            data-testid="checkout-button"
           >
             {loading
               ? "リダイレクト中..."
