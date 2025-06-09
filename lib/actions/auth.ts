@@ -58,33 +58,8 @@ export async function loginWithCredentials(
     };
   }
 
-  // ログイン成功: 本来はここでリダイレクトする方が良い
-  // redirect("/"); は try/catch で囲まないと Next.js のエラーになる場合がある
-  // 代わりに成功状態を返し、クライアント側でリダイレクトをトリガーすることも可能
-  // 今回は redirect を試みます
-  try {
-    redirect("/lists"); // ログイン後のリダイレクト先を /lists に変更
-  } catch (e: unknown) {
-    // redirect() は内部的にエラーをスローするため、キャッチしないとビルド時にエラーになる
-    if (
-      typeof e === "object" &&
-      e !== null &&
-      "digest" in e &&
-      typeof (e as { digest: string }).digest === "string" &&
-      (e as { digest: string }).digest.startsWith("NEXT_REDIRECT")
-    ) {
-      throw e;
-    }
-    console.error("Redirect failed:", e);
-    return {
-      message:
-        "ログインには成功しましたが、リダイレクト中にエラーが発生しました。",
-      success: true, // ログイン自体は成功している
-    };
-  }
-
-  // redirectが成功した場合、この部分は実行されない
-  // return { message: "ログイン成功", success: true };
+  // ログイン成功
+  redirect("/lists");
 }
 
 // サインアップ用 Server Action
@@ -143,24 +118,7 @@ export async function signupWithCredentials(
   // メール確認が不要な場合、または自動で確認される場合 (例: localhost)
   if (signUpData.session) {
     // セッションがあればログイン成功とみなしリダイレクト
-    try {
-      redirect("/lists"); // 登録後のリダイレクト先を /lists に変更
-    } catch (e: unknown) {
-      if (
-        typeof e === "object" &&
-        e !== null &&
-        "digest" in e &&
-        typeof (e as { digest: string }).digest === "string" &&
-        (e as { digest: string }).digest.startsWith("NEXT_REDIRECT")
-      )
-        throw e;
-      console.error("Redirect failed after signup:", e);
-      return {
-        message:
-          "登録には成功しましたが、リダイレクト中にエラーが発生しました。",
-        success: true,
-      };
-    }
+    redirect("/lists"); // 登録後のリダイレクト先を /lists に変更
   } else if (signUpData.user) {
     // メール確認が必要な場合
     return {
