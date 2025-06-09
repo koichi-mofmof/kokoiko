@@ -76,7 +76,7 @@ export default function Footer({ currentUser }: FooterProps) {
                   ヘルプ
                 </Link>
                 <Link
-                  href="/contact"
+                  href="https://forms.gle/vg9kMmdKiKxxN6EU6"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
                   お問い合わせ
@@ -106,6 +106,12 @@ export default function Footer({ currentUser }: FooterProps) {
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
                   Cookie ポリシー
+                </Link>
+                <Link
+                  href="/tokushoho"
+                  className="text-sm text-neutral-400 hover:text-white block"
+                >
+                  特定商取引法に基づく表記
                 </Link>
               </div>
             </div>
