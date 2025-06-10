@@ -10,7 +10,8 @@ import {
   signupWithCredentials,
 } from "@/lib/actions/auth";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 // Google Logo SVG
@@ -74,10 +75,23 @@ function SignupSubmitButton() {
 export function SignupForm() {
   const initialState: AuthState = { message: null, errors: {}, success: false };
   const [state, dispatch] = useActionState(signupWithCredentials, initialState);
-  const [googleState, googleDispatch] = useActionState(
-    loginWithGoogle,
-    initialState
+
+  const searchParams = useSearchParams();
+  const [googleError, setGoogleError] = useState<string | null>(
+    searchParams.get("google_error")
   );
+
+  useEffect(() => {
+    const error = searchParams.get("google_error");
+    if (error) {
+      setGoogleError("Googleでの登録に失敗しました。");
+    }
+  }, [searchParams]);
+
+  const googleLoginAction = async () => {
+    // 新規登録画面からはリダイレクトURLを引き継がないので引数はなし
+    await loginWithGoogle();
+  };
 
   if (state.success && state.message?.includes("確認メール")) {
     return (
@@ -229,15 +243,11 @@ export function SignupForm() {
       </div>
 
       {/* Google Signup Form */}
-      <form action={googleDispatch} className="space-y-4">
+      <form action={googleLoginAction} className="space-y-4">
         <GoogleButton />
-        {googleState.errors?.general && (
+        {googleError && (
           <div aria-live="polite" aria-atomic="true">
-            {googleState.errors.general.map((error: string) => (
-              <p className="text-sm text-red-500" key={error}>
-                {error}
-              </p>
-            ))}
+            <p className="text-sm text-red-500">{googleError}</p>
           </div>
         )}
       </form>

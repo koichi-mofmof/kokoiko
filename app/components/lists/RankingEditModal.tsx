@@ -100,7 +100,7 @@ export default function RankingEditModal({
         setCustomRankingCount("");
       }
     }
-  }, [isOpen, list]); // listの変更も検知
+  }, [isOpen, list, list.ranking]);
 
   useEffect(() => {
     if (isOpen) {

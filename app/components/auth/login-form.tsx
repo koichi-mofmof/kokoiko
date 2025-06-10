@@ -9,7 +9,8 @@ import {
   loginWithGoogle,
 } from "@/lib/actions/auth";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { GoogleLogoIcon } from "./signup-form";
 
@@ -30,7 +31,7 @@ function GoogleLoginButton() {
 
   return (
     <Button
-      type="submit" // form action をトリガーするために type="submit" に変更
+      type="submit"
       variant="outline"
       className="w-full"
       disabled={pending}
@@ -42,14 +43,27 @@ function GoogleLoginButton() {
 }
 
 export function LoginForm() {
-  // useFormState を useActionState に変更
   const initialState: AuthState = { message: null, errors: {}, success: false };
   const [state, dispatch] = useActionState(loginWithCredentials, initialState);
-  // Googleログイン用の状態も別途管理（または共通の状態を使うかは設計次第）
-  const [googleState, googleDispatch] = useActionState(
-    loginWithGoogle,
-    initialState
+
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect_url");
+  const [googleError, setGoogleError] = useState<string | null>(
+    searchParams.get("google_error")
   );
+
+  useEffect(() => {
+    // URLからエラーを取得して表示
+    const error = searchParams.get("google_error");
+    if (error) {
+      setGoogleError("Googleでのログインに失敗しました。");
+    }
+  }, [searchParams]);
+
+  const googleLoginAction = async () => {
+    // loginWithGoogleはリダイレクトするかエラーを投げるので、返り値は直接使わない
+    await loginWithGoogle(redirectUrl || undefined);
+  };
 
   return (
     <div className="space-y-4">
@@ -59,6 +73,9 @@ export function LoginForm() {
         className="space-y-4"
         data-testid="credentials-login-form"
       >
+        {redirectUrl && (
+          <input type="hidden" name="redirect_url" value={redirectUrl} />
+        )}
         <div className="space-y-2">
           <Label htmlFor="email">メールアドレス</Label>
           <Input
@@ -114,16 +131,12 @@ export function LoginForm() {
       </div>
 
       {/* Googleログインフォーム (別のform要素でactionを指定) */}
-      <form action={googleDispatch} className="space-y-4">
+      <form action={googleLoginAction} className="space-y-4">
         <GoogleLoginButton /> {/* Googleログインボタンコンポーネントを使用 */}
         {/* Googleログイン開始時のエラー表示 */}
-        {googleState.errors?.general && (
+        {googleError && (
           <div aria-live="polite" aria-atomic="true">
-            {googleState.errors.general.map((error: string) => (
-              <p className="text-sm text-red-500" key={error}>
-                {error}
-              </p>
-            ))}
+            <p className="text-sm text-red-500">{googleError}</p>
           </div>
         )}
       </form>

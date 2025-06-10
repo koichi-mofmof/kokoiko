@@ -3,10 +3,12 @@ import Header from "@/components/ui/Header";
 import { Toaster } from "@/components/ui/toaster";
 import { SubscriptionProvider } from "@/contexts/SubscriptionProvider";
 import { logoutUser } from "@/lib/actions/auth";
+import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/server";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
+import { ProfileSetupProvider } from "@/app/components/auth/profile-setup-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -44,26 +46,31 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // ユーザープロフィール情報の取得
-  let avatarUrl = null;
-  let displayName = null;
+  let profileData: ProfileSettingsData | null = null;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("*")
       .eq("id", user.id)
       .single();
 
     if (profile) {
-      displayName = profile.display_name || null;
-
+      let publicAvatarUrl = null;
       if (profile.avatar_url) {
-        const { data: imageData } = await supabase.storage
+        const { data } = supabase.storage
           .from("profile_images")
           .getPublicUrl(profile.avatar_url);
-
-        avatarUrl = imageData?.publicUrl || null;
+        publicAvatarUrl = data.publicUrl;
       }
+
+      profileData = {
+        userId: user.id,
+        username: profile.username,
+        displayName: profile.display_name,
+        bio: profile.bio,
+        avatarUrl: publicAvatarUrl,
+        avatarPath: profile.avatar_url,
+      };
     }
   }
 
@@ -73,21 +80,31 @@ export default async function RootLayout({
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}
       >
         <SubscriptionProvider>
-          <Header
-            currentUser={
-              user
-                ? {
-                    id: user.id,
-                    name: displayName || "User",
-                    email: user.email || "",
-                    avatarUrl,
-                  }
-                : null
-            }
-            onLogout={logoutUser}
-          />
-          <main className="flex-grow">{children}</main>
-          <Footer currentUser={user ? { id: user.id } : null} />
+          {user && profileData ? (
+            <ProfileSetupProvider profileData={profileData}>
+              <Header
+                currentUser={
+                  user
+                    ? {
+                        id: user.id,
+                        name: profileData?.displayName || "User",
+                        email: user.email || "",
+                        avatarUrl: profileData?.avatarUrl,
+                      }
+                    : null
+                }
+                onLogout={logoutUser}
+              />
+              <main className="flex-grow">{children}</main>
+              <Footer currentUser={user ? { id: user.id } : null} />
+            </ProfileSetupProvider>
+          ) : (
+            <>
+              <Header currentUser={null} onLogout={logoutUser} />
+              <main className="flex-grow">{children}</main>
+              <Footer currentUser={null} />
+            </>
+          )}
         </SubscriptionProvider>
         <Toaster />
       </body>

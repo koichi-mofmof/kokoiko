@@ -59,7 +59,8 @@ export async function loginWithCredentials(
   }
 
   // ログイン成功
-  redirect("/lists");
+  const redirectUrl = formData.get("redirect_url")?.toString() || "/lists";
+  redirect(redirectUrl);
 }
 
 // サインアップ用 Server Action
@@ -95,7 +96,7 @@ export async function signupWithCredentials(
     options: {
       // 確認メール内のリンクをクリックした後のリダイレクト先
       emailRedirectTo: `${
-        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
       }/`,
     },
   });
@@ -138,14 +139,23 @@ export async function signupWithCredentials(
 }
 
 // Googleログイン用 Server Action (OAuthフローを開始)
-export async function loginWithGoogle(): Promise<AuthState> {
+export async function loginWithGoogle(
+  redirectUrl?: string
+): Promise<AuthState> {
   const supabase = await createClient();
+
+  const redirectTo = new URL(
+    "/auth/callback",
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  );
+  if (redirectUrl) {
+    redirectTo.searchParams.set("redirect_url", redirectUrl);
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${
-        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-      }/auth/callback`,
+      redirectTo: redirectTo.toString(),
     },
   });
 
