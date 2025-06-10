@@ -24,7 +24,8 @@ jest.mock("lucide-react", () => ({
   Edit: () => <span data-testid="edit-icon">編集アイコン</span>,
   MoreHorizontal: () => <span data-testid="more-icon">詳細アイコン</span>,
   Trash2: () => <span data-testid="trash-icon">削除アイコン</span>,
-  Share2: () => <span data-testid="share-icon">共有アイコン</span>,
+  Share: () => <span data-testid="share-icon">共有アイコン</span>,
+  UserPlus: () => <span data-testid="userplus-icon">ユーザー追加アイコン</span>,
 }));
 
 // toastをモック
@@ -134,6 +135,36 @@ jest.mock("@/app/components/lists/ListFormComponent", () => ({
   ),
 }));
 
+// DropdownMenu系コンポーネントのモック
+jest.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }) => (
+    <div data-testid="dropdown-menu">{children}</div>
+  ),
+  DropdownMenuTrigger: ({ children }) => (
+    <div data-testid="dropdown-menu-trigger">{children}</div>
+  ),
+  DropdownMenuContent: ({ children, ...props }) => (
+    <div data-testid="dropdown-menu-content" {...props}>
+      {children}
+    </div>
+  ),
+  DropdownMenuItem: ({ children, onClick }) => (
+    <div data-testid="dropdown-menu-item" onClick={onClick}>
+      {children}
+    </div>
+  ),
+  DropdownMenuSeparator: () => <div data-testid="dropdown-menu-separator" />,
+}));
+
+// window.matchMediaのモック
+if (!window.matchMedia) {
+  window.matchMedia = () => ({
+    matches: false,
+    addListener: () => {},
+    removeListener: () => {},
+  });
+}
+
 describe("ListCardActionsコンポーネントテスト", () => {
   // テスト用リストデータ
   const mockOwnedList = {
@@ -182,7 +213,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
 
     // メニューアイテムが表示されることを確認
     expect(screen.getByText("リストを編集")).toBeInTheDocument();
-    expect(screen.getByText("共有設定")).toBeInTheDocument();
+    expect(screen.getByText("共同編集者を招待")).toBeInTheDocument();
     expect(screen.getByText("リストを削除")).toBeInTheDocument();
   });
 
@@ -206,7 +237,7 @@ describe("ListCardActionsコンポーネントテスト", () => {
 
     // 編集メニューが表示されることを確認
     expect(screen.getByText("リストを編集")).toBeInTheDocument();
-    expect(screen.getByText("共有設定")).toBeInTheDocument();
+    expect(screen.getByText("共同編集者を招待")).toBeInTheDocument();
 
     // 削除メニューは表示されないことを確認
     expect(screen.queryByText("リストを削除")).toBeNull();

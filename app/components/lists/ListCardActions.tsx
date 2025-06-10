@@ -16,7 +16,7 @@ import {
 } from "@/lib/actions/lists";
 import { getListDetails, MyListForClient } from "@/lib/dal/lists";
 import type { Database } from "@/types/supabase";
-import { Edit, MoreHorizontal, Share2, Trash2 } from "lucide-react";
+import { Edit, MoreHorizontal, Share, Trash2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { DeleteListDialog } from "./DeleteListDialog";
@@ -140,6 +140,35 @@ export function ListCardActions({
     setIsShareDialogOpen(true);
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = list.name;
+    const text = list.description || "";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title,
+          text,
+          url,
+        });
+      } catch (error) {
+        console.error("Share failed:", error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: "リンクをコピーしました" });
+      } catch (err) {
+        toast({
+          title: "リンクのコピーに失敗しました",
+          description: "もう一度お試しください。",
+        });
+        console.error("Failed to copy link: ", err);
+      }
+    }
+  };
+
   return (
     <>
       <div className={className} onClick={handleClick}>
@@ -176,9 +205,15 @@ export function ListCardActions({
                   <Edit className="h-4 w-4 mr-2" />
                   リストを編集
                 </DropdownMenuItem>
+                {list.is_public && (
+                  <DropdownMenuItem onClick={handleShare}>
+                    <Share className="h-4 w-4 mr-2" />
+                    リストを共有
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleOpenShareDialog}>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  共有設定
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  共同編集者を招待
                 </DropdownMenuItem>
                 {isOwner && (
                   <>

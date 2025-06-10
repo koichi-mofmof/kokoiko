@@ -277,7 +277,7 @@ export function ShareSettingsDialog({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>共有設定</DialogTitle>
+          <DialogTitle>共同編集者を招待</DialogTitle>
         </DialogHeader>
         {/* 新規共有リンク発行フォーム */}
         <form

@@ -90,6 +90,53 @@ jest.mock("@/components/ui/textarea", () => ({
   ),
 }));
 
+// RadioGroupのchildrenを再帰的に走査してRadioGroupItemにchecked/onChangeを渡す
+function mapRadioGroupChildren(children, value, onValueChange) {
+  return React.Children.map(children, (child) => {
+    if (!React.isValidElement(child)) return child;
+    if (
+      child.type &&
+      (child.type.name === "RadioGroupItem" ||
+        child.type.displayName === "RadioGroupItem")
+    ) {
+      return React.cloneElement(child, {
+        checked: child.props.value === value,
+        onChange: () => onValueChange(child.props.value),
+        onClick: () => onValueChange(child.props.value),
+      });
+    }
+    if (child.props && child.props.children) {
+      return React.cloneElement(child, {
+        children: mapRadioGroupChildren(
+          child.props.children,
+          value,
+          onValueChange
+        ),
+      });
+    }
+    return child;
+  });
+}
+
+jest.mock("@/components/ui/radio-group", () => ({
+  RadioGroup: ({ value, onValueChange, children, className }) => (
+    <div className={className} data-testid="radio-group">
+      {mapRadioGroupChildren(children, value, onValueChange)}
+    </div>
+  ),
+  RadioGroupItem: ({ id, value, checked, onChange }) => (
+    <input
+      type="radio"
+      id={id}
+      value={value}
+      checked={checked}
+      onChange={onChange}
+      onClick={onChange}
+      data-testid="radio-group-item"
+    />
+  ),
+}));
+
 describe("ListFormComponentテスト", () => {
   const mockSubmit = jest.fn();
   const mockCancel = jest.fn();
@@ -119,7 +166,12 @@ describe("ListFormComponentテスト", () => {
     expect(screen.getByTestId("textarea-description")).toHaveValue(
       "テスト説明"
     );
-    expect(screen.getByTestId("switch-isPublic")).toBeChecked();
+    // 公開ラジオを取得
+    const radios = screen.getAllByTestId("radio-group-item");
+    const privateRadio = radios.find((r) => r.id === "private");
+    const publicRadio = radios.find((r) => r.id === "public");
+    expect(publicRadio.checked).toBe(true);
+    expect(privateRadio.checked).toBe(false);
 
     // ボタンのテキストが正しいことを確認
     expect(screen.getByTestId("submit-button")).toHaveTextContent("保存");
@@ -137,17 +189,21 @@ describe("ListFormComponentテスト", () => {
     // 入力フィールドを取得
     const nameInput = screen.getByTestId("input-name");
     const descriptionTextarea = screen.getByTestId("textarea-description");
-    const publicSwitch = screen.getByTestId("switch-isPublic");
+    // 公開・非公開ラジオを取得
+    const radios = screen.getAllByTestId("radio-group-item");
+    const privateRadio = radios.find((r) => r.id === "private");
+    const publicRadio = radios.find((r) => r.id === "public");
 
     // 入力を変更
     fireEvent.change(nameInput, { target: { value: "新しいリスト名" } });
     fireEvent.change(descriptionTextarea, { target: { value: "新しい説明" } });
-    fireEvent.click(publicSwitch);
+    fireEvent.click(privateRadio);
 
     // 値が変更されていることを確認
     expect(nameInput).toHaveValue("新しいリスト名");
     expect(descriptionTextarea).toHaveValue("新しい説明");
-    expect(publicSwitch).toBeChecked();
+    expect(privateRadio.checked).toBe(true);
+    expect(publicRadio.checked).toBe(false);
   });
 
   it("初期データが変更された場合にフォームが更新されること", () => {
@@ -163,7 +219,12 @@ describe("ListFormComponentテスト", () => {
     // 初期値が正しく設定されていることを確認
     expect(screen.getByTestId("input-name")).toHaveValue("リスト1");
     expect(screen.getByTestId("textarea-description")).toHaveValue("説明1");
-    expect(screen.getByTestId("switch-isPublic")).not.toBeChecked();
+    // 公開・非公開ラジオを取得
+    const radios = screen.getAllByTestId("radio-group-item");
+    const privateRadio = radios.find((r) => r.id === "private");
+    const publicRadio = radios.find((r) => r.id === "public");
+    expect(privateRadio.checked).toBe(true);
+    expect(publicRadio.checked).toBe(false);
 
     // initialDataを変更して再レンダリング
     rerender(
@@ -178,7 +239,12 @@ describe("ListFormComponentテスト", () => {
     // 新しい初期値が反映されていることを確認
     expect(screen.getByTestId("input-name")).toHaveValue("リスト2");
     expect(screen.getByTestId("textarea-description")).toHaveValue("説明2");
-    expect(screen.getByTestId("switch-isPublic")).toBeChecked();
+    // 公開・非公開ラジオを取得
+    const radios2 = screen.getAllByTestId("radio-group-item");
+    const privateRadio2 = radios2.find((r) => r.id === "private");
+    const publicRadio2 = radios2.find((r) => r.id === "public");
+    expect(publicRadio2.checked).toBe(true);
+    expect(privateRadio2.checked).toBe(false);
   });
 
   it("フォーム送信時にonSubmitコールバックが呼ばれること", async () => {
@@ -197,7 +263,8 @@ describe("ListFormComponentテスト", () => {
     fireEvent.change(screen.getByTestId("textarea-description"), {
       target: { value: "テスト説明" },
     });
-    fireEvent.click(screen.getByTestId("switch-isPublic"));
+    // 公開ラジオを明示的に選択
+    fireEvent.click(screen.getByLabelText("公開"));
 
     // フォームを送信
     fireEvent.submit(screen.getByTestId("submit-button").closest("form"));

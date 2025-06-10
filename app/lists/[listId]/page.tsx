@@ -80,7 +80,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
                 </span>
               </span>
             ) : null}
-            <div className="absolute right-0 top-0">
+            <div className="absolute right-0 top-0 flex items-center gap-2">
               <ListCardActions list={listDetails} />
             </div>
           </h1>

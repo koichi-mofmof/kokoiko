@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import isEqual from "lodash/isEqual";
 import { useEffect, useReducer, useRef } from "react";
@@ -77,7 +77,7 @@ export function ListFormComponent({
     });
   };
 
-  const handleSwitchChange = (checked: boolean) => {
+  const handleIsPublicChange = (checked: boolean) => {
     dispatch({ type: "SET_FIELD", fieldName: "isPublic", value: checked });
   };
 
@@ -115,13 +115,36 @@ export function ListFormComponent({
           />
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="isPublic"
-            checked={formData.isPublic}
-            onCheckedChange={handleSwitchChange}
-          />
-          <Label htmlFor="isPublic">公開リストにする</Label>
+        <div className="grid gap-3">
+          <Label>公開設定</Label>
+          <RadioGroup
+            value={formData.isPublic ? "public" : "private"}
+            onValueChange={(value) => handleIsPublicChange(value === "public")}
+            className="gap-4"
+          >
+            <div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="private" id="private" />
+                <Label htmlFor="private" className="font-normal">
+                  非公開
+                </Label>
+              </div>
+              <p className="pl-6 text-sm text-muted-foreground">
+                自分と招待したメンバーのみが閲覧できます。
+              </p>
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="public" id="public" />
+                <Label htmlFor="public" className="font-normal">
+                  公開
+                </Label>
+              </div>
+              <p className="pl-6 text-sm text-muted-foreground">
+                リンクを知っているすべての人が閲覧できます。
+              </p>
+            </div>
+          </RadioGroup>
         </div>
       </div>
 
