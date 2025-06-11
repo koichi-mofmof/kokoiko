@@ -139,7 +139,10 @@ export default function RankingView({
           />
           {(permission === "edit" || permission === "owner") && (
             <div className="mt-6 text-center">
-              <Button onClick={() => setIsEditModalOpen(true)}>
+              <Button
+                onClick={() => setIsEditModalOpen(true)}
+                variant="secondary"
+              >
                 ランキングを編集
               </Button>
             </div>
@@ -151,7 +154,10 @@ export default function RankingView({
             このリストにはまだランキングが作成されていません。
           </p>
           {(permission === "edit" || permission === "owner") && (
-            <Button onClick={() => setIsEditModalOpen(true)}>
+            <Button
+              onClick={() => setIsEditModalOpen(true)}
+              variant="secondary"
+            >
               ランキングを作成
             </Button>
           )}

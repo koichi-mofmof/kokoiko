@@ -73,7 +73,7 @@ export default function Footer({ currentUser }: FooterProps) {
                   href="/help"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  ヘルプ
+                  よくあるご質問
                 </Link>
                 <Link
                   href="https://forms.gle/vg9kMmdKiKxxN6EU6"

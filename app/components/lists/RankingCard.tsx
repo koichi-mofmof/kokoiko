@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Place, RankedPlace } from "@/types";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -14,37 +14,72 @@ interface RankingCardProps {
   isSample?: boolean;
 }
 
-// TOP3のスタイル定義をさらに強化
+// テーマ：旅への期待感を高める、洗練されたデザイン
 const rankStyles = [
+  // 1位: Royal Gold
   {
-    textColor: "text-amber-500",
-    textSize: "text-xl",
-    bgGradient: "bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-600",
-    lightGradient: "bg-gradient-to-br from-yellow-100 via-amber-50 to-white",
-    shadowColor: "shadow-amber-300/40",
-    borderColor: "border-amber-400",
-    glowColor: "from-amber-300/30",
+    cardBg:
+      "bg-gradient-to-br from-yellow-50 via-white to-yellow-50 dark:from-yellow-900/20 dark:via-neutral-900 dark:to-yellow-900/20",
+    border: "border-yellow-400/80 dark:border-yellow-600/60",
+    shadow: "shadow-xl shadow-yellow-500/20 dark:shadow-yellow-600/10",
+    hover:
+      "hover:border-yellow-400 dark:hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/30",
+    rankBadge:
+      "bg-gradient-to-br from-yellow-300 to-amber-500 text-white ring-4 ring-white dark:ring-neutral-900",
+    textColor: "text-amber-700 dark:text-amber-300",
+    nameColor: "text-amber-950 dark:text-amber-100",
+    accent: "text-amber-600 dark:text-amber-400",
+    ribbon: "bg-gradient-to-r from-yellow-400 to-amber-500",
+    bgAccent: "bg-yellow-100 dark:bg-yellow-900/30",
   },
+  // 2位: Elegant Silver
   {
-    textColor: "text-slate-600",
-    textSize: "text-xl",
-    bgGradient: "bg-gradient-to-br from-slate-300 via-slate-400 to-slate-600",
-    lightGradient: "bg-gradient-to-br from-slate-100 via-slate-50 to-white",
-    shadowColor: "shadow-slate-300/40",
-    borderColor: "border-slate-400",
-    glowColor: "from-slate-300/30",
+    cardBg:
+      "bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-800/20 dark:via-neutral-900 dark:to-slate-800/20",
+    border: "border-slate-400/70 dark:border-slate-600/50",
+    shadow: "shadow-lg shadow-slate-500/15 dark:shadow-slate-600/10",
+    hover:
+      "hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-xl hover:shadow-slate-500/20",
+    rankBadge:
+      "bg-gradient-to-br from-slate-300 to-gray-500 text-white ring-4 ring-white dark:ring-neutral-900",
+    textColor: "text-slate-700 dark:text-slate-300",
+    nameColor: "text-slate-900 dark:text-slate-100",
+    accent: "text-slate-600 dark:text-slate-400",
+    ribbon: "bg-gradient-to-r from-slate-300 to-gray-500",
+    bgAccent: "bg-slate-100 dark:bg-slate-800/30",
   },
+  // 3位: Warm Bronze
   {
-    textColor: "text-orange-600",
-    textSize: "text-xl",
-    bgGradient:
-      "bg-gradient-to-br from-orange-300 via-orange-400 to-orange-600",
-    lightGradient: "bg-gradient-to-br from-orange-100 via-orange-50 to-white",
-    shadowColor: "shadow-orange-300/40",
-    borderColor: "border-orange-400",
-    glowColor: "from-orange-300/30",
+    cardBg:
+      "bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-orange-900/20 dark:via-neutral-900 dark:to-orange-900/20",
+    border: "border-orange-400/70 dark:border-orange-600/50",
+    shadow: "shadow-lg shadow-orange-500/15 dark:shadow-orange-600/10",
+    hover:
+      "hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-xl hover:shadow-orange-500/20",
+    rankBadge:
+      "bg-gradient-to-br from-orange-300 to-rose-500 text-white ring-4 ring-white dark:ring-neutral-900",
+    textColor: "text-orange-700 dark:text-orange-300",
+    nameColor: "text-orange-950 dark:text-orange-100",
+    accent: "text-orange-600 dark:text-orange-400",
+    ribbon: "bg-gradient-to-r from-orange-400 to-rose-500",
+    bgAccent: "bg-orange-100 dark:bg-orange-900/30",
   },
 ];
+
+const defaultStyle = {
+  cardBg: "bg-white dark:bg-neutral-900",
+  border: "border-neutral-200 dark:border-neutral-800",
+  shadow: "shadow-md shadow-neutral-300/10 dark:shadow-black/10",
+  hover:
+    "hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-lg hover:shadow-neutral-300/20 dark:hover:shadow-black/20",
+  rankBadge:
+    "bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-2 ring-white dark:ring-neutral-900",
+  textColor: "text-neutral-600 dark:text-neutral-400",
+  nameColor: "text-neutral-800 dark:text-neutral-100",
+  accent: "text-neutral-500 dark:text-neutral-500",
+  ribbon: "bg-neutral-200 dark:bg-neutral-800",
+  bgAccent: "bg-neutral-100 dark:bg-neutral-800/50",
+};
 
 export default function RankingCard({
   rankedPlace,
@@ -55,6 +90,7 @@ export default function RankingCard({
   const router = useRouter();
   const isTopThree = rankedPlace.rank <= 3;
   const rankIdx = rankedPlace.rank - 1;
+  const style = isTopThree ? rankStyles[rankIdx] : defaultStyle;
 
   const handleDetailClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -65,146 +101,142 @@ export default function RankingCard({
     router.push(url);
   };
 
+  // 4位以下とそれ以上でクラスを切り替え
+  const cardClasses = `relative flex flex-col overflow-hidden rounded-xl border transition-all duration-300 ease-in-out 
+    ${style.cardBg} ${style.border} ${style.shadow} ${style.hover}
+    ${isTopThree ? "" : "scale-[0.92] sm:scale-[0.95]"}`;
+
   return (
     <Card
       role="article"
-      className={`relative group flex flex-col overflow-hidden rounded-2xl transition-all duration-300 ease-in-out 
-      ${
-        isTopThree
-          ? `${rankStyles[rankIdx].lightGradient} ring-1 ${rankStyles[rankIdx].borderColor} ${rankStyles[rankIdx].shadowColor}`
-          : "bg-white dark:bg-neutral-900 hover:bg-gradient-to-b hover:from-gray-50 hover:to-white dark:hover:from-neutral-800 dark:hover:to-neutral-900"
-      }
-      hover:shadow-xl hover:-translate-y-1 text-card-foreground
-      ${
-        isTopThree
-          ? `shadow-lg ${rankStyles[rankIdx].shadowColor}`
-          : "shadow-md"
-      }`}
+      className={`${cardClasses} transform transition-all duration-500 hover:-translate-y-1`}
       tabIndex={0}
       aria-label={`${rankedPlace.rank}位: ${place.name}`}
     >
-      {/* --- 高級感のある装飾エフェクト --- */}
-      {isTopThree && (
-        <>
+      <div className="relative flex flex-col h-full">
+        {/* ランク表示バッジ - より目立つ位置に */}
+        <div className="absolute -left-2 -top-2 z-10 flex items-center justify-center">
           <div
-            className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-20 blur-3xl ${rankStyles[rankIdx].bgGradient}`}
-            aria-hidden="true"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/5 dark:to-black/5 z-0"
-            aria-hidden="true"
-          />
-        </>
-      )}
-
-      {/* --- ランキング表示（さらに洗練） --- */}
-      <div className="absolute top-4 left-4 flex items-center z-10">
-        {isTopThree ? (
-          <div
-            className={`flex items-center justify-center w-14 h-14 rounded-full 
-          ${rankStyles[rankIdx].bgGradient} shadow-lg ${rankStyles[rankIdx].shadowColor}
-          before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-white/20 before:z-0`}
+            className={`flex-shrink-0 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 
+              ${
+                isTopThree
+                  ? "w-12 h-12 sm:w-14 sm:h-14"
+                  : "w-9 h-9 sm:w-10 sm:h-10"
+              } 
+              ${style.rankBadge}`}
+            style={{ transform: isTopThree ? "scale(1.05)" : "" }}
           >
-            <span className="relative text-white text-2xl font-black drop-shadow-md">
+            <span
+              className={`font-bold drop-shadow-sm ${
+                isTopThree ? "text-xl sm:text-2xl" : "text-base sm:text-lg"
+              }`}
+            >
               {rankedPlace.rank}
             </span>
           </div>
-        ) : (
-          <div className="flex items-center justify-center w-9 h-9 rounded-full bg-neutral-600 dark:bg-neutral-800">
-            <span className="text-lg font-medium text-neutral-50 dark:text-gray-400">
-              {rankedPlace.rank}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <CardContent
-        className={`relative flex flex-1 flex-col p-6 pt-16 z-10 ${
-          isTopThree ? "pt-20" : ""
-        }`}
-      >
-        {/* --- 場所名 --- */}
-        <h3
-          className={`mb-2 font-semibold leading-tight truncate 
-          ${
-            isTopThree
-              ? `${rankStyles[rankIdx].textColor} ${rankStyles[rankIdx].textSize}`
-              : "text-neutral-600 text-base"
-          }`}
-          title={place.name}
-        >
-          {place.name}
-        </h3>
-
-        {/* --- 住所 --- */}
-        {place.address && (
-          <div
-            className={`flex items-center ${
-              isTopThree ? "text-sm" : "text-neutral-600 text-xs"
-            }`}
-          >
-            <MapPin className="mr-1 h-4 w-4 flex-shrink-0" />
-            <span className="truncate" title={place.address}>
-              {place.address}
-            </span>
-          </div>
-        )}
-
-        {/* --- ランキングコメント--- */}
-        {rankedPlace.comment && (
-          <div
-            className={`my-4 py-2 px-4 
-          ${
-            isTopThree
-              ? `text-sm bg-gradient-to-r ${rankStyles[rankIdx].glowColor} to-transparent/5 backdrop-blur-sm border-l-4 ${rankStyles[rankIdx].borderColor}`
-              : "text-xs bg-neutral-50 dark:bg-neutral-800/50 border-l-4 border-neutral-200 dark:border-neutral-700"
-          } 
-          shadow-sm`}
-          >
-            <div className="flex items-start">
-              <div className="italic leading-relaxed whitespace-pre-line">
-                {(rankedPlace.comment ?? "")
-                  .split("\n")
-                  .map((line, idx, arr) => (
-                    <React.Fragment key={idx}>
-                      {line}
-                      {idx !== arr.length - 1 && <br />}
-                    </React.Fragment>
-                  ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex-grow" />
-
-        {/* --- 詳細を見るボタン（モダンでおしゃれなデザイン） --- */}
-        <div className="mt-auto text-right">
-          <Button
-            variant={isTopThree ? "outline" : "ghost"}
-            size="sm"
-            onClick={handleDetailClick}
-            tabIndex={0}
-            aria-label="詳細を見る"
-            className={`group text-sm font-medium rounded-full items-center ${
-              isTopThree
-                ? `border ${rankStyles[rankIdx].borderColor} ${
-                    rankStyles[rankIdx].textColor
-                  } hover:bg-gradient-to-r hover:from-transparent hover:to-${
-                    rankStyles[rankIdx].textColor.split("-")[1]
-                  }-50`
-                : "text-neutral-600 hover:text-neutral-700"
-            }`}
-          >
-            詳細を見る
-            {isTopThree ? (
-              <ArrowRight className="ml-1.5 h-4 w-4 transform transition-all" />
-            ) : (
-              <ArrowRight className="ml-1.5 h-4 w-4 transform transition-transform" />
-            )}
-          </Button>
         </div>
-      </CardContent>
+
+        {/* カードコンテンツ */}
+        <div
+          className={`flex-1 flex flex-col p-4 pt-5 sm:p-5 ${
+            isTopThree ? "sm:pt-6" : "pt-4 sm:pt-5 sm:p-4"
+          }`}
+        >
+          {/* 施設名 - ランクバッジを避けるようにパディング */}
+          <div
+            className={`pl-8 sm:pl-10 pr-2 sm:pr-3 mb-3 ${
+              isTopThree ? "" : "pl-7 sm:pl-9 mb-2"
+            }`}
+          >
+            <h3
+              className={`font-bold leading-tight tracking-tight 
+                ${isTopThree ? "text-lg sm:text-xl" : "text-sm sm:text-base"} 
+                ${style.nameColor} transition-colors duration-300`}
+              title={place.name}
+              style={{
+                display: "-webkit-box",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 2,
+                overflow: "hidden",
+              }}
+            >
+              {place.name}
+            </h3>
+          </div>
+
+          {/* 分割線 - トップ3のみ装飾付き */}
+          <div
+            className={`w-full h-px ${style.bgAccent} mb-3 ${
+              isTopThree ? "" : "mb-2"
+            }`}
+          />
+
+          {/* 情報コンテンツエリア */}
+          <div className="flex-1 flex flex-col">
+            {/* 住所 */}
+            {place.address && (
+              <div
+                className={`flex items-start ${
+                  isTopThree ? "text-sm" : "text-xs sm:text-sm"
+                } ${style.textColor} transition-colors duration-300 mb-3 ${
+                  isTopThree ? "" : "mb-2"
+                }`}
+              >
+                <MapPin
+                  className={`${
+                    isTopThree ? "mr-2 h-4 w-4" : "mr-1.5 h-3.5 w-3.5"
+                  } flex-shrink-0 ${style.accent}`}
+                />
+                <span className="truncate" title={place.address}>
+                  {place.address}
+                </span>
+              </div>
+            )}
+
+            {/* コメント - 装飾を強化 */}
+            {rankedPlace.comment && (
+              <div
+                className={`relative mt-1 mb-4 ${
+                  isTopThree ? style.bgAccent : ""
+                } rounded-lg p-3 ${isTopThree ? "" : "p-2 mb-3"}`}
+              >
+                <blockquote
+                  className={`italic ${isTopThree ? "text-sm" : "text-xs"} ${
+                    style.textColor
+                  } transition-colors duration-300`}
+                >
+                  {rankedPlace.comment}
+                </blockquote>
+              </div>
+            )}
+          </div>
+
+          {/* アクションエリア - 視線の最終到達点 */}
+          <div className="flex justify-end mt-auto pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDetailClick}
+              tabIndex={0}
+              aria-label="詳細を見る"
+              className={`group/button rounded-full transition-all duration-300 ease-in-out
+                ${isTopThree ? "px-5 py-2.5 text-sm" : "px-3.5 py-1.5 text-xs"} 
+                ${
+                  style.textColor
+                } bg-white dark:bg-neutral-900 border-current/30
+                hover:border-current/70 hover:bg-black/5 dark:hover:bg-white/5
+                hover:scale-105 active:scale-95`}
+            >
+              詳細を見る
+              <ArrowRight
+                className={`ml-1.5 ${
+                  isTopThree ? "h-4 w-4" : "h-3.5 w-3.5"
+                } transform transition-transform duration-300 group-hover/button:translate-x-1`}
+              />
+            </Button>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 }

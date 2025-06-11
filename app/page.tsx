@@ -1,10 +1,17 @@
 "use client";
 
 import { CtaButton } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { motion } from "framer-motion";
-import { ArrowDown, Check, MapPin, Tag, User, Users } from "lucide-react";
+import { ArrowDown, Check, MapPin, Share2, Hash, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -127,7 +134,7 @@ export default function Home() {
       </section>
 
       {/* Feature Section */}
-      <section ref={featuresRef} className="py-8 bg-white relative">
+      <section ref={featuresRef} className="py-16 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -140,91 +147,133 @@ export default function Home() {
               特徴
             </h2>
             <p className="mt-2 text-2xl sm:text-4xl leading-8 font-bold text-neutral-900">
-              気になる場所を、
+              あなたの「行きたい」を、
               <br />
-              地図と一緒に共有
+              もっと便利に、もっと楽しく
             </p>
             <p className="mt-6 max-w-2xl sm:text-lg text-neutral-500 lg:mx-auto">
-              カンタン操作で、お店やスポットをピンして、
-              すぐにリストを共有できます。
+              ClippyMapが提供する主な機能をご紹介します。
             </p>
           </motion.div>
 
-          <div className="mt-6">
-            <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="my-8">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Feature 1 */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="pt-4 h-full"
+                className="flex flex-col"
               >
-                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
-                  <div className="-mt-8">
-                    <div>
-                      <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
-                        <MapPin className="h-6 w-6 text-white" />
-                      </span>
+                <div className="text-left sm:text-center">
+                  <div className="flex items-center justify-start gap-3 sm:justify-center">
+                    <div className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
+                      <MapPin className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="mt-6 text-xl font-semibold text-neutral-900">
-                      かんたん登録
+                    <h3 className="text-xl font-semibold text-neutral-900">
+                      行きたい場所を、地図にストック
                     </h3>
-                    <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                      Googleマップ上で地点を検索するだけで行きたい場所をかんたん登録。タグやメモを追加して整理できます。
-                    </p>
                   </div>
+                  <p className="mt-4 text-base text-neutral-600 leading-relaxed">
+                    お店やスポットの名前で検索するだけ。Google
+                    Mapsの情報をもとに、行きたい場所を簡単リストアップ。あなただけの「行きたい場所マップ」が、すぐに完成します。
+                  </p>
                 </div>
               </motion.div>
 
+              {/* Feature 2 */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="pt-4 h-full"
+                className="flex flex-col"
               >
-                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
-                  <div className="-mt-8">
-                    <div>
-                      <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
-                        <Users className="h-6 w-6 text-white" />
-                      </span>
+                <div className="text-left sm:text-center">
+                  <div className="flex items-center justify-start gap-3 sm:justify-center">
+                    <div className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
+                      <Share2 className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="mt-6 text-xl font-semibold text-neutral-900">
-                      グループ共有
+                    <h3 className="text-xl font-semibold text-neutral-900">
+                      リストを、自在に共有
                     </h3>
-                    <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                      パートナーや友人と共有して、次に行きたい場所を一緒に計画しましょう。
-                    </p>
                   </div>
+                  <p className="mt-4 text-base text-neutral-600 leading-relaxed">
+                    「二人だけのデートリスト」は共同編集で。「おすすめカフェリスト」はブログで一般公開。用途に合わせて、リストの共有範囲を変更できます。
+                  </p>
                 </div>
               </motion.div>
 
+              {/* Feature 3 */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="pt-4 h-full"
+                className="flex flex-col"
               >
-                <div className="flow-root bg-neutral-50 rounded-xl px-6 pb-8 h-full transition-all duration-300 border border-neutral-100">
-                  <div className="-mt-8">
-                    <div>
-                      <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
-                        <Tag className="h-6 w-6 text-white" />
-                      </span>
+                <div className="text-left sm:text-center">
+                  <div className="flex items-center justify-start gap-3 sm:justify-center">
+                    <div className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
+                      <Hash className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="mt-6 text-xl font-semibold text-neutral-900">
-                      柔軟なフィルター
+                    <h3 className="text-xl font-semibold text-neutral-900">
+                      「わたしの基準」で、場所を整理
                     </h3>
-                    <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                      ジャンル、エリア、タグなどで絞り込み可能。行きたい場所をすぐに見つけられます。
-                    </p>
                   </div>
+                  <p className="mt-4 text-base text-neutral-600 leading-relaxed">
+                    「#子連れOK」「#夜景が最高」といった自由なタグ付けや、お気に入りランキング作成。あなたのユニークな基準が、最高のガイドブックになります。
+                  </p>
                 </div>
               </motion.div>
             </div>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="w-full max-w-5xl mx-auto"
+          >
+            <div className="relative w-full max-w-5xl mx-auto">
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+                className="w-full"
+              >
+                <CarouselContent>
+                  {Array.from({ length: 4 }).map((_, index) => {
+                    const imagePath = `/screenshots/feature${index + 1}.png`;
+                    return (
+                      <CarouselItem key={index} className="md:basis-1/2">
+                        <div className="p-1">
+                          <Card>
+                            <CardContent className="flex h-64 sm:h-80 lg:h-96 items-center justify-center p-0 bg-neutral-50 rounded-lg border-neutral-200 overflow-hidden">
+                              <Image
+                                src={imagePath}
+                                alt={`機能スクリーンショット ${index + 1}`}
+                                width={1280}
+                                height={960}
+                                className="w-full h-full object-contain"
+                              />
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </CarouselItem>
+                    );
+                  })}
+                </CarouselContent>
+                <div className="absolute -bottom-10 right-0 flex items-center gap-x-2">
+                  <CarouselPrevious className="static translate-y-0" />
+                  <CarouselNext className="static translate-y-0" />
+                </div>
+              </Carousel>
+            </div>
+          </motion.div>
         </div>
       </section>
 
