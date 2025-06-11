@@ -4,16 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { markAuthCallbackPending } from "@/hooks/use-auth-sync";
 import {
   AuthState,
   loginWithGoogle,
   signupWithCredentials,
 } from "@/lib/actions/auth";
+import { getCSRFTokenFromCookie } from "@/lib/utils/csrf-client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { markAuthCallbackPending } from "@/hooks/use-auth-sync";
 
 // Google Logo SVG
 export const GoogleLogoIcon = () => (
@@ -114,6 +115,11 @@ export function SignupForm() {
   return (
     <div className="space-y-6">
       <form action={dispatch} className="space-y-4">
+        <input
+          type="hidden"
+          name="csrf_token"
+          value={getCSRFTokenFromCookie() || ""}
+        />
         {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email">メールアドレス</Label>

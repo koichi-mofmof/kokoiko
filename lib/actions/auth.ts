@@ -1,8 +1,17 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  getCSRFTokenServer,
+  verifyCSRFTokenServer,
+} from "@/lib/utils/csrf-server";
+import {
+  recordCSRFViolation,
+  recordFailedLogin,
+} from "@/lib/utils/security-monitor";
 import { loginSchema, signupSchema } from "@/lib/validators/auth";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -23,6 +32,41 @@ export async function loginWithCredentials(
   prevState: AuthState,
   formData: FormData
 ): Promise<AuthState> {
+  // リクエスト情報を取得
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") || "unknown";
+  const userAgent = headersList.get("user-agent") || "unknown";
+
+  // CSRF protection with fallback
+  let csrfToken = formData.get("csrf_token") as string;
+
+  // フォームからトークンが取得できない場合の緊急回避策
+  if (!csrfToken) {
+    const cookieToken = await getCSRFTokenServer();
+    if (cookieToken) {
+      csrfToken = cookieToken;
+    }
+  }
+
+  if (!csrfToken || !(await verifyCSRFTokenServer(csrfToken))) {
+    // CSRF違反を記録
+    recordCSRFViolation(ip, userAgent, {
+      endpoint: "/login",
+      csrfTokenPresent: !!csrfToken,
+      formData: {
+        email: formData.get("email") || "not_provided",
+      },
+    });
+
+    return {
+      message: "無効なリクエストです。",
+      errors: {
+        general: ["セキュリティエラー: ページを再読み込みしてください。"],
+      },
+      success: false,
+    };
+  }
+
   const validatedFields = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -49,6 +93,15 @@ export async function loginWithCredentials(
   // Supabase 認証エラー
   if (error) {
     console.error("Supabase login error:", error.message);
+
+    // 失敗ログインを記録（異常検知システム）
+    recordFailedLogin(
+      undefined, // ログイン失敗時はユーザーIDが不明
+      ip,
+      userAgent,
+      `Supabase auth error: ${error.message}`
+    );
+
     return {
       message: "メールアドレスまたはパスワードが正しくありません。",
       errors: {
@@ -68,6 +121,19 @@ export async function signupWithCredentials(
   prevState: AuthState,
   formData: FormData
 ): Promise<AuthState> {
+  // CSRF protection
+  const csrfToken = formData.get("csrf_token") as string;
+
+  if (!csrfToken || !(await verifyCSRFTokenServer(csrfToken))) {
+    return {
+      message: "無効なリクエストです。",
+      errors: {
+        general: ["セキュリティエラー: ページを再読み込みしてください。"],
+      },
+      success: false,
+    };
+  }
+
   const validatedFields = signupSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),

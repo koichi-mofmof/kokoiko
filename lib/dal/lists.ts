@@ -248,7 +248,7 @@ export async function fetchMyPageData(userId: string): Promise<MyPageData> {
       if (!ownerProfile && list.created_by) {
         // Check if list.created_by is not null
         const { data: ownerData } = await supabase
-          .from("profiles")
+          .from("profiles_decrypted")
           .select("id, display_name, avatar_url")
           .eq("id", list.created_by)
           .single();
@@ -445,7 +445,7 @@ export async function getListDetails(
     );
     if (!ownerProfile && listData.created_by) {
       const { data: ownerDataFromProfiles } = await supabase
-        .from("profiles")
+        .from("profiles_decrypted")
         .select("id, display_name, avatar_url")
         .eq("id", listData.created_by)
         .single();

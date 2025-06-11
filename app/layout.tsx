@@ -87,8 +87,9 @@ export default async function RootLayout({
 
   let profileData: ProfileSettingsData | null = null;
   if (user) {
+    // profiles_decryptedビューを使用して復号化されたデータを取得
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("profiles_decrypted")
       .select("*")
       .eq("id", user.id)
       .single();

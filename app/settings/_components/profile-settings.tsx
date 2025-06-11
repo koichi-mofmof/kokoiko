@@ -7,6 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
+import {
+  generateSecureFilePath,
+  validateFileContent,
+  validateFileUpload,
+} from "@/lib/utils/file-security";
 import { profileSchema } from "@/lib/validators/profile";
 import { Upload, User } from "lucide-react";
 import { useState } from "react";
@@ -27,26 +32,42 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
   }>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // ファイルサイズチェック (2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast({
-          variant: "destructive",
-          title: "エラー",
-          description: "画像サイズは2MB以下にしてください",
-        });
-        return;
-      }
+    if (!file) return;
 
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImage(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    // セキュリティ検証
+    const validation = validateFileUpload(file);
+    if (!validation.isValid) {
+      toast({
+        variant: "destructive",
+        title: "エラー",
+        description: validation.error,
+      });
+      // ファイル入力をクリア
+      e.target.value = "";
+      return;
     }
+
+    // ファイル内容の検証（マジックナンバーチェック）
+    const isValidContent = await validateFileContent(file);
+    if (!isValidContent) {
+      toast({
+        variant: "destructive",
+        title: "エラー",
+        description:
+          "ファイルの内容が無効です。正しい画像ファイルをアップロードしてください。",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImage(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,8 +110,11 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
           }
         }
 
-        const fileExt = imageFile.name.split(".").pop();
-        const filePath = `${initialData.userId}/${Date.now()}.${fileExt}`;
+        // セキュアなファイルパス生成
+        const filePath = generateSecureFilePath(
+          initialData.userId,
+          imageFile.name
+        );
 
         // Storageにアップロード
         const { error: uploadError } = await supabase.storage

@@ -3,17 +3,18 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { markAuthCallbackPending } from "@/hooks/use-auth-sync";
 import {
   AuthState,
   loginWithCredentials,
   loginWithGoogle,
 } from "@/lib/actions/auth";
+import { getCSRFTokenFromCookie } from "@/lib/utils/csrf-client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { GoogleLogoIcon } from "./signup-form";
-import { markAuthCallbackPending } from "@/hooks/use-auth-sync";
 
 // Submit ボタンコンポーネント (useFormStatusを使用)
 function SubmitButton() {
@@ -53,6 +54,14 @@ export function LoginForm() {
     searchParams.get("google_error")
   );
 
+  // CSRFトークンの取得
+  const [csrfToken, setCsrfToken] = useState<string>("");
+
+  useEffect(() => {
+    const token = getCSRFTokenFromCookie();
+    setCsrfToken(token || "");
+  }, []);
+
   useEffect(() => {
     // URLからエラーを取得して表示
     const error = searchParams.get("google_error");
@@ -79,6 +88,7 @@ export function LoginForm() {
         {redirectUrl && (
           <input type="hidden" name="redirect_url" value={redirectUrl} />
         )}
+        <input type="hidden" name="csrf_token" value={csrfToken} />
         <div className="space-y-2">
           <Label htmlFor="email">メールアドレス</Label>
           <Input

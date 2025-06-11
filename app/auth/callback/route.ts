@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       if (user) {
         // プロファイルの存在確認
         const { data: profile, error: profileError } = await supabase
-          .from("profiles")
+          .from("profiles_decrypted")
           .select("id")
           .eq("id", user.id)
           .single();
