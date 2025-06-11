@@ -44,11 +44,19 @@ async function fetchProfileDataInternal(
 
     let avatarUrl = null;
     if (profile?.avatar_url) {
-      // Ensure avatar_url is not empty before attempting to get public URL
-      const { data: imageData } = supabase.storage
-        .from("profile_images") // Make sure this is the correct bucket name
-        .getPublicUrl(profile.avatar_url);
-      avatarUrl = imageData?.publicUrl || null;
+      // GoogleのアバターURLかチェック（http/httpsで始まる場合はそのまま使用）
+      if (
+        profile.avatar_url.startsWith("http://") ||
+        profile.avatar_url.startsWith("https://")
+      ) {
+        avatarUrl = profile.avatar_url;
+      } else {
+        // ローカルストレージのファイルの場合はpublic URLを取得
+        const { data: imageData } = supabase.storage
+          .from("profile_images") // Make sure this is the correct bucket name
+          .getPublicUrl(profile.avatar_url);
+        avatarUrl = imageData?.publicUrl || null;
+      }
     }
 
     return {

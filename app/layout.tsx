@@ -1,3 +1,5 @@
+import { AuthSyncProvider } from "@/app/components/auth/auth-sync-provider";
+import { ProfileSetupProvider } from "@/app/components/auth/profile-setup-provider";
 import Footer from "@/components/ui/Footer";
 import Header from "@/components/ui/Header";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,7 +10,6 @@ import { createClient } from "@/lib/supabase/server";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
-import { ProfileSetupProvider } from "@/app/components/auth/profile-setup-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -57,10 +58,19 @@ export default async function RootLayout({
     if (profile) {
       let publicAvatarUrl = null;
       if (profile.avatar_url) {
-        const { data } = supabase.storage
-          .from("profile_images")
-          .getPublicUrl(profile.avatar_url);
-        publicAvatarUrl = data.publicUrl;
+        // GoogleのアバターURLかチェック（http/httpsで始まる場合はそのまま使用）
+        if (
+          profile.avatar_url.startsWith("http://") ||
+          profile.avatar_url.startsWith("https://")
+        ) {
+          publicAvatarUrl = profile.avatar_url;
+        } else {
+          // ローカルストレージのファイルの場合はpublic URLを取得
+          const { data } = supabase.storage
+            .from("profile_images")
+            .getPublicUrl(profile.avatar_url);
+          publicAvatarUrl = data.publicUrl;
+        }
       }
 
       profileData = {
@@ -79,33 +89,35 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}
       >
-        <SubscriptionProvider>
-          {user && profileData ? (
-            <ProfileSetupProvider profileData={profileData}>
-              <Header
-                currentUser={
-                  user
-                    ? {
-                        id: user.id,
-                        name: profileData?.displayName || "User",
-                        email: user.email || "",
-                        avatarUrl: profileData?.avatarUrl,
-                      }
-                    : null
-                }
-                onLogout={logoutUser}
-              />
-              <main className="flex-grow">{children}</main>
-              <Footer currentUser={user ? { id: user.id } : null} />
-            </ProfileSetupProvider>
-          ) : (
-            <>
-              <Header currentUser={null} onLogout={logoutUser} />
-              <main className="flex-grow">{children}</main>
-              <Footer currentUser={null} />
-            </>
-          )}
-        </SubscriptionProvider>
+        <AuthSyncProvider>
+          <SubscriptionProvider>
+            {user && profileData ? (
+              <ProfileSetupProvider profileData={profileData}>
+                <Header
+                  currentUser={
+                    user
+                      ? {
+                          id: user.id,
+                          name: profileData?.displayName || "User",
+                          email: user.email || "",
+                          avatarUrl: profileData?.avatarUrl,
+                        }
+                      : null
+                  }
+                  onLogout={logoutUser}
+                />
+                <main className="flex-grow">{children}</main>
+                <Footer currentUser={user ? { id: user.id } : null} />
+              </ProfileSetupProvider>
+            ) : (
+              <>
+                <Header currentUser={null} onLogout={logoutUser} />
+                <main className="flex-grow">{children}</main>
+                <Footer currentUser={null} />
+              </>
+            )}
+          </SubscriptionProvider>
+        </AuthSyncProvider>
         <Toaster />
       </body>
     </html>

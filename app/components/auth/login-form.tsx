@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { GoogleLogoIcon } from "./signup-form";
+import { markAuthCallbackPending } from "@/hooks/use-auth-sync";
 
 // Submit ボタンコンポーネント (useFormStatusを使用)
 function SubmitButton() {
@@ -61,6 +62,8 @@ export function LoginForm() {
   }, [searchParams]);
 
   const googleLoginAction = async () => {
+    // 認証コールバック待機状態をマーク
+    markAuthCallbackPending();
     // loginWithGoogleはリダイレクトするかエラーを投げるので、返り値は直接使わない
     await loginWithGoogle(redirectUrl || undefined);
   };

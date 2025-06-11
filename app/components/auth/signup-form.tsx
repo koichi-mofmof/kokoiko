@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { markAuthCallbackPending } from "@/hooks/use-auth-sync";
 
 // Google Logo SVG
 export const GoogleLogoIcon = () => (
@@ -89,6 +90,8 @@ export function SignupForm() {
   }, [searchParams]);
 
   const googleLoginAction = async () => {
+    // 認証コールバック待機状態をマーク
+    markAuthCallbackPending();
     // 新規登録画面からはリダイレクトURLを引き継がないので引数はなし
     await loginWithGoogle();
   };

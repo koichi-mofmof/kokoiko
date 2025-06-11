@@ -15,6 +15,11 @@ export async function getStoragePublicUrl(
 ): Promise<string | undefined> {
   if (!path) return undefined;
 
+  // GoogleのアバターURLかチェック（http/httpsで始まる場合はそのまま返す）
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
   try {
     // サーバーサイドかクライアントサイドかによって適切なクライアントを使用
     const supabase = isServer
