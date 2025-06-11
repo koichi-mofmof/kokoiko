@@ -1,9 +1,14 @@
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
+import JsonLd from "@/components/seo/JsonLd";
 import { ParticipantAvatars } from "@/components/ui/avatar";
 import NoAccess from "@/components/ui/NoAccess";
 import type { MyListForClient } from "@/lib/dal/lists";
 import { getListDetails } from "@/lib/dal/lists";
+import {
+  generateBreadcrumbSchema,
+  generateItemListSchema,
+} from "@/lib/seo/structured-data";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import type { Metadata } from "next";
@@ -56,6 +61,9 @@ export async function generateMetadata({
   return {
     title: `${listDetails.name} | ClippyMap`,
     description,
+    alternates: {
+      canonical: `/lists/${listId}`,
+    },
     openGraph: {
       title: `${listDetails.name} | ClippyMap`,
       description,
@@ -113,8 +121,17 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     notFound();
   }
 
+  // 構造化データの生成
+  const breadcrumbs = [
+    { name: "ホーム", url: "/" },
+    { name: "マイリスト", url: "/lists" },
+    { name: listDetails.name, url: `/lists/${listId}` },
+  ];
+
   return (
     <>
+      <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
+      <JsonLd data={generateItemListSchema(listDetails)} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="mb-4">
           <Link

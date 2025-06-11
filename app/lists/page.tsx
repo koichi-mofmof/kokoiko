@@ -7,6 +7,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "マイリスト一覧 | ClippyMap",
   description: "あなたが作成・共有されたリストの一覧ページ",
+  alternates: {
+    canonical: "/lists",
+  },
   openGraph: {
     title: "マイリスト一覧 | ClippyMap",
     description: "あなたが作成・共有されたリストの一覧ページ",

@@ -1,11 +1,16 @@
 import { AuthSyncProvider } from "@/app/components/auth/auth-sync-provider";
 import { ProfileSetupProvider } from "@/app/components/auth/profile-setup-provider";
+import JsonLd from "@/components/seo/JsonLd";
 import Footer from "@/components/ui/Footer";
 import Header from "@/components/ui/Header";
 import { Toaster } from "@/components/ui/toaster";
 import { SubscriptionProvider } from "@/contexts/SubscriptionProvider";
 import { logoutUser } from "@/lib/actions/auth";
 import type { ProfileSettingsData } from "@/lib/dal/users";
+import {
+  generateOrganizationSchema,
+  generateWebSiteSchema,
+} from "@/lib/seo/structured-data";
 import { createClient } from "@/lib/supabase/server";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
@@ -38,6 +43,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   ),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "ClippyMap",
     description: "行きたい場所を共有できるサービス",
@@ -125,6 +133,10 @@ export default async function RootLayout({
 
   return (
     <html lang="ja">
+      <head>
+        <JsonLd data={generateOrganizationSchema()} />
+        <JsonLd data={generateWebSiteSchema()} />
+      </head>
       <body
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}
       >

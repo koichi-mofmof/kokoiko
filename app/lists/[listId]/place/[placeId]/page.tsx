@@ -1,11 +1,16 @@
 import AddCommentForm from "@/app/components/lists/AddCommentForm";
 import CommentItem from "@/app/components/lists/CommentItem";
 import EditPlaceDialogButton from "@/app/components/places/EditPlaceDialogButton";
+import JsonLd from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { getCommentsByListPlaceId } from "@/lib/actions/place-actions";
 import { getListDetails } from "@/lib/dal/lists";
 import { fetchAuthenticatedUserWithProfile } from "@/lib/dal/users";
+import {
+  generateBreadcrumbSchema,
+  generatePlaceSchema,
+} from "@/lib/seo/structured-data";
 import { createClient } from "@/lib/supabase/server";
 import { ListPlaceComment } from "@/types";
 import {
@@ -69,6 +74,9 @@ export async function generateMetadata({
   return {
     title: `${place.name} | ${list.name} | ClippyMap`,
     description,
+    alternates: {
+      canonical: `/lists/${listId}/place/${placeId}`,
+    },
     openGraph: {
       title: `${place.name} | ${list.name} | ClippyMap`,
       description,
@@ -121,119 +129,131 @@ export default async function PlaceDetailPage({
   const canEditOrDelete =
     list.permission === "owner" || list.permission === "edit";
 
+  // 構造化データの生成
+  const breadcrumbs = [
+    { name: "ホーム", url: "/" },
+    { name: "マイリスト", url: "/lists" },
+    { name: list.name, url: `/lists/${listId}` },
+    { name: place.name, url: `/lists/${listId}/place/${placeId}` },
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-4 flex items-center">
-        <Link
-          href={`/lists/${listId}`}
-          className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          {list.name}に戻る
-        </Link>
-      </div>
-      <Card>
-        <CardContent className="py-6 relative">
-          {canEditOrDelete && (
-            <div className="absolute right-4 top-4 z-10">
-              <EditPlaceDialogButton place={place} listId={listId} />
-            </div>
-          )}
-          <CardTitle className="text-neutral-800 sm:text-xl mb-1">
-            {place.name}
-          </CardTitle>
-          <div className="flex items-center text-xs sm:text-sm text-neutral-500 mb-2">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{place.address}</span>
-          </div>
-          <div className="mt-3 flex items-center">
-            {place.visited === "visited" ? (
-              <>
-                <Check className="h-4 w-4 mr-1 text-primary-500" />
-                <span className="text-xs sm:text-sm text-primary-700">
-                  訪問済み
-                </span>
-              </>
-            ) : (
-              <>
-                <Circle className="h-4 w-4 mr-1 text-neutral-400" />
-                <span className="text-xs sm:text-sm text-neutral-600">
-                  未訪問
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* 地図 */}
-          <div className="mt-4 h-[300px] sm:h-[450px]">
-            <PlaceMapClient place={place} listId={listId} />
-          </div>
-
-          <div className="mt-2">
-            <a
-              href={place.googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Googleマップで開く"
-            >
-              <Button size="sm" variant="outline">
-                <span className="inline-flex items-center">
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  Google Mapsで開く
-                </span>
-              </Button>
-            </a>
-          </div>
-
-          {/* タグラベル＋タグ */}
-          {place.tags && place.tags.length > 0 && (
-            <div className="mt-4">
-              <div className="text-xs sm:text-sm font-semibold text-neutral-600 mb-1">
-                タグ
+    <>
+      <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
+      <JsonLd data={generatePlaceSchema(place, listId, list.name)} />
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="mb-4 flex items-center">
+          <Link
+            href={`/lists/${listId}`}
+            className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            {list.name}に戻る
+          </Link>
+        </div>
+        <Card>
+          <CardContent className="py-6 relative">
+            {canEditOrDelete && (
+              <div className="absolute right-4 top-4 z-10">
+                <EditPlaceDialogButton place={place} listId={listId} />
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {place.tags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
-                  >
-                    <Tag className="h-3 w-3 mr-1 opacity-80" />
-                    {tag.name}
+            )}
+            <CardTitle className="text-neutral-800 sm:text-xl mb-1">
+              {place.name}
+            </CardTitle>
+            <div className="flex items-center text-xs sm:text-sm text-neutral-500 mb-2">
+              <MapPin className="h-4 w-4 mr-1" />
+              <span>{place.address}</span>
+            </div>
+            <div className="mt-3 flex items-center">
+              {place.visited === "visited" ? (
+                <>
+                  <Check className="h-4 w-4 mr-1 text-primary-500" />
+                  <span className="text-xs sm:text-sm text-primary-700">
+                    訪問済み
                   </span>
-                ))}
-              </div>
+                </>
+              ) : (
+                <>
+                  <Circle className="h-4 w-4 mr-1 text-neutral-400" />
+                  <span className="text-xs sm:text-sm text-neutral-600">
+                    未訪問
+                  </span>
+                </>
+              )}
             </div>
-          )}
 
-          {/* コメントラベル＋コメント一覧 */}
-          <div className="mt-6">
-            <div className="text-xs sm:text-sm font-semibold text-neutral-600 mb-1">
-              コメント
+            {/* 地図 */}
+            <div className="mt-4 h-[300px] sm:h-[450px]">
+              <PlaceMapClient place={place} listId={listId} />
             </div>
-            {comments.length > 0 && (
-              <div className="space-y-3">
-                {comments.map((comment) => (
-                  <CommentItem
-                    key={comment.id}
-                    comment={comment}
-                    commentUser={list.collaborators?.find(
-                      (c) => c.id === comment.user_id
-                    )}
-                    isMyComment={comment.user_id === user.userId}
-                  />
-                ))}
+
+            <div className="mt-2">
+              <a
+                href={place.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Googleマップで開く"
+              >
+                <Button size="sm" variant="outline">
+                  <span className="inline-flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Google Mapsで開く
+                  </span>
+                </Button>
+              </a>
+            </div>
+
+            {/* タグラベル＋タグ */}
+            {place.tags && place.tags.length > 0 && (
+              <div className="mt-4">
+                <div className="text-xs sm:text-sm font-semibold text-neutral-600 mb-1">
+                  タグ
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {place.tags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
+                    >
+                      <Tag className="h-3 w-3 mr-1 opacity-80" />
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
-          {place.listPlaceId && canEditOrDelete && (
-            <AddCommentForm
-              listPlaceId={place.listPlaceId}
-              displayName={user.displayName}
-              avatarUrl={user.avatarUrl || undefined}
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+            {/* コメントラベル＋コメント一覧 */}
+            <div className="mt-6">
+              <div className="text-xs sm:text-sm font-semibold text-neutral-600 mb-1">
+                コメント
+              </div>
+              {comments.length > 0 && (
+                <div className="space-y-3">
+                  {comments.map((comment) => (
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      commentUser={list.collaborators?.find(
+                        (c) => c.id === comment.user_id
+                      )}
+                      isMyComment={comment.user_id === user.userId}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            {place.listPlaceId && canEditOrDelete && (
+              <AddCommentForm
+                listPlaceId={place.listPlaceId}
+                displayName={user.displayName}
+                avatarUrl={user.avatarUrl || undefined}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
