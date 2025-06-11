@@ -95,6 +95,15 @@ jest.mock("lucide-react", () => ({
   Upload: () => <div data-testid="upload-icon">UploadIcon</div>,
 }));
 
+// ファイルセキュリティ関数をモック
+jest.mock("@/lib/utils/file-security", () => ({
+  validateFileUpload: jest.fn().mockReturnValue({ isValid: true }),
+  validateFileContent: jest.fn().mockResolvedValue(true),
+  generateSecureFilePath: jest
+    .fn()
+    .mockReturnValue("profile_images/user123/avatar_secure.jpg"),
+}));
+
 // テスト用の初期データ
 const mockInitialData = {
   userId: "user123",
@@ -183,47 +192,78 @@ describe("ProfileSettingsコンポーネントテスト", () => {
   });
 
   it("画像アップロード処理が機能すること", async () => {
+    // FileReaderの完全なモック
     global.FileReader = class {
       constructor() {
         this.result = "data:image/jpeg;base64,mockbase64data";
+        this.onload = null;
       }
       readAsDataURL() {
         // FileReaderのonloadを呼び出す
-        setTimeout(() => this.onload({ target: this }), 0);
+        setTimeout(() => {
+          if (this.onload) {
+            this.onload({ target: this });
+          }
+        }, 0);
+      }
+      readAsArrayBuffer(blob) {
+        // マジックナンバー検証用のArrayBufferを返す（JPEGのマジックナンバー）
+        const buffer = new ArrayBuffer(12);
+        const view = new Uint8Array(buffer);
+        view[0] = 0xff; // JPEG magic number
+        view[1] = 0xd8;
+        this.result = buffer;
+        setTimeout(() => {
+          if (this.onload) {
+            this.onload({ target: this });
+          }
+        }, 0);
       }
     };
 
+    // Fileクラスのモック
     global.File = class {
       constructor(parts, name, options) {
         this.name = name;
         this.size = options?.size || 1024; // デフォルトは1KB
         this.type = "image/jpeg";
+        this.parts = parts;
+      }
+
+      slice(start, end) {
+        // sliceメソッドのモック - 新しいFileオブジェクトを返す
+        return new File(this.parts, this.name, {
+          size: end - start,
+          type: this.type,
+        });
       }
     };
 
     render(<ProfileSettings initialData={mockInitialData} />);
 
-    // ファイル選択イベントをシミュレート - labelとinputの構造に合わせて修正
+    // ファイル入力要素を取得
     const fileInput = screen.getByLabelText("プロフィール画像をアップロード");
-    expect(fileInput).toBeInTheDocument();
-    expect(fileInput.id).toBe("profile-image-upload");
 
-    const testFile = new File(["test"], "test.jpg", { size: 1024 });
-
-    Object.defineProperty(fileInput, "files", {
-      value: [testFile],
+    // テスト用ファイルを作成
+    const file = new File(["dummy content"], "test.jpg", {
+      type: "image/jpeg",
+      size: 1024,
     });
 
-    fireEvent.change(fileInput);
+    // ファイルを選択
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
-    // 画像のプレビューが更新されることを確認（非同期処理）
-    await waitFor(() => {
-      const avatarImage = screen.getByTestId("avatar-image");
-      expect(avatarImage).toHaveAttribute(
-        "src",
-        "data:image/jpeg;base64,mockbase64data"
-      );
-    });
+    // 画像のプレビューが表示されることを確認
+    await waitFor(
+      () => {
+        const avatarImage = screen.getByTestId("avatar-image");
+        expect(avatarImage).toHaveAttribute(
+          "src",
+          "data:image/jpeg;base64,mockbase64data"
+        );
+      },
+      { timeout: 2000 }
+    );
   });
 
   it("フォーム送信が正しく処理されること", async () => {

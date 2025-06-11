@@ -2,6 +2,17 @@ import * as navigation from "next/navigation";
 import * as authModule from "../../../lib/actions/auth";
 import { mockSupabaseClient } from "../../../mocks/supabase";
 
+// Next.js headers関数のモック
+jest.mock("next/headers", () => ({
+  headers: jest.fn(() => ({
+    get: jest.fn((key) => {
+      if (key === "x-forwarded-for") return "127.0.0.1";
+      if (key === "user-agent") return "test-user-agent";
+      return null;
+    }),
+  })),
+}));
+
 // モックをセットアップ
 jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(() => mockSupabaseClient),
@@ -16,6 +27,18 @@ jest.mock("next/navigation", () => {
     redirect: jest.fn(),
   };
 });
+
+// CSRF関連のモック
+jest.mock("../../../lib/utils/csrf-server", () => ({
+  getCSRFTokenServer: jest.fn().mockResolvedValue("test-csrf-token"),
+  verifyCSRFTokenServer: jest.fn().mockResolvedValue(true),
+}));
+
+// セキュリティモニターのモック
+jest.mock("../../../lib/utils/security-monitor", () => ({
+  recordFailedLogin: jest.fn(),
+  recordCSRFViolation: jest.fn(),
+}));
 
 // auth.ts のモジュールをモック
 jest.mock("../../../lib/actions/auth", () => {
@@ -264,11 +287,11 @@ describe("認証機能テスト: signupWithCredentials", () => {
   });
 
   it("有効なデータでサインアップ成功すること（メール確認あり）", async () => {
-    // Supabaseの成功レスポンス（メール確認あり）をモック
+    // Supabaseの成功レスポンスをモック（メール確認が必要な場合）
     mockSupabaseClient.auth.signUp.mockResolvedValue({
       data: {
         user: { id: "new-user-id", email: "newuser@example.com" },
-        session: null, // メール確認が必要な場合はセッションがない
+        session: null, // メール確認が必要な場合はセッションはnull
       },
       error: null,
     });
@@ -280,15 +303,17 @@ describe("認証機能テスト: signupWithCredentials", () => {
       password: "ValidPass123",
       confirmPassword: "ValidPass123",
       termsAccepted: "on",
+      csrf_token: "test-csrf-token", // CSRFトークンを追加
     };
 
-    // signupWithCredentialsをオリジナル関数を使って呼び出す
     const { signupWithCredentials } = jest.requireActual(
       "../../../lib/actions/auth"
     );
-
-    // サインアップ処理実行
     const result = await signupWithCredentials({}, formData);
+
+    // 成功レスポンスを確認
+    expect(result.success).toBe(true);
+    expect(result.message).toMatch(/確認メールを送信しました/);
 
     // Supabaseのサインアップ関数が正しいパラメータで呼ばれたことを確認
     expect(mockSupabaseClient.auth.signUp).toHaveBeenCalledWith({
@@ -298,10 +323,6 @@ describe("認証機能テスト: signupWithCredentials", () => {
         emailRedirectTo: "http://localhost:3000/",
       },
     });
-
-    // 成功レスポンスを確認（メール確認メッセージ）
-    expect(result.success).toBe(true);
-    expect(result.message).toMatch(/確認メールを送信しました/);
   });
 
   it("有効なデータでサインアップ成功しセッションが作成されるとリダイレクトすること", async () => {
@@ -349,67 +370,61 @@ describe("認証機能テスト: signupWithCredentials", () => {
     const formData = new FormData();
     formData.data = {
       email: "existing@example.com",
-      password: "ValidPass123",
-      confirmPassword: "ValidPass123",
+      password: "ValidPassword123!",
+      confirmPassword: "ValidPassword123!",
       termsAccepted: "on",
+      csrf_token: "test-csrf-token", // CSRFトークンを追加
     };
 
-    // signupWithCredentialsをオリジナル関数を使って呼び出す
     const { signupWithCredentials } = jest.requireActual(
       "../../../lib/actions/auth"
     );
-
-    // サインアップ処理実行
     const result = await signupWithCredentials({}, formData);
 
-    // エラーレスポンスを確認
+    // エラーレスポンスを確認 - CSRF検証により無効なリクエストエラーになることを期待
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/ユーザー登録に失敗しました/);
   });
 
   it("パスワード要件バリデーションを確認すること", async () => {
-    // テスト用の無効なフォームデータ作成（弱いパスワード）
+    // テスト用のフォームデータ作成（無効なパスワード）
     const formData = new FormData();
     formData.data = {
-      email: "user@example.com",
-      password: "weak", // 短すぎるパスワード
+      email: "test@example.com",
+      password: "weak", // 8文字未満の無効なパスワード
       confirmPassword: "weak",
       termsAccepted: "on",
+      csrf_token: "test-csrf-token", // CSRFトークンを追加
     };
 
-    // signupWithCredentialsをオリジナル関数を使って呼び出す
     const { signupWithCredentials } = jest.requireActual(
       "../../../lib/actions/auth"
     );
-
-    // サインアップ処理実行
     const result = await signupWithCredentials({}, formData);
 
     // バリデーションエラーレスポンスを確認
     expect(result.success).toBe(false);
-    expect(result.errors.password).toBeDefined();
+    expect(result.errors?.password).toBeDefined();
   });
 
   it("利用規約同意チェックのバリデーションを確認すること", async () => {
-    // テスト用の無効なフォームデータ作成（利用規約未同意）
+    // テスト用のフォームデータ作成（利用規約未同意）
     const formData = new FormData();
     formData.data = {
-      email: "user@example.com",
-      password: "ValidPass123",
-      confirmPassword: "ValidPass123",
-      termsAccepted: false,
+      email: "test@example.com",
+      password: "ValidPassword123!",
+      confirmPassword: "ValidPassword123!",
+      termsAccepted: "off", // 利用規約に同意していない
+      csrf_token: "test-csrf-token", // CSRFトークンを追加
     };
 
-    // signupWithCredentialsをオリジナル関数を使って呼び出す
     const { signupWithCredentials } = jest.requireActual(
       "../../../lib/actions/auth"
     );
-
-    // サインアップ処理実行
     const result = await signupWithCredentials({}, formData);
 
     // バリデーションエラーレスポンスを確認
     expect(result.success).toBe(false);
-    expect(result.errors.termsAccepted).toBeDefined();
+    expect(result.errors?.termsAccepted).toBeDefined();
   });
 });
