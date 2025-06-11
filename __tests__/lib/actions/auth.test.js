@@ -32,7 +32,7 @@ jest.mock("../../../lib/actions/auth", () => {
 });
 
 // 環境変数のモック
-process.env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
+process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
 
 // 認証関連のスキーマをモック
 jest.mock("zod", () => {

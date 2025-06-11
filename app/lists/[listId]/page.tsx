@@ -6,12 +6,77 @@ import type { MyListForClient } from "@/lib/dal/lists";
 import { getListDetails } from "@/lib/dal/lists";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, LockKeyhole, LockKeyholeOpen } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 interface ListDetailPageProps {
   params: Promise<{ listId: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: ListDetailPageProps): Promise<Metadata> {
+  const { listId } = await params;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      title: "ClippyMap",
+      description: "行きたい場所を共有できるサービス",
+    };
+  }
+
+  const listDetails: MyListForClient | null = await getListDetails(
+    listId,
+    user.id
+  );
+
+  if (!listDetails) {
+    return {
+      title: "ClippyMap",
+      description: "行きたい場所を共有できるサービス",
+    };
+  }
+
+  const owner = listDetails.collaborators.find((c) => c.isOwner);
+  const placesCount = listDetails.places.length;
+
+  const description = listDetails.description
+    ? `${listDetails.description} - ${placesCount}件の場所が登録されています`
+    : `${
+        owner?.name || "ユーザー"
+      }さんが作成したリスト - ${placesCount}件の場所が登録されています`;
+
+  return {
+    title: `${listDetails.name} | ClippyMap`,
+    description,
+    openGraph: {
+      title: `${listDetails.name} | ClippyMap`,
+      description,
+      type: "article",
+      locale: "ja_JP",
+      images: [
+        {
+          url: "/ogp-image.png",
+          width: 1200,
+          height: 630,
+          alt: `${listDetails.name} - ClippyMap`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${listDetails.name} | ClippyMap`,
+      description,
+      images: ["/ogp-image.png"],
+    },
+  };
 }
 
 export default async function ListDetailPage({ params }: ListDetailPageProps) {

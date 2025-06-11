@@ -16,12 +16,80 @@ import {
   MapPin,
   Tag,
 } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PlaceMapClient from "./PlaceMapClient";
 
 interface PlaceDetailPageProps {
   params: Promise<{ listId: string; placeId: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PlaceDetailPageProps): Promise<Metadata> {
+  const { listId, placeId } = await params;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      title: "ClippyMap",
+      description: "行きたい場所を共有できるサービス",
+    };
+  }
+
+  const list = await getListDetails(listId, user.id);
+  if (!list?.places) {
+    return {
+      title: "ClippyMap",
+      description: "行きたい場所を共有できるサービス",
+    };
+  }
+
+  const place = list.places.find((p) => p.id === placeId);
+  if (!place) {
+    return {
+      title: "ClippyMap",
+      description: "行きたい場所を共有できるサービス",
+    };
+  }
+
+  const statusText = place.visited === "visited" ? "訪問済み" : "未訪問";
+  const tagsText =
+    place.tags && place.tags.length > 0
+      ? ` - タグ: ${place.tags.map((tag) => tag.name).join(", ")}`
+      : "";
+
+  const description = `${place.address} (${statusText})${tagsText} - ${list.name}に登録された場所`;
+
+  return {
+    title: `${place.name} | ${list.name} | ClippyMap`,
+    description,
+    openGraph: {
+      title: `${place.name} | ${list.name} | ClippyMap`,
+      description,
+      type: "article",
+      locale: "ja_JP",
+      images: [
+        {
+          url: "/ogp-image.png",
+          width: 1200,
+          height: 630,
+          alt: `${place.name} - ${list.name} - ClippyMap`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${place.name} | ${list.name} | ClippyMap`,
+      description,
+      images: ["/ogp-image.png"],
+    },
+  };
 }
 
 export default async function PlaceDetailPage({

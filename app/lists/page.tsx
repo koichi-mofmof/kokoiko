@@ -2,6 +2,32 @@ import { ErrorMessageToast } from "@/app/components/lists/ErrorMessageToast";
 import { MyLists } from "@/app/components/lists/MyLists";
 import { MyPageDataLoader } from "@/app/components/lists/MyPageDataLoader";
 import { List } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "マイリスト一覧 | ClippyMap",
+  description: "あなたが作成・共有されたリストの一覧ページ",
+  openGraph: {
+    title: "マイリスト一覧 | ClippyMap",
+    description: "あなたが作成・共有されたリストの一覧ページ",
+    type: "website",
+    locale: "ja_JP",
+    images: [
+      {
+        url: "/ogp-image.png",
+        width: 1200,
+        height: 630,
+        alt: "マイリスト一覧 - ClippyMap",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "マイリスト一覧 | ClippyMap",
+    description: "あなたが作成・共有されたリストの一覧ページ",
+    images: ["/ogp-image.png"],
+  },
+};
 
 export default async function MyPage() {
   const { myListsForClient, error } = await MyPageDataLoader();
