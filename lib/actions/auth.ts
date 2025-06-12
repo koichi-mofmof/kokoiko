@@ -9,7 +9,12 @@ import {
   recordCSRFViolation,
   recordFailedLogin,
 } from "@/lib/utils/security-monitor";
-import { loginSchema, signupSchema } from "@/lib/validators/auth";
+import {
+  deleteAccountSchema,
+  loginSchema,
+  signupSchema,
+} from "@/lib/validators/auth";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -365,4 +370,271 @@ export async function updateUserPassword(
     success: true,
     message: "パスワードが正常に変更されました。",
   };
+}
+
+/**
+ * ユーザーのサブスクリプション状態を確認するサーバーアクション
+ */
+export async function checkUserSubscriptionStatus(): Promise<{
+  hasActiveSubscription: boolean;
+  subscriptionType?: string;
+  subscriptionStatus?: string;
+  message?: string;
+  isWarningLevel?: boolean;
+}> {
+  const supabase = await createClient();
+
+  // 認証ユーザー情報を取得
+  const {
+    data: { user },
+    error: authUserError,
+  } = await supabase.auth.getUser();
+
+  if (authUserError || !user) {
+    return {
+      hasActiveSubscription: false,
+      message: "認証されていません。",
+    };
+  }
+
+  try {
+    // 削除を阻止すべきサブスクリプション状態を確認
+    const blockingStatuses = ["active", "trialing", "past_due"];
+    const warningStatuses = ["incomplete", "unpaid", "paused"];
+
+    const { data: subscriptions, error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("status", [...blockingStatuses, ...warningStatuses])
+      .order("created_at", { ascending: false });
+
+    if (subscriptionError) {
+      console.error("サブスクリプション確認エラー:", subscriptionError);
+      return {
+        hasActiveSubscription: false,
+        message: "サブスクリプション状態の確認に失敗しました。",
+      };
+    }
+
+    if (subscriptions && subscriptions.length > 0) {
+      // キャンセル済み（cancel_at_period_end: true）のサブスクリプションを除外
+      const activeSubscriptions = subscriptions.filter(
+        (sub) => !sub.cancel_at_period_end
+      );
+
+      if (activeSubscriptions.length === 0) {
+        // すべてのサブスクリプションがキャンセル済みの場合
+        return {
+          hasActiveSubscription: false,
+          message: "すべてのサブスクリプションがキャンセル済みです。",
+        };
+      }
+
+      // 最も重要度の高いアクティブなサブスクリプションを特定
+      const blockingSubscription = activeSubscriptions.find((sub) =>
+        blockingStatuses.includes(sub.status)
+      );
+
+      if (blockingSubscription) {
+        return {
+          hasActiveSubscription: true,
+          subscriptionType: blockingSubscription.price_id || "premium",
+          subscriptionStatus: blockingSubscription.status,
+          message: `${blockingSubscription.status}状態のサブスクリプションがあります。`,
+        };
+      }
+
+      // 警告レベルのアクティブなサブスクリプション
+      const warningSubscription = activeSubscriptions[0];
+      return {
+        hasActiveSubscription: true,
+        subscriptionType: warningSubscription.price_id || "premium",
+        subscriptionStatus: warningSubscription.status,
+        message: `${warningSubscription.status}状態のサブスクリプションがあります。`,
+        isWarningLevel: true,
+      };
+    }
+
+    return {
+      hasActiveSubscription: false,
+      message: "アクティブなサブスクリプションはありません。",
+    };
+  } catch (error) {
+    console.error("サブスクリプション確認処理エラー:", error);
+    return {
+      hasActiveSubscription: false,
+      message: "サブスクリプション状態の確認中にエラーが発生しました。",
+    };
+  }
+}
+
+/**
+ * アカウント削除処理を行うサーバーアクション
+ */
+export async function deleteUserAccount(
+  prevState: ActionResult | undefined,
+  formData: FormData
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  // 1. 認証ユーザー情報を取得
+  const {
+    data: { user },
+    error: authUserError,
+  } = await supabase.auth.getUser();
+
+  if (authUserError || !user) {
+    return {
+      success: false,
+      message: "認証されていません。アカウントを削除できません。",
+    };
+  }
+
+  // 2. フォームデータの検証
+  const validatedFields = deleteAccountSchema.safeParse({
+    password: formData.get("password"),
+    confirmText: formData.get("confirmText"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: "入力内容を確認してください。",
+      errors:
+        validatedFields.error.flatten().fieldErrors.password?.map((e) => ({
+          field: "password",
+          message: e,
+        })) ||
+        validatedFields.error.flatten().fieldErrors.confirmText?.map((e) => ({
+          field: "confirmText",
+          message: e,
+        })),
+    };
+  }
+
+  const { password } = validatedFields.data;
+
+  // 3. パスワードで再認証
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password,
+  });
+
+  if (signInError) {
+    return {
+      success: false,
+      message: "パスワードが正しくありません。",
+      errors: [
+        {
+          field: "password",
+          message: "パスワードが正しくありません。",
+        },
+      ],
+    };
+  }
+
+  try {
+    // 4. 環境変数の確認
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return {
+        success: false,
+        message: "サーバー設定に問題があります。管理者にお問い合わせください。",
+      };
+    }
+
+    // 5. Admin クライアントを使用してユーザーデータを削除
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // 6. データベースの関連データをトランザクション処理で削除
+    const { data: deleteResult, error: deleteDataError } =
+      await adminSupabase.rpc("delete_user_data_transaction", {
+        target_user_id: user.id,
+      });
+
+    if (deleteDataError) {
+      return {
+        success: false,
+        message: `関連データの削除に失敗しました: ${deleteDataError.message}`,
+      };
+    }
+
+    // RPC関数からのレスポンスをチェック
+    if (!deleteResult?.success || !deleteResult?.ready_for_account_deletion) {
+      return {
+        success: false,
+        message:
+          deleteResult?.message || "関連データの削除中にエラーが発生しました。",
+      };
+    }
+
+    // 7. ストレージファイルを削除（RPC関数から取得した情報を使用）
+    if (deleteResult.storage_files && deleteResult.storage_files.length > 0) {
+      try {
+        const { data: files, error: listError } = await adminSupabase.storage
+          .from("profile_images")
+          .list(user.id);
+
+        if (!listError && files && files.length > 0) {
+          const filePaths = files.map((file) => `${user.id}/${file.name}`);
+          await adminSupabase.storage.from("profile_images").remove(filePaths);
+        }
+      } catch (storageError) {
+        // ストレージエラーは処理を停止しない（ログ出力のみ）
+        console.warn("ストレージファイル削除エラー:", storageError);
+      }
+    }
+
+    // 8. 削除準備の最終確認
+    const { data: confirmResult, error: confirmError } =
+      await adminSupabase.rpc("confirm_account_deletion_ready", {
+        target_user_id: user.id,
+      });
+
+    if (confirmError || !confirmResult?.ready_for_deletion) {
+      return {
+        success: false,
+        message: `アカウント削除の準備確認に失敗しました: ${
+          confirmError?.message || confirmResult?.message || "不明なエラー"
+        }`,
+      };
+    }
+
+    // 9. ユーザーアカウント自体を削除
+    const { error: deleteError } = await adminSupabase.auth.admin.deleteUser(
+      user.id
+    );
+
+    if (deleteError) {
+      return {
+        success: false,
+        message: `アカウントの削除に失敗しました: ${deleteError.message}`,
+      };
+    }
+
+    // 10. セッションをクリアしてログアウト
+    await supabase.auth.signOut();
+
+    // 11. キャッシュをクリア
+    revalidatePath("/", "layout");
+  } catch (error) {
+    console.error("アカウント削除処理エラー詳細:", {
+      error,
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return {
+      success: false,
+      message: `アカウントの削除中にエラーが発生しました: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+      errors: [],
+    };
+  }
+
+  // 12. ホームページにリダイレクト（削除完了）
+  redirect("/");
 }

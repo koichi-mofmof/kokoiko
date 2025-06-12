@@ -53,3 +53,11 @@ export const passwordClientSchema = z
     message: "新しいパスワードは現在のパスワードと異なる必要があります。",
     path: ["newPassword"],
   });
+
+// アカウント削除用バリデーションスキーマ
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, { message: "パスワードを入力してください。" }),
+  confirmText: z.string().refine((val) => val === "削除", {
+    message: "「削除」と入力してください。",
+  }),
+});

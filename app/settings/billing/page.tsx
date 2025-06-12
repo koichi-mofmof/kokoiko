@@ -91,7 +91,9 @@ export default async function BillingSettingsPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 プランの変更、お支払い方法の更新、ご解約手続きは、Stripeが提供する安全なカスタマーポータルで行うことができます。「プランを管理する」ボタンをクリックしてポータルサイトへお進みください。
               </p>
-              <ManagePlanButton userId={user.id} />
+              <div className="flex justify-center sm:justify-end w-full">
+                <ManagePlanButton userId={user.id} />
+              </div>
             </div>
           )}
         </CardContent>

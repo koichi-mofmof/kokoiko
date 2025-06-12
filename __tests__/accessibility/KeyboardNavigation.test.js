@@ -29,6 +29,7 @@ jest.mock("@/lib/supabase/client", () => ({
     storage: {
       from: jest.fn().mockReturnValue({
         upload: jest.fn().mockResolvedValue({ error: null }),
+        remove: jest.fn().mockResolvedValue({ error: null }),
       }),
     },
     from: jest.fn().mockReturnValue({
@@ -50,6 +51,20 @@ jest.mock("@/components/ui/avatar", () => ({
   AvatarFallback: ({ children }) => (
     <div data-testid="avatar-fallback">{children}</div>
   ),
+}));
+
+// バリデーター関数のモック
+jest.mock("@/lib/validators/profile", () => ({
+  profileSchema: {
+    safeParse: jest.fn().mockReturnValue({ success: true }),
+  },
+}));
+
+// ファイルセキュリティ関数のモック
+jest.mock("@/lib/utils/file-security", () => ({
+  validateFileUpload: jest.fn().mockReturnValue({ isValid: true }),
+  validateFileContent: jest.fn().mockResolvedValue(true),
+  generateSecureFilePath: jest.fn().mockReturnValue("secure/path/file.jpg"),
 }));
 
 jest.mock("@/components/ui/input", () => ({
@@ -144,7 +159,9 @@ jest.mock("next/link", () => {
 jest.mock("@/components/ui/card", () => ({
   Card: ({ children, ...rest }) => <div {...rest}>{children}</div>,
   CardContent: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardHeader: ({ children, ...rest }) => <div {...rest}>{children}</div>,
   CardTitle: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardDescription: ({ children, ...rest }) => <div {...rest}>{children}</div>,
 }));
 
 // モックデータ

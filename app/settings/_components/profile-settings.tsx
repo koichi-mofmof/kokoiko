@@ -2,6 +2,13 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -171,123 +178,133 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
 
   return (
     <div className="space-y-6 px-0 sm:px-4">
-      <div className="text-left">
-        <h2 className="text-xl font-semibold mb-1">プロフィール設定</h2>
-        <p className="text-sm text-muted-foreground">
-          <span className="text-red-500">*</span> は必須項目です。
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-8 w-full">
-        <section className="w-full">
-          <h3 className="mb-4 text-left">プロフィール画像</h3>
-          <div className="flex flex-row items-center sm:items-start gap-4 sm:gap-6">
-            <Avatar className="h-16 w-16 border bg-muted">
-              {image ? (
-                <AvatarImage src={image} alt="プロフィール画像" />
-              ) : (
-                <AvatarFallback className="text-lg">
-                  <User className="h-6 w-6 text-muted-foreground" />
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="space-y-2 text-left w-auto">
-              <div className="relative">
-                <label
-                  htmlFor="profile-image-upload"
-                  className="flex items-center justify-center px-3 py-1.5 text-sm border rounded-md hover:bg-accent cursor-pointer"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  画像をアップロード
-                </label>
-                <input
-                  id="profile-image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="sr-only"
-                  aria-label="プロフィール画像をアップロード"
-                />
+      <Card>
+        <CardHeader>
+          <CardTitle>プロフィール設定</CardTitle>
+          <CardDescription>
+            プロフィール画像や基本情報を設定してください。
+            <span className="text-red-500">*</span> は必須項目です。
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-8 w-full">
+            <section className="w-full">
+              <h3 className="mb-4 text-left">プロフィール画像</h3>
+              <div className="flex flex-row items-center sm:items-start gap-4 sm:gap-6">
+                <Avatar className="h-16 w-16 border bg-muted">
+                  {image ? (
+                    <AvatarImage src={image} alt="プロフィール画像" />
+                  ) : (
+                    <AvatarFallback className="text-lg">
+                      <User className="h-6 w-6 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="space-y-2 text-left w-auto">
+                  <div className="relative">
+                    <label
+                      htmlFor="profile-image-upload"
+                      className="flex items-center justify-center px-3 py-1.5 text-sm border rounded-md hover:bg-accent cursor-pointer"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      画像をアップロード
+                    </label>
+                    <input
+                      id="profile-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="sr-only"
+                      aria-label="プロフィール画像をアップロード"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG, GIF形式で最大2MBまで
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                JPG, PNG, GIF形式で最大2MBまで
-              </p>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        <section className="w-full">
-          <h3 className="font-medium mb-4 text-left">基本情報</h3>
-          <div className="space-y-5 w-full">
-            <div className="w-full">
-              <label
-                htmlFor="nickname"
-                className="block mb-1 text-sm text-left"
+            <section className="w-full">
+              <h3 className="font-medium mb-4 text-left">基本情報</h3>
+              <div className="space-y-5 w-full">
+                <div className="w-full">
+                  <label
+                    htmlFor="nickname"
+                    className="block mb-1 text-sm text-left"
+                  >
+                    表示名 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="w-full">
+                    <Input
+                      id="nickname"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      placeholder="あなたの名前"
+                      maxLength={50}
+                      className={`w-full ${
+                        validationErrors.display_name ? "border-red-500" : ""
+                      }`}
+                      required
+                    />
+                  </div>
+                  {validationErrors.display_name?.map((error, index) => (
+                    <p
+                      key={index}
+                      className="mt-1 text-sm text-red-500 text-left"
+                    >
+                      {error}
+                    </p>
+                  ))}
+                  <p className="mt-1 text-xs text-muted-foreground text-left">
+                    50文字以内で入力してください
+                  </p>
+                </div>
+
+                <div className="w-full">
+                  <label htmlFor="bio" className="block mb-1 text-sm text-left">
+                    自己紹介
+                  </label>
+                  <Textarea
+                    id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="あなたの自己紹介"
+                    rows={5}
+                    maxLength={500}
+                    className={`resize-none w-full ${
+                      validationErrors.bio ? "border-red-500" : ""
+                    }`}
+                  />
+                  {validationErrors.bio?.map((error, index) => (
+                    <p
+                      key={index}
+                      className="mt-1 text-sm text-red-500 text-left"
+                    >
+                      {error}
+                    </p>
+                  ))}
+                  <div className="flex justify-end mt-1">
+                    <p className="text-xs text-muted-foreground">
+                      {bio.length}/500文字
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div className="flex justify-center sm:justify-end w-full">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-primary-600 text-white hover:bg-primary-600/90 w-full sm:w-auto px-8"
               >
-                表示名 <span className="text-red-500">*</span>
-              </label>
-              <div className="w-full">
-                <Input
-                  id="nickname"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="あなたの名前"
-                  maxLength={50}
-                  className={`w-full ${
-                    validationErrors.display_name ? "border-red-500" : ""
-                  }`}
-                  required
-                />
-              </div>
-              {validationErrors.display_name?.map((error, index) => (
-                <p key={index} className="mt-1 text-sm text-red-500 text-left">
-                  {error}
-                </p>
-              ))}
-              <p className="mt-1 text-xs text-muted-foreground text-left">
-                50文字以内で入力してください
-              </p>
+                {isLoading ? "保存中..." : "変更を保存"}
+              </Button>
             </div>
-
-            <div className="w-full">
-              <label htmlFor="bio" className="block mb-1 text-sm text-left">
-                自己紹介
-              </label>
-              <Textarea
-                id="bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="あなたの自己紹介"
-                rows={5}
-                maxLength={500}
-                className={`resize-none w-full ${
-                  validationErrors.bio ? "border-red-500" : ""
-                }`}
-              />
-              {validationErrors.bio?.map((error, index) => (
-                <p key={index} className="mt-1 text-sm text-red-500 text-left">
-                  {error}
-                </p>
-              ))}
-              <div className="flex justify-end mt-1">
-                <p className="text-xs text-muted-foreground">
-                  {bio.length}/500文字
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="flex justify-center sm:justify-end w-full">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="bg-primary-600 text-white hover:bg-primary-600/90 w-full sm:w-auto px-8"
-          >
-            {isLoading ? "保存中..." : "変更を保存"}
-          </Button>
-        </div>
-      </form>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

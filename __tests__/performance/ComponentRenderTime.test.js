@@ -37,6 +37,7 @@ jest.mock("@/lib/supabase/client", () => ({
     storage: {
       from: jest.fn().mockReturnValue({
         upload: jest.fn().mockResolvedValue({ error: null }),
+        remove: jest.fn().mockResolvedValue({ error: null }),
       }),
     },
     from: jest.fn().mockReturnValue({
@@ -72,7 +73,36 @@ jest.mock("@/components/ui/avatar", () => ({
 jest.mock("@/components/ui/card", () => ({
   Card: ({ children, ...rest }) => <div {...rest}>{children}</div>,
   CardContent: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardHeader: ({ children, ...rest }) => <div {...rest}>{children}</div>,
   CardTitle: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+  CardDescription: ({ children, ...rest }) => <div {...rest}>{children}</div>,
+}));
+
+// Input・Textarea・Buttonコンポーネントのモック
+jest.mock("@/components/ui/input", () => ({
+  Input: (props) => <input {...props} data-testid={props.id} />,
+}));
+
+jest.mock("@/components/ui/textarea", () => ({
+  Textarea: (props) => <textarea {...props} data-testid={props.id} />,
+}));
+
+jest.mock("@/components/ui/button", () => ({
+  Button: ({ children, ...props }) => <button {...props}>{children}</button>,
+}));
+
+// バリデーター関数のモック
+jest.mock("@/lib/validators/profile", () => ({
+  profileSchema: {
+    safeParse: jest.fn().mockReturnValue({ success: true }),
+  },
+}));
+
+// ファイルセキュリティ関数のモック
+jest.mock("@/lib/utils/file-security", () => ({
+  validateFileUpload: jest.fn().mockReturnValue({ isValid: true }),
+  validateFileContent: jest.fn().mockResolvedValue(true),
+  generateSecureFilePath: jest.fn().mockReturnValue("secure/path/file.jpg"),
 }));
 
 // Next.jsのLinkコンポーネントをモック

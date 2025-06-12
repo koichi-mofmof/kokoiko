@@ -78,15 +78,43 @@ export async function createCheckoutSession({
         .eq("user_id", userId);
       if (updateError) throw new Error("DB更新エラー: " + updateError.message);
     } else {
-      // 既存Customerのemailが異なる場合は同期
-      const customer = await stripe.customers.retrieve(stripeCustomerId);
-      if (
-        customer &&
-        typeof customer === "object" &&
-        "email" in customer &&
-        customer.email !== userEmail
-      ) {
-        await stripe.customers.update(stripeCustomerId, { email: userEmail });
+      // 既存Customerが存在するかどうか確認し、emailが異なる場合は同期
+      try {
+        const customer = await stripe.customers.retrieve(stripeCustomerId);
+        if (
+          customer &&
+          typeof customer === "object" &&
+          "email" in customer &&
+          customer.email !== userEmail
+        ) {
+          await stripe.customers.update(stripeCustomerId, { email: userEmail });
+        }
+      } catch (stripeError: unknown) {
+        // カスタマーが存在しない場合（例：削除済み）は新規作成
+        if (
+          stripeError instanceof Stripe.errors.StripeInvalidRequestError &&
+          stripeError.message.includes("No such customer")
+        ) {
+          console.log(
+            `Customer ${stripeCustomerId} does not exist, creating new customer for user ${userId}`
+          );
+
+          const customer = await stripe.customers.create({
+            email: userEmail,
+            metadata: { user_id: userId },
+          });
+          stripeCustomerId = customer.id;
+
+          const { error: updateError } = await supabase
+            .from("subscriptions")
+            .update({ stripe_customer_id: stripeCustomerId })
+            .eq("user_id", userId);
+          if (updateError)
+            throw new Error("DB更新エラー: " + updateError.message);
+        } else {
+          // その他のStripeエラーは再スロー
+          throw stripeError;
+        }
       }
     }
 
@@ -146,22 +174,111 @@ export async function createCustomerPortalSession(
 
     const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing`;
 
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: subscription.stripe_customer_id,
-      return_url: returnUrl,
-    });
+    try {
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: subscription.stripe_customer_id,
+        return_url: returnUrl,
+      });
 
-    if (!portalSession.url) {
-      throw new Error(
-        "カスタマーポータルセッションのURLが取得できませんでした。"
-      );
+      if (!portalSession.url) {
+        throw new Error(
+          "カスタマーポータルセッションのURLが取得できませんでした。"
+        );
+      }
+
+      return { url: portalSession.url };
+    } catch (stripeError: unknown) {
+      // カスタマーが存在しない場合の特別な処理
+      if (
+        stripeError instanceof Stripe.errors.StripeInvalidRequestError &&
+        stripeError.message.includes("No such customer")
+      ) {
+        throw new Error(
+          "お客様のアカウント情報に問題があります。サポートまでお問い合わせください。"
+        );
+      }
+      throw stripeError;
     }
-
-    return { url: portalSession.url };
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Portalセッション作成エラー";
     console.error(`[Error] createCustomerPortalSession: ${message}`);
     return { error: message };
+  }
+}
+
+/**
+ * 無効なStripeカスタマーIDをクリーンアップする関数
+ * @param userId Supabase AuthのユーザーID
+ */
+export async function cleanupInvalidCustomer(
+  userId: string
+): Promise<{ success: boolean; message: string }> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-05-28.basil",
+  });
+
+  try {
+    const { data: subscription, error: subError } = await supabase
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", userId)
+      .single();
+
+    if (subError || !subscription?.stripe_customer_id) {
+      return {
+        success: false,
+        message: "サブスクリプション情報が見つかりませんでした。",
+      };
+    }
+
+    // Stripeカスタマーの存在確認
+    try {
+      await stripe.customers.retrieve(subscription.stripe_customer_id);
+      return {
+        success: true,
+        message: "カスタマーIDは有効です。",
+      };
+    } catch (stripeError: unknown) {
+      if (
+        stripeError instanceof Stripe.errors.StripeInvalidRequestError &&
+        stripeError.message.includes("No such customer")
+      ) {
+        // 無効なカスタマーIDをクリア
+        const { error: updateError } = await supabase
+          .from("subscriptions")
+          .update({
+            stripe_customer_id: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", userId);
+
+        if (updateError) {
+          return {
+            success: false,
+            message: "データベースの更新に失敗しました。",
+          };
+        }
+
+        return {
+          success: true,
+          message: "無効なカスタマーIDをクリーンアップしました。",
+        };
+      }
+      throw stripeError;
+    }
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "予期しないエラーが発生しました。";
+    console.error(`[Error] cleanupInvalidCustomer: ${message}`);
+    return {
+      success: false,
+      message,
+    };
   }
 }

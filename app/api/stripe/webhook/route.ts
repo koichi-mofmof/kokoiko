@@ -157,6 +157,90 @@ export async function POST(req: NextRequest) {
         }
         break;
       }
+      case "customer.subscription.created": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const subscriptionId = subscription.id;
+        const customerId = subscription.customer as string;
+
+        try {
+          // カスタマーIDからuser_idを取得
+          const { data: existing, error: fetchError } = await supabase
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_customer_id", customerId)
+            .single();
+
+          if (fetchError) {
+            if (fetchError.code === "PGRST116") {
+              console.error(
+                `[${requestId}] No subscription record found for customer ${customerId}, cannot process subscription.created`
+              );
+            } else {
+              console.error(
+                `[${requestId}] Error fetching subscription for customer ${customerId}:`,
+                fetchError
+              );
+            }
+            break;
+          }
+
+          if (!existing) {
+            console.error(
+              `[${requestId}] No user found for customer ${customerId}`
+            );
+            break;
+          }
+
+          const userId = existing.user_id;
+          const firstItem = subscription.items.data[0];
+          const priceId = firstItem?.price.id;
+          const status = subscription.status;
+          const trialStart = subscription.trial_start
+            ? new Date(subscription.trial_start * 1000)
+            : null;
+          const trialEnd = subscription.trial_end
+            ? new Date(subscription.trial_end * 1000)
+            : null;
+          const currentPeriodStart = firstItem?.current_period_start
+            ? new Date(firstItem.current_period_start * 1000)
+            : null;
+          const currentPeriodEnd = firstItem?.current_period_end
+            ? new Date(firstItem.current_period_end * 1000)
+            : null;
+
+          // サブスクリプション情報を更新
+          const { error: updateError } = await supabase
+            .from("subscriptions")
+            .update({
+              stripe_subscription_id: subscriptionId,
+              stripe_price_id: priceId,
+              status,
+              trial_start: trialStart,
+              trial_end: trialEnd,
+              current_period_start: currentPeriodStart,
+              current_period_end: currentPeriodEnd,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (updateError) {
+            console.error(
+              `[${requestId}] Failed to update subscription for subscription.created:`,
+              updateError
+            );
+          } else {
+            console.log(
+              `[${requestId}] Successfully processed customer.subscription.created for user ${userId}`
+            );
+          }
+        } catch (error) {
+          console.error(
+            `[${requestId}] Error processing customer.subscription.created:`,
+            error
+          );
+        }
+        break;
+      }
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         const subscriptionId = subscription.id;
@@ -266,6 +350,7 @@ export async function POST(req: NextRequest) {
             .from("subscriptions")
             .update({
               status: "canceled",
+              stripe_subscription_id: null, // 削除されたサブスクリプションIDはクリア
               canceled_at: canceledAt,
               updated_at: new Date().toISOString(),
             })
@@ -454,6 +539,67 @@ export async function POST(req: NextRequest) {
         } catch (error) {
           console.error(
             `[${requestId}] Error processing invoice.payment_failed:`,
+            error
+          );
+        }
+        break;
+      }
+      case "customer.deleted": {
+        const customer = event.data.object as Stripe.Customer;
+        const customerId = customer.id;
+
+        try {
+          // customer_id を使って該当するユーザーを検索し、stripe_customer_id をクリア
+          const { data: existing, error: fetchError } = await supabase
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_customer_id", customerId)
+            .single();
+
+          if (fetchError) {
+            if (fetchError.code === "PGRST116") {
+              // レコードが見つからない場合は無視（既に削除済みまたは存在しない）
+              console.log(
+                `[${requestId}] Customer ${customerId} not found in subscriptions table, ignoring deletion event`
+              );
+            } else {
+              console.error(
+                `[${requestId}] Error fetching subscription for customer deletion:`,
+                fetchError
+              );
+            }
+            break;
+          }
+
+          if (!existing) {
+            console.log(
+              `[${requestId}] No subscription found for deleted customer ${customerId}`
+            );
+            break;
+          }
+
+          const userId = existing.user_id;
+          const { error: updateError } = await supabase
+            .from("subscriptions")
+            .update({
+              stripe_customer_id: null, // カスタマーが削除されたためIDをクリア
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (updateError) {
+            console.error(
+              `[${requestId}] Failed to clear customer ID for deleted customer:`,
+              updateError
+            );
+          } else {
+            console.log(
+              `[${requestId}] Successfully processed customer.deleted for user ${userId}, cleared customer ID ${customerId}`
+            );
+          }
+        } catch (error) {
+          console.error(
+            `[${requestId}] Error processing customer.deleted:`,
             error
           );
         }
