@@ -115,8 +115,9 @@ export async function middleware(request: NextRequest) {
     console.error("Authentication error in middleware:", sessionError);
   }
 
-  // 保護されたルートのリスト - より細かい制御
-  const protectedRoutes = ["/lists", "/settings", "/add-place"];
+  // 保護されたルートの細かい制御
+  const protectedRoutes = ["/settings", "/add-place"];
+  const protectedListRoutes = ["/lists"]; // マイリスト一覧のみ保護（個別リストは除外）
   const adminRoutes = ["/admin"];
   const apiRoutes = ["/api/protected"];
 
@@ -142,6 +143,21 @@ export async function middleware(request: NextRequest) {
 
   // Protected routes for authenticated users
   if (!session && protectedRoutes.some((route) => pathname.startsWith(route))) {
+    // Prevent potential redirect loops
+    if (pathname === "/login") {
+      return response;
+    }
+
+    // Sanitize redirect URL to prevent open redirects
+    const redirectUrl = new URL("/login", request.url);
+    const sanitizedRedirect =
+      pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/";
+    redirectUrl.searchParams.set("redirect_url", sanitizedRedirect);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // マイリスト一覧のみを保護（個別のリスト詳細は除外）
+  if (!session && protectedListRoutes.some((route) => pathname === route)) {
     // Prevent potential redirect loops
     if (pathname === "/login") {
       return response;

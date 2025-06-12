@@ -315,6 +315,7 @@ export async function joinListViaShareLink(
       .update({ permission })
       .eq("id", existing.id);
     if (updateError) {
+      console.error("Update error:", updateError);
       return { success: false, error: "参加処理中にエラーが発生しました。" };
     }
   } else {
@@ -326,17 +327,34 @@ export async function joinListViaShareLink(
       owner_id: ownerId,
     });
     if (insertError) {
+      console.error("Insert error:", insertError);
       return { success: false, error: "参加処理中にエラーが発生しました。" };
     }
   }
 
   // 3. list_share_tokensのcurrent_usesをインクリメント
+  // 現在の使用回数を取得してインクリメント
+  const { data: currentToken, error: getTokenError } = await supabase
+    .from("list_share_tokens")
+    .select("current_uses")
+    .eq("token", token)
+    .single();
+
+  if (getTokenError || !currentToken) {
+    return {
+      success: false,
+      error: "トークン情報の取得中にエラーが発生しました。",
+    };
+  }
+
+  const newCurrentUses = (currentToken.current_uses || 0) + 1;
   const { error: updateTokenError } = await supabase
     .from("list_share_tokens")
-    .update({ current_uses: supabase.rpc("increment", { x: 1 }) })
+    .update({ current_uses: newCurrentUses })
     .eq("token", token);
-  // 上記はPostgresのincrement関数が必要。なければcurrent_uses+1でupdateする実装に修正可。
+
   if (updateTokenError) {
+    console.error("Token update error:", updateTokenError);
     return {
       success: false,
       error: "利用回数の更新中にエラーが発生しました。",

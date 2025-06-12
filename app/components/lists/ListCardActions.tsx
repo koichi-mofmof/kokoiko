@@ -14,7 +14,7 @@ import {
   deleteList,
   fetchShareLinksForList,
 } from "@/lib/actions/lists";
-import { getListDetails, MyListForClient } from "@/lib/dal/lists";
+import { getListDetails, ListForClient } from "@/lib/dal/lists";
 import type { Database } from "@/types/supabase";
 import { Edit, MoreHorizontal, Share, Trash2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -25,7 +25,7 @@ import { ShareLinkIssuedDialog } from "./ShareLinkIssuedDialog";
 import { ShareSettingsDialog } from "./ShareSettingsDialog";
 
 type ListCardActionsProps = {
-  list: MyListForClient;
+  list: ListForClient;
   className?: string;
   onSuccess?: () => void;
 };

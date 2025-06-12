@@ -1,4 +1,5 @@
-import { MyListForClient } from "@/lib/dal/lists";
+import { ListForClient, Collaborator } from "@/lib/dal/lists";
+import type { Place } from "@/types";
 
 // Organization スキーマ（サイト情報）
 export function generateOrganizationSchema() {
@@ -62,9 +63,9 @@ export function generateBreadcrumbSchema(
 }
 
 // ItemList スキーマ（リスト情報）
-export function generateItemListSchema(list: MyListForClient) {
+export function generateItemListSchema(list: ListForClient) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const owner = list.collaborators.find((c) => c.isOwner);
+  const owner = list.collaborators.find((c: Collaborator) => c.isOwner);
 
   return {
     "@context": "https://schema.org",
@@ -74,13 +75,15 @@ export function generateItemListSchema(list: MyListForClient) {
       list.description || `${owner?.name || "ユーザー"}さんが作成したリスト`,
     url: `${baseUrl}/lists/${list.id}`,
     numberOfItems: list.places.length,
-    itemListElement: list.places.slice(0, 10).map((place, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: place.name,
-      description: place.address,
-      url: `${baseUrl}/lists/${list.id}/place/${place.id}`,
-    })),
+    itemListElement: list.places
+      .slice(0, 10)
+      .map((place: Place, index: number) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: place.name,
+        description: place.address,
+        url: `${baseUrl}/lists/${list.id}/place/${place.id}`,
+      })),
     author: {
       "@type": "Person",
       name: owner?.name || "ユーザー",

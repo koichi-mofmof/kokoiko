@@ -37,7 +37,7 @@ import {
   deleteShareLinkAction,
   updateShareLinkAction,
 } from "@/lib/actions/share-actions";
-import { MyListForClient } from "@/lib/dal/lists";
+import { ListForClient, Collaborator } from "@/lib/dal/lists";
 import type { Database } from "@/types/supabase";
 import { CheckCircle2, Copy, Info, Share2, XCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -58,7 +58,7 @@ export function ShareSettingsDialog({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  list: MyListForClient;
+  list: ListForClient;
   links: Partial<Database["public"]["Tables"]["list_share_tokens"]["Row"]>[];
   loading: boolean;
   error: string | null;
@@ -107,7 +107,6 @@ export function ShareSettingsDialog({
   >({});
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
-  const [sharedListNames, setSharedListNames] = useState<string[]>([]);
 
   // collaboratorsが変わるたびに初期化
   useEffect(() => {
@@ -120,7 +119,7 @@ export function ShareSettingsDialog({
         permissionChanged: boolean;
       }
     > = {};
-    list.collaborators.forEach((member) => {
+    list.collaborators.forEach((member: Collaborator) => {
       initialStates[member.id] = {
         localPermission: member.permission || "view",
         loading: false,
@@ -144,9 +143,6 @@ export function ShareSettingsDialog({
       result.upgradeRecommended
     ) {
       setShowUpgradeDialog(true);
-      setSharedListNames(
-        (result as { sharedListNames?: string[] }).sharedListNames || []
-      );
     }
   };
 
@@ -329,17 +325,6 @@ export function ShareSettingsDialog({
                   フリープランでは共有できるリストは{" "}
                   <span className="font-bold">1件まで</span> です。
                 </span>
-                <br />
-                {sharedListNames.length > 0 && (
-                  <div className="mt-2 ml-4">
-                    <span>現在共有中のリスト:</span>
-                    <ul className="list-disc list-inside mt-1 ml-5">
-                      {sharedListNames.map((name, idx) => (
-                        <li key={idx}>{name}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
                 <div className="mt-2">
                   <span className="font-semibold text-primary-700">
                     プレミアムプラン
@@ -505,7 +490,7 @@ export function ShareSettingsDialog({
           <h3 className="font-semibold mb-2 text-sm">共有メンバー管理</h3>
           <div className="flex flex-col gap-2">
             {list.collaborators && list.collaborators.length > 0 ? (
-              list.collaborators.map((member) => {
+              list.collaborators.map((member: Collaborator) => {
                 const state = memberStates[member.id] || {
                   localPermission: member.permission,
                   loading: false,

@@ -9,14 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { updateList } from "@/lib/actions/lists";
-import { MyListForClient } from "@/lib/dal/lists";
+import { ListForClient } from "@/lib/dal/lists";
 import { useState } from "react";
 import { ListFormComponent, ListFormData } from "./ListFormComponent";
 
 type EditListDialogProps = {
   isOpen: boolean;
   onClose: () => void;
-  list: MyListForClient;
+  list: ListForClient;
   onSuccess: () => void;
 };
 

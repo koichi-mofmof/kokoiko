@@ -4,9 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getStoragePublicUrl } from "@/lib/supabase/storage";
 import type { Place, User } from "@/types";
 import type { Database } from "@/types/supabase";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
-// Type definitions moved from MyPageDataLoader.tsx
+// ===================================
+// 🎯 RLS設計を活用した改善されたDAL
+// ===================================
+
+// Type definitions
 type PlaceRow = Database["public"]["Tables"]["places"]["Row"];
 
 export interface Collaborator extends User {
@@ -14,7 +17,7 @@ export interface Collaborator extends User {
   isOwner?: boolean;
 }
 
-export type MyListForClient = {
+export type ListForClient = {
   id: string;
   name: string;
   description: string | null;
@@ -28,22 +31,22 @@ export type MyListForClient = {
   permission?: string;
 };
 
-export interface MyPageData {
-  myListsForClient: MyListForClient[];
+export interface ListsPageData {
+  lists: ListForClient[];
   userId: string;
   error?: string;
 }
 
-// Helper function moved from MyPageDataLoader.tsx
+// ===================================
+// 🔧 Helper Functions
+// ===================================
+
 /**
- * Supabaseのplacesテーブルの行データをクライアントで使用するPlace型に変換します。
- * @param placeRow - Supabaseのplacesテーブルの行データ。
- * @param currentUserId - 現在のユーザーID。PlaceオブジェクトのcreatedByフィールドに設定されます。
- * @returns クライアントで使用するPlace型のオブジェクト。
+ * PlaceRowをPlace型に変換するヘルパー関数
  */
 const mapPlaceRowToPlace = (
   placeRow: PlaceRow,
-  currentUserId: string
+  currentUserId?: string
 ): Place => {
   return {
     id: placeRow.id,
@@ -60,7 +63,7 @@ const mapPlaceRowToPlace = (
     createdAt: placeRow.created_at ? new Date(placeRow.created_at) : new Date(),
     updatedAt: placeRow.updated_at ? new Date(placeRow.updated_at) : undefined,
     visited: "not_visited",
-    createdBy: currentUserId,
+    createdBy: currentUserId || "",
     imageUrl: undefined,
     rating: undefined,
     googlePlaceId: placeRow.google_place_id || undefined,
@@ -68,45 +71,228 @@ const mapPlaceRowToPlace = (
   };
 };
 
-// Data fetching functions moved and adapted from MyPageDataLoader.tsx
-/**
- * 特定のリストIDに紐づく場所のリストを取得します。
- * @param supabase - Supabaseクライアントインスタンス。
- * @param listId - 場所を取得する対象のリストID。
- * @param userId - 現在のユーザーID。取得した場所情報のcreatedByフィールドに設定されます。
- * @returns 指定されたリストに含まれる場所の配列 (Place[])。
- */
-async function fetchPlacesForList(
-  supabase: SupabaseClient<Database>,
-  listId: string,
-  userId: string
-): Promise<Place[]> {
-  const { data: listPlacesData, error: listPlacesError } = await supabase
-    .from("list_places")
-    .select(
-      `
-      id,
-      list_id,
-      place_id,
-      user_id,
-      visited_status,
-      places (*),
-      list_place_tags (
-        tags (id, name)
-      )
-    `
-    )
-    .eq("list_id", listId);
+// ===================================
+// 🎯 RLS活用型データ取得関数
+// ===================================
 
-  if (listPlacesError) {
-    console.error("Error fetching places for list:", listPlacesError);
+/**
+ * RLSを活用してリスト一覧を取得
+ * - RLSポリシーが自動的にアクセス権限をフィルタリング
+ * - アプリケーション層での複雑な権限チェックが不要
+ */
+export async function getAccessibleLists(
+  userId?: string
+): Promise<ListForClient[]> {
+  const supabase = await createClient();
+
+  if (!userId) return [];
+
+  try {
+    // 1. 自分が作成したリストを取得
+    const { data: ownedLists, error: ownedError } = await supabase
+      .from("place_lists")
+      .select(
+        `
+        id,
+        name,
+        description,
+        is_public,
+        created_at,
+        updated_at,
+        created_by
+      `
+      )
+      .eq("created_by", userId)
+      .order("created_at", { ascending: false });
+
+    if (ownedError) {
+      console.error("Error fetching owned lists:", ownedError);
+      return [];
+    }
+
+    // 2. 明示的に共有されたリストを取得
+    const { data: sharedListIds, error: sharedError } = await supabase
+      .from("shared_lists")
+      .select(
+        `
+        list_id,
+        permission,
+        place_lists!inner (
+          id,
+          name,
+          description,
+          is_public,
+          created_at,
+          updated_at,
+          created_by
+        )
+      `
+      )
+      .eq("shared_with_user_id", userId);
+
+    if (sharedError) {
+      console.error("Error fetching shared lists:", sharedError);
+      return [];
+    }
+
+    // 3. 結果をマージ
+    const allLists = [
+      ...(ownedLists || []).map((list) => ({ ...list, permission: "owner" })),
+      ...(sharedListIds || []).map((item) => {
+        const sharedItem = item as unknown as {
+          permission: string;
+          place_lists: {
+            id: string;
+            name: string;
+            description: string | null;
+            is_public: boolean | null;
+            created_at: string | null;
+            updated_at: string | null;
+            created_by: string;
+          };
+        };
+        return {
+          ...sharedItem.place_lists,
+          permission: sharedItem.permission,
+        };
+      }),
+    ];
+
+    // 4. 各リストの詳細情報を並列取得
+    const listsWithDetails = await Promise.all(
+      allLists.map(async (list) => {
+        const [places, collaborators] = await Promise.all([
+          getPlacesForList(list.id, userId),
+          getCollaboratorsForList(list.id, list.created_by),
+        ]);
+
+        return {
+          ...list,
+          places,
+          place_count: places.length,
+          collaborators,
+        };
+      })
+    );
+
+    return listsWithDetails.sort(
+      (a, b) =>
+        new Date(b.created_at || 0).getTime() -
+        new Date(a.created_at || 0).getTime()
+    );
+  } catch (error) {
+    console.error("Error in getAccessibleLists:", error);
     return [];
   }
+}
 
-  const places: Place[] = [];
-  if (listPlacesData && listPlacesData.length > 0) {
-    for (const lp of listPlacesData) {
-      // 型アサーションをより安全にするか、Zodなどでパースすることを推奨
+/**
+ * RLSを活用してリスト詳細を取得
+ * - 公開/非公開、認証/未認証を問わず統一的に処理
+ * - RLSポリシーが自動的にアクセス権限をチェック
+ */
+export async function getListDetails(
+  listId: string,
+  userId?: string
+): Promise<ListForClient | null> {
+  const supabase = await createClient();
+
+  try {
+    // RLSポリシーが自動的にアクセス権限をチェック
+    const { data: list, error } = await supabase
+      .from("place_lists")
+      .select(
+        `
+        id,
+        name,
+        description,
+        is_public,
+        created_at,
+        updated_at,
+        created_by
+      `
+      )
+      .eq("id", listId)
+      .single();
+
+    if (error || !list) {
+      // RLSポリシーによりアクセス拒否された場合もここに来る
+      return null;
+    }
+
+    // 詳細情報を並列取得
+    const [places, collaborators] = await Promise.all([
+      getPlacesForList(listId, userId || list.created_by),
+      getCollaboratorsForList(listId, list.created_by),
+    ]);
+
+    // 権限の判定
+    let permission = "view";
+    if (userId === list.created_by) {
+      permission = "owner";
+    } else if (userId) {
+      const { data: sharedEntry } = await supabase
+        .from("shared_lists")
+        .select("permission")
+        .eq("list_id", listId)
+        .eq("shared_with_user_id", userId)
+        .single();
+
+      if (sharedEntry?.permission === "edit") {
+        permission = "edit";
+      }
+    }
+
+    return {
+      ...list,
+      places,
+      place_count: places.length,
+      collaborators,
+      permission,
+    };
+  } catch (error) {
+    console.error("Error in getListDetails:", error);
+    return null;
+  }
+}
+
+/**
+ * RLSを活用してリストの場所一覧を取得
+ */
+async function getPlacesForList(
+  listId: string,
+  userId?: string
+): Promise<Place[]> {
+  const supabase = await createClient();
+
+  try {
+    // RLSポリシーが自動的にアクセス権限をチェック
+    const { data: listPlaces, error } = await supabase
+      .from("list_places")
+      .select(
+        `
+        id,
+        list_id,
+        place_id,
+        user_id,
+        visited_status,
+        places (*),
+        list_place_tags (
+          tags (id, name)
+        )
+      `
+      )
+      .eq("list_id", listId);
+
+    if (error) {
+      console.error("Error fetching places for list:", error);
+      return [];
+    }
+
+    if (!listPlaces) return [];
+
+    const places: Place[] = [];
+    for (const lp of listPlaces) {
       const listPlaceRow = lp as unknown as {
         id: string;
         list_id: string;
@@ -120,405 +306,334 @@ async function fetchPlacesForList(
       };
 
       if (listPlaceRow.places) {
-        const place = mapPlaceRowToPlace(
-          listPlaceRow.places, // PlaceRow型のはず
-          userId
-        );
+        const place = mapPlaceRowToPlace(listPlaceRow.places, userId);
         place.listPlaceId = listPlaceRow.id;
         place.visited = listPlaceRow.visited_status as
           | "visited"
           | "not_visited";
-
-        // タグ情報をマッピング
         place.tags = listPlaceRow.list_place_tags
           .map((lpt) => lpt.tags)
           .filter((tag) => tag !== null) as { id: string; name: string }[];
         places.push(place);
       }
     }
-  }
-  return places;
-}
 
-/**
- * 特定のリストIDに紐づくコラボレーター（共有ユーザー）のリストを取得します。
- * @param supabase - Supabaseクライアントインスタンス。
- * @param listId - コラボレーターを取得する対象のリストID。
- * @param ownerId - リストのオーナーID。コラボレーター情報にisOwnerフラグを設定するために使用されます。
- * @returns 指定されたリストのコラボレーターの配列 (Collaborator[])。
- */
-export async function fetchCollaboratorsForList(
-  supabase: SupabaseClient<Database>,
-  listId: string,
-  ownerId: string
-): Promise<Collaborator[]> {
-  try {
-    const { data: shared } = await supabase
-      .from("shared_lists")
-      .select("shared_with_user_id, permission")
-      .eq("list_id", listId);
-
-    if (!shared || shared.length === 0) {
-      return [];
-    }
-
-    const userIds = shared.map((shared) => shared.shared_with_user_id);
-
-    const { data: userData, error: userError } = await supabase
-      .from("profiles")
-      .select("id, display_name, avatar_url")
-      .in("id", userIds);
-
-    if (userError) {
-      console.error("Error fetching profile data:", userError);
-      return [];
-    }
-
-    const collaboratorsPromises =
-      userData?.map(async (user) => {
-        const avatarUrl = user.avatar_url
-          ? await getStoragePublicUrl(user.avatar_url)
-          : undefined;
-        const sharedInfo = shared.find(
-          (s) => s.shared_with_user_id === user.id
-        );
-        return {
-          id: user.id,
-          name: user.display_name || "",
-          email: "", // Assuming email is not fetched or needed here
-          avatarUrl,
-          isOwner: user.id === ownerId,
-          permission: sharedInfo?.permission || undefined,
-        } as Collaborator;
-      }) || [];
-
-    const collaborators: Collaborator[] = await Promise.all(
-      collaboratorsPromises
-    );
-    return collaborators;
+    return places;
   } catch (error) {
-    console.error("Unexpected error in fetchCollaboratorsForList:", error);
+    console.error("Error in getPlacesForList:", error);
     return [];
   }
 }
 
-// Main data fetching function for MyPage
 /**
- * マイページに必要なデータをまとめて取得します。
- * 具体的には、指定されたユーザーIDに基づいてアクセス可能なすべてのリスト、
- * 各リストに含まれる場所、および各リストのコラボレーター情報を取得します。
- * @param userId - データ取得の対象となるユーザーID。
- * @returns マイページ表示に必要なデータ (MyPageData)。成功時はmyListsForClientとuserIdを、エラー時はerrorメッセージを含むオブジェクトを返します。
+ * RLSを活用してコラボレーター一覧を取得
  */
-export async function fetchMyPageData(userId: string): Promise<MyPageData> {
+export async function getCollaboratorsForList(
+  listId: string,
+  ownerId: string
+): Promise<Collaborator[]> {
   const supabase = await createClient();
 
   try {
-    const { data: accessibleLists, error: accessError } = await supabase
-      .from("user_accessible_lists")
-      .select("*")
-      .order("created_at", { ascending: false });
+    // 所有者と共有されたユーザーの両方を取得
+    const [ownerResult, sharedResult] = await Promise.all([
+      // 所有者の情報を取得
+      supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .eq("id", ownerId)
+        .single(),
+      // 共有されたユーザーを取得
+      supabase
+        .from("shared_lists")
+        .select("shared_with_user_id, permission")
+        .eq("list_id", listId),
+    ]);
 
-    if (accessError) {
-      console.error("Error fetching accessible lists:", accessError);
-      return {
-        myListsForClient: [],
-        userId: userId,
-        error: "リストの取得中にエラーが発生しました。",
-      };
-    }
+    const collaborators: Collaborator[] = [];
 
-    if (!accessibleLists) {
-      return { myListsForClient: [], userId: userId };
-    }
+    // 所有者を追加
+    if (ownerResult.data && !ownerResult.error) {
+      const ownerAvatarUrl = ownerResult.data.avatar_url
+        ? await getStoragePublicUrl(ownerResult.data.avatar_url)
+        : undefined;
 
-    const myListsForClient: MyListForClient[] = [];
-
-    for (const list of accessibleLists) {
-      const places = await fetchPlacesForList(supabase, list.id, userId);
-      const collaboratorsWithoutOwner = await fetchCollaboratorsForList(
-        supabase,
-        list.id,
-        list.created_by
-      );
-
-      let ownerProfile: Collaborator | undefined =
-        collaboratorsWithoutOwner.find((c) => c.id === list.created_by);
-
-      if (!ownerProfile && list.created_by) {
-        // Check if list.created_by is not null
-        const { data: ownerData } = await supabase
-          .from("profiles_decrypted")
-          .select("id, display_name, avatar_url")
-          .eq("id", list.created_by)
-          .single();
-        if (ownerData) {
-          const avatarUrl = ownerData.avatar_url
-            ? await getStoragePublicUrl(ownerData.avatar_url)
-            : undefined;
-          ownerProfile = {
-            id: ownerData.id,
-            name: ownerData.display_name || "",
-            email: "",
-            avatarUrl,
-            isOwner: true,
-          };
-        }
-      }
-
-      const finalCollaborators: Collaborator[] = ownerProfile
-        ? [
-            ownerProfile,
-            ...collaboratorsWithoutOwner.filter(
-              (c) => c.id !== list.created_by
-            ),
-          ]
-        : [...collaboratorsWithoutOwner];
-
-      // Ensure owner is always present if created_by is the current user and not in collaborators
-      if (
-        list.created_by === userId &&
-        !finalCollaborators.some((c) => c.id === userId && c.isOwner)
-      ) {
-        const { data: currentUserProfileData } = await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url")
-          .eq("id", userId)
-          .single();
-        if (currentUserProfileData) {
-          const avatarUrl = currentUserProfileData.avatar_url
-            ? await getStoragePublicUrl(currentUserProfileData.avatar_url)
-            : undefined;
-          const currentUserAsOwner: Collaborator = {
-            id: currentUserProfileData.id,
-            name: currentUserProfileData.display_name || "",
-            email: "",
-            avatarUrl,
-            isOwner: true,
-          };
-          // Add if not already present (e.g. as a collaborator)
-          if (!finalCollaborators.some((c) => c.id === userId)) {
-            finalCollaborators.unshift(currentUserAsOwner); // Add to the beginning
-          } else {
-            // If present but not marked as owner, update
-            const existingUserIndex = finalCollaborators.findIndex(
-              (c) => c.id === userId
-            );
-            finalCollaborators[existingUserIndex] = {
-              ...finalCollaborators[existingUserIndex],
-              ...currentUserAsOwner,
-            };
-          }
-        }
-      }
-
-      myListsForClient.push({
-        id: list.id,
-        name: list.name || "リスト名未設定",
-        description: list.description,
-        is_public: list.is_public,
-        created_at: list.created_at,
-        updated_at: list.updated_at,
-        created_by: list.created_by,
-        places,
-        place_count: places.length,
-        collaborators: finalCollaborators,
-        permission:
-          list.access_type === "owner"
-            ? "owner"
-            : collaboratorsWithoutOwner.find((c) => c.id === userId)
-                ?.permission,
+      collaborators.push({
+        id: ownerResult.data.id,
+        name: ownerResult.data.display_name || "",
+        email: "",
+        avatarUrl: ownerAvatarUrl,
+        isOwner: true,
+        permission: "owner",
       });
     }
 
-    return { myListsForClient, userId: userId };
+    // 共有ユーザーを追加
+    if (
+      sharedResult.data &&
+      !sharedResult.error &&
+      sharedResult.data.length > 0
+    ) {
+      const userIds = sharedResult.data.map((s) => s.shared_with_user_id);
+
+      const { data: userData, error: userError } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", userIds);
+
+      if (!userError && userData) {
+        const sharedCollaborators = await Promise.all(
+          userData.map(async (user) => {
+            const avatarUrl = user.avatar_url
+              ? await getStoragePublicUrl(user.avatar_url)
+              : undefined;
+            const sharedInfo = sharedResult.data.find(
+              (s) => s.shared_with_user_id === user.id
+            );
+
+            return {
+              id: user.id,
+              name: user.display_name || "",
+              email: "",
+              avatarUrl,
+              isOwner: false,
+              permission: sharedInfo?.permission || "view",
+            } as Collaborator;
+          })
+        );
+
+        collaborators.push(...sharedCollaborators);
+      }
+    }
+
+    return collaborators;
   } catch (error) {
-    console.error("Error in fetchMyPageData:", error);
+    console.error("Error in getCollaboratorsForList:", error);
+    return [];
+  }
+}
+
+// ===================================
+// 🎯 高レベルAPI関数
+// ===================================
+
+/**
+ * マイページ用データ取得（認証済みユーザー向け）
+ */
+export async function getMyPageData(userId: string): Promise<ListsPageData> {
+  try {
+    const lists = await getAccessibleLists(userId);
     return {
-      myListsForClient: [],
-      userId: userId,
-      error: "ページの読み込み中に予期せぬエラーが発生しました。",
+      lists,
+      userId,
+    };
+  } catch (error) {
+    console.error("Error in getMyPageData:", error);
+    return {
+      lists: [],
+      userId,
+      error: "ページの読み込み中にエラーが発生しました。",
     };
   }
 }
 
-// Function to fetch details for a specific list
 /**
- * 特定のリストIDに基づいてリスト詳細情報を取得します。
- * これには、リストの基本情報、含まれる場所のリスト、およびコラボレーター（オーナーを含む）のリストが含まれます。
- * @param listId 取得するリストのID。
- * @param userId 現在のユーザーID。場所情報や権限の判定に使用されます。
- * @returns リスト詳細情報 (MyListForClient) 、またはリストが見つからない場合は null。
+ * 公開リスト用データ取得（未ログインユーザー向け）
  */
-export async function getListDetails(
-  listId: string,
-  userId: string
-): Promise<MyListForClient | null> {
+export async function getPublicListData(
+  listId: string
+): Promise<ListForClient | null> {
+  // RLSポリシーが自動的に公開リストのみを返すため、
+  // getListDetailsと同じ関数を使用可能
+  return getListDetails(listId);
+}
+
+// ===================================
+// 🔍 RLS活用型検索・フィルタリング関数
+// ===================================
+
+/**
+ * タグによるリスト検索（RLS適用）
+ */
+export async function searchListsByTag(
+  tagName: string,
+  userId?: string
+): Promise<ListForClient[]> {
   const supabase = await createClient();
 
   try {
-    // 1. Fetch basic list information
-    const { data: listData, error: listError } = await supabase
-      .from("place_lists")
+    // RLSポリシーが自動的にアクセス権限をフィルタリング
+    const { data: listIds, error } = await supabase
+      .from("list_place_tags")
       .select(
-        "id, name, description, is_public, created_at, updated_at, created_by"
+        `
+        list_places!inner (
+          list_id,
+          place_lists!inner (
+            id,
+            name,
+            description,
+            is_public,
+            created_at,
+            updated_at,
+            created_by
+          )
+        ),
+        tags!inner (name)
+      `
       )
-      .eq("id", listId)
-      .single();
+      .eq("tags.name", tagName);
 
-    if (listError || !listData) {
-      console.warn(
-        `Error fetching list details for listId ${listId}:`,
-        listError
-      );
-      return null;
+    if (error) {
+      console.error("Error searching lists by tag:", error);
+      return [];
     }
 
-    // 2. アクセス権限チェック
-    let permission: string = "view"; // デフォルトはviewに統一
-    let hasAccess = false;
-
-    if (listData.is_public) {
-      // 公開リスト: 誰でもアクセス可
-      hasAccess = true;
-      if (listData.created_by === userId) {
-        permission = "owner";
-      } else {
-        // shared_listsでedit権限があればpermissionを上書き
-        const { data: sharedEntry } = await supabase
-          .from("shared_lists")
-          .select("permission")
-          .eq("list_id", listId)
-          .eq("shared_with_user_id", userId)
-          .single();
-        if (sharedEntry && sharedEntry.permission === "edit") {
-          permission = "edit";
-        } else {
-          permission = "view";
-        }
-      }
-    } else {
-      // 非公開リスト: オーナーまたはshared_listsでview/edit権限が必要
-      if (listData.created_by === userId) {
-        hasAccess = true;
-        permission = "owner";
-      } else {
-        // shared_listsを参照
-        const { data: sharedEntry } = await supabase
-          .from("shared_lists")
-          .select("permission")
-          .eq("list_id", listId)
-          .eq("shared_with_user_id", userId)
-          .single();
-        if (
-          sharedEntry &&
-          (sharedEntry.permission === "view" ||
-            sharedEntry.permission === "edit")
-        ) {
-          hasAccess = true;
-          permission = sharedEntry.permission;
-        }
-      }
-    }
-
-    if (!hasAccess) {
-      // アクセス権限なし
-      console.warn(
-        `User ${userId} attempted to access list ${listId} without permission.`
-      );
-      return null;
-    }
-
-    // 3. Fetch places for the list
-    const places = await fetchPlacesForList(supabase, listId, userId);
-
-    // 4. Fetch collaborators
-    const collaboratorsWithoutOwner = await fetchCollaboratorsForList(
-      supabase,
-      listId,
-      listData.created_by
+    // 重複を除去してリスト詳細を取得
+    const uniqueListIds = Array.from(
+      new Set(
+        listIds?.flatMap((item) =>
+          (
+            item as unknown as {
+              list_places: { place_lists: { id: string }[] };
+            }
+          ).list_places.place_lists.map((list) => list.id)
+        ) || []
+      )
     );
 
-    let ownerProfile: Collaborator | undefined;
-    ownerProfile = collaboratorsWithoutOwner.find(
-      (c) => c.id === listData.created_by && c.isOwner
+    const lists = await Promise.all(
+      uniqueListIds.map((listId) => getListDetails(listId, userId))
     );
-    if (!ownerProfile && listData.created_by) {
-      const { data: ownerDataFromProfiles } = await supabase
-        .from("profiles_decrypted")
-        .select("id, display_name, avatar_url")
-        .eq("id", listData.created_by)
-        .single();
-      if (ownerDataFromProfiles) {
-        const avatarUrl = ownerDataFromProfiles.avatar_url
-          ? await getStoragePublicUrl(ownerDataFromProfiles.avatar_url)
-          : undefined;
-        ownerProfile = {
-          id: ownerDataFromProfiles.id,
-          name: ownerDataFromProfiles.display_name || "",
-          email: "",
-          avatarUrl,
-          isOwner: true,
-        };
-      }
+
+    return lists.filter((list): list is ListForClient => list !== null);
+  } catch (error) {
+    console.error("Error in searchListsByTag:", error);
+    return [];
+  }
+}
+
+/**
+ * 場所名によるリスト検索（RLS適用）
+ */
+export async function searchListsByPlace(
+  placeName: string,
+  userId?: string
+): Promise<ListForClient[]> {
+  const supabase = await createClient();
+
+  try {
+    // RLSポリシーが自動的にアクセス権限をフィルタリング
+    const { data: listIds, error } = await supabase
+      .from("list_places")
+      .select(
+        `
+        list_id,
+        places!inner (name),
+        place_lists!inner (
+          id,
+          name,
+          description,
+          is_public,
+          created_at,
+          updated_at,
+          created_by
+        )
+      `
+      )
+      .ilike("places.name", `%${placeName}%`);
+
+    if (error) {
+      console.error("Error searching lists by place:", error);
+      return [];
     }
-    const finalCollaborators: Collaborator[] = ownerProfile
-      ? [
-          ownerProfile,
-          ...collaboratorsWithoutOwner.filter(
-            (c) => c.id !== listData.created_by
-          ),
-        ]
-      : [...collaboratorsWithoutOwner];
-    if (
-      listData.created_by === userId &&
-      !finalCollaborators.some((c) => c.id === userId && c.isOwner)
-    ) {
-      const currentUserAsOwnerInCollaborators = finalCollaborators.find(
-        (c) => c.id === userId
-      );
-      if (currentUserAsOwnerInCollaborators) {
-        currentUserAsOwnerInCollaborators.isOwner = true;
-      } else {
-        const { data: currentUserProfileData } = await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url")
-          .eq("id", userId)
-          .single();
-        if (currentUserProfileData) {
-          const avatarUrl = currentUserProfileData.avatar_url
-            ? await getStoragePublicUrl(currentUserProfileData.avatar_url)
-            : undefined;
-          const currentUserAsOwner: Collaborator = {
-            id: currentUserProfileData.id,
-            name: currentUserProfileData.display_name || "",
-            email: "",
-            avatarUrl,
-            isOwner: true,
-          };
-          finalCollaborators.unshift(currentUserAsOwner);
-        }
-      }
-    }
+
+    // 重複を除去してリスト詳細を取得
+    const uniqueListIds = Array.from(
+      new Set(
+        listIds?.map(
+          (item) =>
+            (item as unknown as { place_lists: { id: string } }).place_lists.id
+        ) || []
+      )
+    );
+
+    const lists = await Promise.all(
+      uniqueListIds.map((listId) => getListDetails(listId, userId))
+    );
+
+    return lists.filter((list): list is ListForClient => list !== null);
+  } catch (error) {
+    console.error("Error in searchListsByPlace:", error);
+    return [];
+  }
+}
+
+// ===================================
+// 🎯 統計情報取得関数（RLS適用）
+// ===================================
+
+/**
+ * ユーザーのリスト統計情報を取得
+ */
+export async function getUserListStats(userId: string) {
+  const supabase = await createClient();
+
+  try {
+    // RLSポリシーが自動的にアクセス権限をフィルタリング
+    const [ownedLists, sharedLists, totalPlaces] = await Promise.all([
+      // 自分が作成したリスト数
+      supabase
+        .from("place_lists")
+        .select("id", { count: "exact" })
+        .eq("created_by", userId),
+
+      // 共有されているリスト数
+      supabase
+        .from("shared_lists")
+        .select("id", { count: "exact" })
+        .eq("shared_with_user_id", userId),
+
+      // アクセス可能な総場所数
+      supabase.from("list_places").select("id", { count: "exact" }),
+    ]);
 
     return {
-      id: listData.id,
-      name: listData.name || "リスト名未設定",
-      description: listData.description,
-      is_public: listData.is_public,
-      created_at: listData.created_at,
-      updated_at: listData.updated_at,
-      created_by: listData.created_by,
-      places,
-      place_count: places.length,
-      collaborators: finalCollaborators,
-      permission: permission,
+      ownedListsCount: ownedLists.count || 0,
+      sharedListsCount: sharedLists.count || 0,
+      totalPlacesCount: totalPlaces.count || 0,
     };
   } catch (error) {
-    console.error(
-      `Unexpected error in getListDetails for listId ${listId}:`,
-      error
-    );
-    return null;
+    console.error("Error in getUserListStats:", error);
+    return {
+      ownedListsCount: 0,
+      sharedListsCount: 0,
+      totalPlacesCount: 0,
+    };
   }
+}
+
+// ===================================
+// 🔄 レガシー関数との互換性
+// ===================================
+
+/**
+ * 既存のfetchMyPageData関数との互換性を保つ
+ * @deprecated 新しいgetMyPageData関数を使用してください
+ */
+export async function fetchMyPageData(userId: string) {
+  const result = await getMyPageData(userId);
+  return {
+    myListsForClient: result.lists,
+    userId: result.userId,
+    error: result.error,
+  };
+}
+
+/**
+ * 既存のgetPublicListDetails関数との互換性を保つ
+ * @deprecated 新しいgetPublicListData関数を使用してください
+ */
+export async function getPublicListDetails(listId: string) {
+  return getPublicListData(listId);
 }

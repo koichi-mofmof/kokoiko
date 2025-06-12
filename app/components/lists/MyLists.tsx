@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { MyListForClient as MyListClientData } from "@/lib/dal/lists";
+import { ListForClient as MyListClientData } from "@/lib/dal/lists";
 import { ArrowDown, ArrowUp, ListFilter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CreateListModal } from "./CreateListModal";

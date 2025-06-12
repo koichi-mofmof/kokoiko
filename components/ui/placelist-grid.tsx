@@ -15,7 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MyListForClient } from "@/lib/dal/lists";
+import { ListForClient } from "@/lib/dal/lists";
 import type { Place, User } from "@/types";
 import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import Link from "next/link";
@@ -275,7 +275,7 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                   <Card className="overflow-hidden h-full flex flex-col transition-all duration-200 ease-in-out group-hover:shadow-lg group-hover:-translate-y-1 relative">
                     <div className="absolute top-2 right-2 z-10">
                       <ListCardActions
-                        list={list as unknown as MyListForClient}
+                        list={list as unknown as ListForClient}
                       />
                     </div>
                     <CardContent className="p-4 flex flex-col flex-grow">

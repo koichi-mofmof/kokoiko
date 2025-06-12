@@ -117,7 +117,7 @@ export default function RankingView({
           />
         ) : (
           <div className="text-center py-10">
-            <p className="text-sm md:text-base text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               このリストにはまだランキングが作成されていません。
             </p>
           </div>
@@ -150,7 +150,7 @@ export default function RankingView({
         </div>
       ) : (
         <div className="text-center py-10">
-          <p className="text-sm md:text-base text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             このリストにはまだランキングが作成されていません。
           </p>
           {(permission === "edit" || permission === "owner") && (

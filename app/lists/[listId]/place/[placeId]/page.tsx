@@ -40,14 +40,16 @@ export async function generateMetadata({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return {
-      title: "ClippyMap",
-      description: "行きたい場所を共有できるサービス",
-    };
+  // ログインユーザーまたは未ログインかで処理を分岐
+  let list = null;
+  if (user) {
+    list = await getListDetails(listId, user.id);
+  } else {
+    // 未ログインの場合は公開リストのみ取得
+    const { getPublicListData } = await import("@/lib/dal/lists");
+    list = await getPublicListData(listId);
   }
 
-  const list = await getListDetails(listId, user.id);
   if (!list?.places) {
     return {
       title: "ClippyMap",
@@ -104,17 +106,28 @@ export default async function PlaceDetailPage({
   params,
 }: PlaceDetailPageProps) {
   const { listId, placeId } = await params;
-  const userProfileResult = await fetchAuthenticatedUserWithProfile();
-  if (!userProfileResult.userWithProfile) notFound();
-  const user = userProfileResult.userWithProfile;
 
   const supabase = await createClient();
   const {
     data: { user: supabaseUser },
   } = await supabase.auth.getUser();
-  if (!supabaseUser) notFound();
 
-  const list = await getListDetails(listId, supabaseUser.id);
+  // ログインユーザーまたは未ログインかで処理を分岐
+  let list = null;
+  let user = null;
+
+  if (supabaseUser) {
+    // ログインユーザーの場合
+    const userProfileResult = await fetchAuthenticatedUserWithProfile();
+    if (!userProfileResult.userWithProfile) notFound();
+    user = userProfileResult.userWithProfile;
+    list = await getListDetails(listId, supabaseUser.id);
+  } else {
+    // 未ログインの場合は公開リストのみ取得
+    const { getPublicListData } = await import("@/lib/dal/lists");
+    list = await getPublicListData(listId);
+  }
+
   if (!list || !list.places) notFound();
   const place = list.places.find((p) => p.id === placeId);
   if (!place) notFound();
@@ -132,7 +145,7 @@ export default async function PlaceDetailPage({
   // 構造化データの生成
   const breadcrumbs = [
     { name: "ホーム", url: "/" },
-    { name: "マイリスト", url: "/lists" },
+    ...(user ? [{ name: "マイリスト", url: "/lists" }] : []),
     { name: list.name, url: `/lists/${listId}` },
     { name: place.name, url: `/lists/${listId}/place/${placeId}` },
   ];
@@ -238,13 +251,15 @@ export default async function PlaceDetailPage({
                       commentUser={list.collaborators?.find(
                         (c) => c.id === comment.user_id
                       )}
-                      isMyComment={comment.user_id === user.userId}
+                      isMyComment={
+                        user ? comment.user_id === user.userId : false
+                      }
                     />
                   ))}
                 </div>
               )}
             </div>
-            {place.listPlaceId && canEditOrDelete && (
+            {place.listPlaceId && canEditOrDelete && user && (
               <AddCommentForm
                 listPlaceId={place.listPlaceId}
                 displayName={user.displayName}

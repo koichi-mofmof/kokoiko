@@ -1,7 +1,13 @@
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function NoAccess() {
+export default async function NoAccess() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
@@ -11,9 +17,15 @@ export default function NoAccess() {
         <br />
         リストのオーナーまたは共有ユーザーのみが閲覧できます。
       </p>
-      <Link href="/lists" className="text-primary-600 hover:underline">
-        マイリスト一覧に戻る
-      </Link>
+      {user ? (
+        <Link href="/lists" className="text-primary-600 hover:underline">
+          マイリスト一覧に戻る
+        </Link>
+      ) : (
+        <Link href="/" className="text-primary-600 hover:underline">
+          ホームに戻る
+        </Link>
+      )}
     </div>
   );
 }
