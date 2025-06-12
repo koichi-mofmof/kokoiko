@@ -409,9 +409,9 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="w-full max-w-5xl mx-auto"
+            className="w-full max-w-7xl mx-auto"
           >
-            <div className="relative w-full max-w-5xl mx-auto">
+            <div className="relative w-full max-w-7xl mx-auto">
               <Carousel
                 opts={{
                   align: "start",
