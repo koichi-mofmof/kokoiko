@@ -10,6 +10,11 @@ export interface Place {
   updatedAt?: Date;
   visited: "visited" | "not_visited";
   createdBy: string;
+  createdByUser?: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
   imageUrl?: string;
   rating?: number;
   googlePlaceId?: string;

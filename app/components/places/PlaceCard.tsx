@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Place } from "@/types";
 import { Check, Circle, MapPin, Tag, X } from "lucide-react";
@@ -52,9 +53,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
       >
         <div className="p-3 sm:p-4 flex flex-col min-h-[160px]">
           <div className="relative flex items-start justify-between mb-1">
-            <h3 className="sm:text-lg font-medium text-neutral-800 line-clamp-1 pr-8">
-              {place.name}
-            </h3>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <h3 className="sm:text-lg font-medium text-neutral-800 line-clamp-1 flex-1">
+                {place.name}
+              </h3>
+            </div>
             {onClose && (
               <button
                 type="button"
@@ -62,7 +65,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                   e.stopPropagation();
                   onClose();
                 }}
-                className="absolute right-0 top-0 p-1 rounded-full hover:bg-neutral-100 focus:outline-none"
+                className="ml-2 p-1 rounded-full hover:bg-neutral-100 focus:outline-none flex-shrink-0"
                 aria-label="閉じる"
                 tabIndex={0}
               >
@@ -91,17 +94,34 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
             </div>
           )}
           {visitStatusElement}
-          <div className="flex-grow" />
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDetailClick}
-              tabIndex={0}
-              aria-label="詳細を見る"
-            >
-              詳細を見る
-            </Button>
+          <div className="inline-flex justify-between mt-3">
+            {place.createdByUser && (
+              <div
+                title={`${place.createdByUser.name}さんが追加`}
+                className="flex items-center gap-2"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={place.createdByUser.avatarUrl}
+                    alt={place.createdByUser.name}
+                  />
+                  <AvatarFallback className="text-xs bg-primary-100 text-primary-700">
+                    {place.createdByUser.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDetailClick}
+                tabIndex={0}
+                aria-label="詳細を見る"
+              >
+                詳細を見る
+              </Button>
+            </div>
           </div>
         </div>
       </div>

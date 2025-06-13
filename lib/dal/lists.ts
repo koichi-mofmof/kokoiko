@@ -291,6 +291,32 @@ async function getPlacesForList(
 
     if (!listPlaces) return [];
 
+    // ユーザー情報を別途取得
+    const userIds = [
+      ...new Set(
+        listPlaces.map((lp) => {
+          const row = lp as { user_id: string };
+          return row.user_id;
+        })
+      ),
+    ];
+    let usersData: {
+      id: string;
+      display_name: string | null;
+      avatar_url: string | null;
+    }[] = [];
+
+    if (userIds.length > 0) {
+      const { data: users, error: usersError } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", userIds);
+
+      if (!usersError && users) {
+        usersData = users;
+      }
+    }
+
     const places: Place[] = [];
     for (const lp of listPlaces) {
       const listPlaceRow = lp as unknown as {
@@ -314,6 +340,24 @@ async function getPlacesForList(
         place.tags = listPlaceRow.list_place_tags
           .map((lpt) => lpt.tags)
           .filter((tag) => tag !== null) as { id: string; name: string }[];
+
+        // 登録者情報を追加
+        place.createdBy = listPlaceRow.user_id;
+        const userProfile = usersData.find(
+          (u) => u.id === listPlaceRow.user_id
+        );
+        if (userProfile) {
+          const avatarUrl = userProfile.avatar_url
+            ? await getStoragePublicUrl(userProfile.avatar_url)
+            : undefined;
+
+          place.createdByUser = {
+            id: userProfile.id,
+            name: userProfile.display_name || "匿名ユーザー",
+            avatarUrl,
+          };
+        }
+
         places.push(place);
       }
     }

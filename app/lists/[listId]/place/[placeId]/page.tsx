@@ -2,6 +2,7 @@ import AddCommentForm from "@/app/components/lists/AddCommentForm";
 import CommentItem from "@/app/components/lists/CommentItem";
 import EditPlaceDialogButton from "@/app/components/places/EditPlaceDialogButton";
 import JsonLd from "@/components/seo/JsonLd";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { getCommentsByListPlaceId } from "@/lib/actions/place-actions";
@@ -20,6 +21,7 @@ import {
   ExternalLink,
   MapPin,
   Tag,
+  User,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -174,6 +176,7 @@ export default async function PlaceDetailPage({
             <CardTitle className="text-neutral-800 sm:text-xl mb-1">
               {place.name}
             </CardTitle>
+
             <div className="flex items-center text-xs sm:text-sm text-neutral-500 mb-2">
               <MapPin className="h-4 w-4 mr-1" />
               <span>{place.address}</span>
@@ -265,6 +268,22 @@ export default async function PlaceDetailPage({
                 displayName={user.displayName}
                 avatarUrl={user.avatarUrl || undefined}
               />
+            )}
+
+            {/* 登録者情報 */}
+            {place.createdByUser && (
+              <div className="flex items-center gap-2 mt-6 text-xs sm:text-sm text-neutral-500">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage
+                    src={place.createdByUser.avatarUrl}
+                    alt={place.createdByUser.name}
+                  />
+                  <AvatarFallback className="text-xs bg-neutral-100 text-neutral-600">
+                    {place.createdByUser.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{place.createdByUser.name}さんが追加</span>
+              </div>
             )}
           </CardContent>
         </Card>

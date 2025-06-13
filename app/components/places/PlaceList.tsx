@@ -1,4 +1,5 @@
 "use client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Place } from "@/types";
 import { Check, ChevronRight, Circle, MapPin, Tag } from "lucide-react";
@@ -53,50 +54,58 @@ const PlaceList: React.FC<PlaceListProps> = ({
               }
             }}
           >
-            <CardContent className="flex-1 py-4 overflow-hidden">
-              <div className="flex items-start">
-                <div className="ml-3 flex-grow min-w-0">
-                  <div className="flex justify-between">
-                    <CardTitle className="text-sm font-medium text-neutral-800">
-                      {place.name}
-                    </CardTitle>
-                  </div>
-                  <div className="mt-1 flex items-center text-xs text-neutral-500 w-full gap-2 overflow-hidden">
-                    <span className="flex items-center min-w-0 flex-1 overflow-hidden">
-                      <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span className="truncate min-w-0 text-xs sm:text-sm text-neutral-600">
-                        {place.address}
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {place.tags.map((tagObj, index) => (
+            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center flex-1 min-w-0">
+              <div className="flex flex-col flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <CardTitle className="text-base sm:text-lg font-medium text-neutral-800 line-clamp-1 flex-1">
+                    {place.name}
+                  </CardTitle>
+                  {place.createdByUser && (
+                    <div
+                      title={`${place.createdByUser.name}さんが追加`}
+                      className="flex-shrink-0"
+                    >
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage
+                          src={place.createdByUser.avatarUrl}
+                          alt={place.createdByUser.name}
+                        />
+                        <AvatarFallback className="text-xs bg-primary-100 text-primary-700">
+                          {place.createdByUser.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center text-xs sm:text-sm text-neutral-500">
+                  <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                  <span className="line-clamp-1">{place.address}</span>
+                </div>
+                {place.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-3">
+                    {place.tags.map((tag) => (
                       <span
-                        key={tagObj.id || `tag-${index}`}
-                        className="mt-2 inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
+                        key={tag.id}
+                        className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600"
                       >
-                        <Tag className="h-3 w-3 mr-1 opacity-80" />
-                        {tagObj.name}
+                        <Tag className="h-3 w-3 mr-1" />
+                        {tag.name}
                       </span>
                     ))}
                   </div>
-
-                  <div className="mt-2 flex items-center">
-                    {place.visited === "visited" ? (
-                      <>
-                        <Check className="h-4 w-4 mr-1 text-primary-500" />
-                        <span className="text-xs text-primary-700">
-                          訪問済み
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Circle className="h-4 w-4 mr-1 text-neutral-400" />
-                        <span className="text-xs text-neutral-600">未訪問</span>
-                      </>
-                    )}
-                  </div>
+                )}
+                <div className="mt-3 flex items-center">
+                  {place.visited === "visited" ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1 text-primary-500" />
+                      <span className="text-xs text-primary-700">訪問済み</span>
+                    </>
+                  ) : (
+                    <>
+                      <Circle className="h-4 w-4 mr-1 text-neutral-400" />
+                      <span className="text-xs text-neutral-600">未訪問</span>
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>
