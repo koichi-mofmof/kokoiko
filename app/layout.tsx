@@ -1,3 +1,5 @@
+import GoogleAnalytics from "@/app/components/analytics/GoogleAnalytics";
+import GoogleSearchConsole from "@/app/components/analytics/GoogleSearchConsole";
 import { AuthSyncProvider } from "@/app/components/auth/auth-sync-provider";
 import { ProfileSetupProvider } from "@/app/components/auth/profile-setup-provider";
 import JsonLd from "@/components/seo/JsonLd";
@@ -134,6 +136,7 @@ export default async function RootLayout({
   return (
     <html lang="ja">
       <head>
+        <GoogleSearchConsole />
         <JsonLd data={generateOrganizationSchema()} />
         <JsonLd data={generateWebSiteSchema()} />
       </head>
@@ -170,6 +173,7 @@ export default async function RootLayout({
           </SubscriptionProvider>
         </AuthSyncProvider>
         <Toaster />
+        <GoogleAnalytics />
       </body>
     </html>
   );

@@ -21,7 +21,6 @@ import {
   ExternalLink,
   MapPin,
   Tag,
-  User,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";

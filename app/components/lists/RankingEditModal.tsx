@@ -89,10 +89,8 @@ export default function RankingEditModal({
         } else {
           setCustomRankingCount(""); // 3,5,10の場合はカスタムをクリア
         }
-        // rankingCountが初期値と異なる場合のみ更新（基本的には不要なはず）
-        if (rankingCount !== list.ranking.length) {
-          setRankingCount(list.ranking.length);
-        }
+        // ランキング件数を既存の長さに設定
+        setRankingCount(list.ranking.length);
       } else {
         setRankingTargetIds([]);
         setRankingComments({});

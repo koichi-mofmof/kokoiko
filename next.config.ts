@@ -17,11 +17,11 @@ const nextConfig: NextConfig = {
     // Development環境用のCSP設定（ローカルSupabaseアクセス許可）
     const developmentCSP = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://maps.googleapis.com https://www.google.com",
+      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.pexels.com https://lh3.googleusercontent.com https://maps.googleapis.com https://maps.gstatic.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://i.pravatar.cc http://127.0.0.1:54321",
-      "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://places.googleapis.com wss://realtime.supabase.co https://*.supabase.co http://127.0.0.1:54321 ws://127.0.0.1:54321",
+      "img-src 'self' data: blob: https://images.pexels.com https://lh3.googleusercontent.com https://maps.googleapis.com https://maps.gstatic.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://i.pravatar.cc https://www.google-analytics.com http://127.0.0.1:54321",
+      "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://places.googleapis.com wss://realtime.supabase.co https://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net http://127.0.0.1:54321 ws://127.0.0.1:54321",
       "frame-src 'self' https://js.stripe.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
@@ -31,11 +31,11 @@ const nextConfig: NextConfig = {
     // Production環境用のCSP設定（より厳格）
     const productionCSP = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://maps.googleapis.com https://www.google.com",
+      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.pexels.com https://lh3.googleusercontent.com https://maps.googleapis.com https://maps.gstatic.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://i.pravatar.cc",
-      "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://places.googleapis.com wss://realtime.supabase.co https://*.supabase.co",
+      "img-src 'self' data: blob: https://images.pexels.com https://lh3.googleusercontent.com https://maps.googleapis.com https://maps.gstatic.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://i.pravatar.cc https://www.google-analytics.com",
+      "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://places.googleapis.com wss://realtime.supabase.co https://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net",
       "frame-src 'self' https://js.stripe.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
