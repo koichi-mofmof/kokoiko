@@ -1,0 +1,101 @@
+# =================================================================
+# Cloudflare Workers 設定ファイル (wrangler.toml)
+# =================================================================
+#
+# このファイルはCloudflare Workersのデプロイ設定を管理します。
+#
+# ■ デフォルト環境 (本番)
+# `npx wrangler deploy` でデプロイされる本番環境の設定です。
+# このファイルのトップレベルに直接記述されています。
+#
+# ■ 開発環境
+# `npx wrangler dev` で使用される開発環境の設定です。
+# `[env.development]` ブロック内に記述されています。
+#
+
+# -----------------------------------------------------------------
+# 本番環境設定 (デフォルト)
+# -----------------------------------------------------------------
+name = "clippymap-prod"
+main = ".open-next/worker.js"
+compatibility_date = "2025-03-25"
+compatibility_flags = [
+  "nodejs_compat",
+  "nodejs_compat_populate_process_env"
+]
+
+# 本番環境のルート設定
+routes = [
+  { pattern = "clippymap.com/*", zone_name = "clippymap.com" },
+  { pattern = "www.clippymap.com/*", zone_name = "clippymap.com" }
+]
+
+# 本番環境の環境変数
+[vars]
+NODE_ENV = "production"
+NEXT_PUBLIC_APP_URL = "https://clippymap.com"
+NEXT_PUBLIC_SUPABASE_URL = "https://typroopuejyfkpkgsjsa.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5cHJvb3B1ZWp5Zmtwa2dzanNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1MzQ1MzksImV4cCI6MjA2MTExMDUzOX0.eRQWfD503iHamBQFFm_hG_YQmOqkwcY4NgJUVocV7ro"
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "AIzaSyDfaW_giY1UQD93PL26nzOp3uB4rzLgmhQ"
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_live_51RW7WVGWuYESGCDjSQowBqDsDhG3l9tHcbXRoAYb3XCSrnIvPiOMYFIwWMwCu9WfGs8FPZ62ADBPbpMx8r327A4K00o9tXASkF"
+NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY = "price_1RZkoDGWuYESGCDjvz5iTg2T"
+NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY = "price_1RZkoDGWuYESGCDjoWSXqrjo"
+NEXT_PUBLIC_GA_MEASUREMENT_ID = "G-BZZ21WY1L2"
+
+# Workers KV設定 (本番環境)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "5650ea00d03d4215a747b1dbf6515448"
+
+[[kv_namespaces]]
+binding = "SESSION_CACHE"
+id = "b79342f05a554d58925f6cd651bc937d"
+
+# 静的アセット設定
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+# ビルド設定
+[build]
+command = "npm run cf:build"
+cwd = "."
+
+# ログ設定
+[observability]
+enabled = true
+
+# -----------------------------------------------------------------
+# 開発環境 (`npx wrangler dev`)
+# -----------------------------------------------------------------
+[env.development]
+name = "clippymap-dev"
+
+# 開発環境の環境変数
+[env.development.vars]
+NODE_ENV = "development"
+NEXT_PUBLIC_APP_URL = "http://localhost:8787"
+NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+
+# 開発環境のKV設定 (preview_idを使用)
+[[env.development.kv_namespaces]]
+binding = "CACHE"
+id = "5650ea00d03d4215a747b1dbf6515448"
+preview_id = "09a5f82bafe34da2bafad549b0e088a5"
+
+[[env.development.kv_namespaces]]
+binding = "SESSION_CACHE"
+id = "b79342f05a554d58925f6cd651bc937d"
+preview_id = "75204ee7d107439cb8575ce3ff70f92a"
+
+# ↓↓↓↓ 注意: 以下のサーバーサイド専用キーはCloudflareのSecretsに設定してください ↓↓↓↓
+# wrangler secret put STRIPE_SECRET_KEY
+# wrangler secret put STRIPE_WEBHOOK_SECRET
+# wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+
+# D1データベース設定（将来のセッション管理用・現在未使用）
+# [[d1_databases]]
+# binding = "SESSION_DB"
+# database_name = "clippymap-sessions"
+# database_id = "session_db_id" 

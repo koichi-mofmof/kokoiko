@@ -76,7 +76,7 @@ export function UpgradePlanDialog({
           returnUrl: window.location.href,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
         window.location.href = data.url;
       } else {

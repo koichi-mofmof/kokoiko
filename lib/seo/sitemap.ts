@@ -1,6 +1,41 @@
 import { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 
+// CloudFlare Workers + OpenNext環境での環境変数取得ヘルパー関数
+function getBaseUrl(env?: Record<string, string>): string {
+  // 本番環境の確実な判定（最優先）
+  const isProduction =
+    (env && env.NODE_ENV === "production") ||
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    (typeof globalThis !== "undefined" && "ASSETS" in globalThis) ||
+    (typeof process !== "undefined" && process.env.CF_PAGES === "1");
+
+  if (isProduction) {
+    return "https://clippymap.com";
+  }
+
+  // OpenNext推奨の環境変数取得順序（開発環境のみ）
+
+  // 1. CloudFlare Workers env オブジェクト
+  if (env && env.NEXT_PUBLIC_APP_URL) {
+    return env.NEXT_PUBLIC_APP_URL;
+  }
+
+  // 2. process.env（通常のNext.js環境）
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  // 3. 開発環境フォールバック
+  if (process.env.NODE_ENV === "development" || !process.env.NODE_ENV) {
+    return "http://localhost:3000";
+  }
+
+  // 4. 最終フォールバック（本番環境）
+  return "https://clippymap.com";
+}
+
 // 静的ページの定義
 const staticPages = [
   {
@@ -32,6 +67,34 @@ const staticPages = [
     lastModified: new Date(),
     changeFrequency: "yearly" as const,
     priority: 0.3,
+  },
+];
+
+// サンプルページの定義
+const samplePages = [
+  {
+    url: "/sample",
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  },
+  {
+    url: "/sample/sample-sunny-day",
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  },
+  {
+    url: "/sample/sample-osaka-trip",
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  },
+  {
+    url: "/sample/sample-favorite-saunas",
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
   },
 ];
 
@@ -116,13 +179,26 @@ async function getPublicListPlaces() {
   }
 }
 
-export async function generateSitemapEntries(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+export async function generateSitemapEntries(
+  env?: Record<string, string>
+): Promise<MetadataRoute.Sitemap> {
+  // CloudFlare Workers環境での環境変数取得を改善
+  const baseUrl = getBaseUrl(env);
 
   const entries: MetadataRoute.Sitemap = [];
 
   // 静的ページを追加
   for (const page of staticPages) {
+    entries.push({
+      url: `${baseUrl}${page.url}`,
+      lastModified: page.lastModified,
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
+    });
+  }
+
+  // サンプルページを追加
+  for (const page of samplePages) {
     entries.push({
       url: `${baseUrl}${page.url}`,
       lastModified: page.lastModified,

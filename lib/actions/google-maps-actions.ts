@@ -5,7 +5,6 @@ import {
   placeDetailsSchema,
 } from "@/lib/validators/google-maps";
 
-// 環境変数からAPIキーを取得 (安全な方法で管理されている前提)
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 interface AutocompleteSuggestion {
@@ -88,7 +87,10 @@ export async function searchPlaces(
       body: JSON.stringify(requestBody),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      suggestions?: AutocompleteSuggestion[];
+      error?: { message?: string; details?: Array<{ reason?: string }> };
+    };
 
     if (!response.ok) {
       console.error("Google Maps Autocomplete API (New) error:", data);
@@ -171,7 +173,12 @@ export async function getPlaceDetails(
       },
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      id?: string;
+      formattedAddress?: string;
+      location?: { latitude: number; longitude: number };
+      error?: { message?: string; details?: Array<{ reason?: string }> };
+    };
 
     if (!response.ok) {
       console.error("Google Maps Place Details API (New) error:", data);
@@ -182,7 +189,7 @@ export async function getPlaceDetails(
     }
 
     const clientPlaceDetails: PlaceDetailsResult = {
-      id: data.id,
+      id: data.id || "",
       formattedAddress: data.formattedAddress,
       location: data.location
         ? {
