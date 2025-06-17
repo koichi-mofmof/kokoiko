@@ -5,7 +5,11 @@ import Script from "next/script";
 // GA4 Measurement ID を環境変数から取得
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
-export default function GoogleAnalytics() {
+interface GoogleAnalyticsProps {
+  nonce?: string;
+}
+
+export default function GoogleAnalytics({ nonce }: GoogleAnalyticsProps) {
   // 本番環境でのみGAを有効化
   if (process.env.NODE_ENV !== "production" || !GA_MEASUREMENT_ID) {
     return null;
@@ -17,11 +21,13 @@ export default function GoogleAnalytics() {
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
         strategy="afterInteractive"
+        nonce={nonce}
         async
       />
       <Script
         id="google-analytics"
         strategy="afterInteractive"
+        nonce={nonce}
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];

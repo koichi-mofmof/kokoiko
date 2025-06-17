@@ -5,10 +5,7 @@ import {
   getCSRFTokenServer,
   verifyCSRFTokenServer,
 } from "@/lib/utils/csrf-server";
-import {
-  recordCSRFViolation,
-  recordFailedLogin,
-} from "@/lib/utils/security-monitor";
+import { recordCSRFViolation } from "@/lib/utils/security-monitor";
 import {
   deleteAccountSchema,
   loginSchema,
@@ -97,21 +94,22 @@ export async function loginWithCredentials(
 
   // Supabase 認証エラー
   if (error) {
-    console.error("Supabase login error:", error.message);
-
-    // 失敗ログインを記録（異常検知システム）
-    recordFailedLogin(
-      undefined, // ログイン失敗時はユーザーIDが不明
-      ip,
-      userAgent,
-      `Supabase auth error: ${error.message}`
-    );
+    console.error("Supabase login error:", {
+      message: error.message,
+      status: error.status,
+      details: error,
+      timestamp: new Date().toISOString(),
+      email: email,
+      ip: ip,
+      userAgent: userAgent,
+    });
 
     return {
-      message: "メールアドレスまたはパスワードが正しくありません。",
+      message:
+        "ログインに失敗しました。メールアドレスとパスワードを確認してください。",
       errors: {
         general: ["メールアドレスまたはパスワードが正しくありません。"],
-      }, // 一般的なエラーとして表示
+      },
       success: false,
     };
   }
@@ -174,8 +172,13 @@ export async function signupWithCredentials(
 
   // Supabase サインアップエラー
   if (signUpError) {
-    console.error("Supabase signup error:", signUpError.message);
-    // TODO: より具体的なエラーメッセージを返す（例: User already registered）
+    console.error("Supabase signup error:", {
+      message: signUpError.message,
+      status: signUpError.status,
+      details: signUpError,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       message: "ユーザー登録に失敗しました。",
       errors: {

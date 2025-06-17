@@ -18,10 +18,9 @@
 # -----------------------------------------------------------------
 name = "clippymap-prod"
 main = ".open-next/worker.js"
-compatibility_date = "2025-03-25"
+compatibility_date = "2025-05-05"
 compatibility_flags = [
-  "nodejs_compat",
-  "nodejs_compat_populate_process_env"
+  "nodejs_compat"
 ]
 
 # 本番環境のルート設定
@@ -55,11 +54,6 @@ id = "b79342f05a554d58925f6cd651bc937d"
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
-
-# ビルド設定
-[build]
-command = "npm run cf:build"
-cwd = "."
 
 # ログ設定
 [observability]

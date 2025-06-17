@@ -9,7 +9,6 @@ import {
   logSecurityEvent,
   protectAPIEndpoint,
   SECURITY_CONFIG,
-  setSecurityHeaders,
   WorkersRateLimit,
 } from "@/lib/cloudflare/security";
 import { createClient } from "@/lib/supabase/server";
@@ -24,6 +23,51 @@ function generateCSRFTokenEdge(): string {
   return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
     ""
   );
+}
+
+// CSP用のnonce生成
+function generateNonce(): string {
+  return Buffer.from(crypto.randomUUID()).toString("base64");
+}
+
+// CSPヘッダー値を生成
+function getContentSecurityPolicyHeaderValue(nonce: string): string {
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  // 開発環境用のCSP設定（Next.jsの開発サーバー対応）
+  const developmentCSP = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https://images.pexels.com https://lh3.googleusercontent.com https://maps.googleapis.com https://maps.gstatic.com https://*.openstreetmap.org https://*.tile.openstreetmap.org",
+    "connect-src 'self' https: *.supabase.co *.stripe.com *.googleapis.com https://cloudflareinsights.com *.google-analytics.com *.googletagmanager.com",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+  ];
+
+  // 本番環境用のCSP設定（Next.js 15.3.3対応：style-srcはunsafe-inlineのみ）
+  const productionCSP = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https: *.supabase.co *.googleapis.com *.gstatic.com *.google-analytics.com *.googletagmanager.com",
+    "connect-src 'self' https: *.supabase.co *.stripe.com *.googleapis.com https://cloudflareinsights.com *.google-analytics.com *.googletagmanager.com",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+  ];
+
+  const csp = isDevelopment ? developmentCSP : productionCSP;
+  return csp.join("; ");
 }
 
 // Development mode configuration
@@ -61,24 +105,31 @@ export async function middleware(request: NextRequest) {
       pattern.test(userAgent)
     );
 
+  // CSP用のnonce生成
+  const nonce = generateNonce();
+
   // 負荷テスト時はセキュリティチェックをバイパス
   if (isLoadTestUA && SECURITY_CONFIG.LOAD_TEST_CONFIG.BYPASS_RATE_LIMIT) {
     console.log(
       `🧪 負荷テスト検出: ${userAgent} - セキュリティチェックをバイパス`
     );
 
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-nonce", nonce);
+
     let response = NextResponse.next({
       request: {
-        headers: request.headers,
+        headers: requestHeaders,
       },
     });
 
     // 基本的なヘッダーのみ設定
     response.headers.set("X-Request-ID", crypto.randomUUID());
     response.headers.set("X-Load-Test-Mode", "true");
-
-    // CloudFlare Workers 用セキュリティヘッダーの適用（軽量版）
-    response = setSecurityHeaders(response);
+    response.headers.set(
+      "Content-Security-Policy",
+      getContentSecurityPolicyHeaderValue(nonce)
+    );
 
     return response;
   }
@@ -188,18 +239,28 @@ export async function middleware(request: NextRequest) {
       });
     }
 
+    // リクエストヘッダーにnonceを追加
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-nonce", nonce);
+
     let response = NextResponse.next({
       request: {
-        headers: request.headers,
+        headers: requestHeaders,
       },
     });
 
-    // Add security headers to all responses
+    // セキュリティヘッダーを設定
     response.headers.set("X-Request-ID", crypto.randomUUID());
     response.headers.set("X-RateLimit-Limit", "60");
     response.headers.set(
       "X-RateLimit-Remaining",
       (60 - rateLimitCheck.count).toString()
+    );
+
+    // CSPヘッダーを設定
+    response.headers.set(
+      "Content-Security-Policy",
+      getContentSecurityPolicyHeaderValue(nonce)
     );
 
     // パフォーマンス監視ヘッダー追加
@@ -383,9 +444,6 @@ export async function middleware(request: NextRequest) {
         "Content-Type, Authorization"
       );
     }
-
-    // CloudFlare Workers 用セキュリティヘッダーの適用
-    response = setSecurityHeaders(response);
 
     // パフォーマンス監視ログ
     logPerformanceMetrics(pathname, performanceMonitor, true);

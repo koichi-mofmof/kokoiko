@@ -1,136 +1,59 @@
-/**
+/*
  * CloudFlare Workers セキュリティ設定
- * Phase 3.3: セキュリティ設定強化
  */
+import type { NextRequest } from "next/server";
 
-import { NextRequest, NextResponse } from "next/server";
-
-// CloudFlare Workers環境での設定値
+/**
+ * セキュリティ設定
+ */
 export const SECURITY_CONFIG = {
-  // レート制限設定（Workers環境用）
   RATE_LIMITS: {
-    API: 100, // API呼び出し: 100req/min
-    AUTH: 10, // 認証エンドポイント: 10req/min
-    UPLOAD: 20, // ファイルアップロード: 20req/min
-    DEFAULT: 300, // その他: 300req/min
-    // 負荷テスト用の緩和設定
-    LOAD_TEST: 1000, // 負荷テスト時: 1000req/min
+    DEFAULT: 60, // 1分あたりのリクエスト数
+    STRICT: 30,
+    API: 30,
+    AUTH: 10,
   },
-
-  // DoS攻撃対策
-  DOS_PROTECTION: {
-    MAX_REQUEST_SIZE: 10 * 1024 * 1024, // 10MB
-    MAX_CONCURRENT_REQUESTS: 50,
-    BLOCK_SUSPICIOUS_USER_AGENTS: true,
-    CHALLENGE_THRESHOLD: 500, // 500req/minでチャレンジ発動
-    // 負荷テスト用の緩和設定
-    LOAD_TEST_MODE: process.env.LOAD_TEST_MODE === "true",
-    LOAD_TEST_CHALLENGE_THRESHOLD: 2000, // 負荷テスト時: 2000req/min
-  },
-
-  // セキュリティヘッダー
   SECURITY_HEADERS: {
     HSTS_MAX_AGE: 31536000, // 1年
-    CSP_NONCE_LENGTH: 16,
     REFERRER_POLICY: "strict-origin-when-cross-origin",
   },
-
-  // 負荷テスト用の許可設定
+  DOS_PROTECTION: {
+    MAX_REQUESTS_PER_MINUTE: 100,
+    SUSPICIOUS_THRESHOLD: 200,
+    BLOCK_DURATION: 300000, // 5分
+    // 負荷テスト用の設定
+    LOAD_TEST_MODE: process.env.LOAD_TEST_MODE === "true",
+  },
+  API_PROTECTION: {
+    MAX_PAYLOAD_SIZE: 1024 * 1024, // 1MB
+    ALLOWED_CONTENT_TYPES: [
+      "application/json",
+      "application/x-www-form-urlencoded",
+      "multipart/form-data",
+    ],
+    BLOCKED_EXTENSIONS: [".php", ".asp", ".jsp", ".cgi"],
+  },
+  CSRF: {
+    TOKEN_LENGTH: 32,
+    COOKIE_NAME: "clippymap_csrf_token",
+    HEADER_NAME: "x-csrf-token",
+  },
+  // 負荷テスト設定
   LOAD_TEST_CONFIG: {
     ALLOWED_USER_AGENTS: [
-      /load.?test/i,
-      /performance.?test/i,
-      /artillery/i,
-      /node/i,
-      /simple.?load.?test/i,
-    ],
-    ALLOWED_IPS: [
-      // 開発環境のIPアドレス（必要に応じて追加）
+      /Artillery\.io/i,
+      /autocannon/i,
+      /k6/i,
+      /JMeter/i,
+      /LoadRunner/i,
+      /Gatling/i,
+      /wrk/i,
+      /bombardier/i,
     ],
     BYPASS_RATE_LIMIT: true,
     BYPASS_DOS_PROTECTION: true,
   },
 } as const;
-
-/**
- * Content Security Policy 設定（CloudFlare Workers用）
- */
-export function generateCSP(nonce?: string): string {
-  const isDevelopment = process.env.NODE_ENV === "development";
-
-  // 開発環境用の追加設定（ローカルSupabaseアクセス許可）
-  const developmentExtensions = isDevelopment
-    ? {
-        imgSrc: " http://127.0.0.1:54321",
-        connectSrc: " http://127.0.0.1:54321 ws://127.0.0.1:54321",
-      }
-    : {
-        imgSrc: "",
-        connectSrc: "",
-      };
-
-  const cspDirectives = [
-    "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' ${
-      nonce ? `'nonce-${nonce}'` : ""
-    } https://js.stripe.com https://maps.googleapis.com https://www.googletagmanager.com`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    `img-src 'self' data: blob: https: *.supabase.co *.googleapis.com *.gstatic.com${developmentExtensions.imgSrc}`,
-    `connect-src 'self' https: *.supabase.co *.stripe.com *.googleapis.com${developmentExtensions.connectSrc}`,
-    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-  ];
-
-  // 本番環境のみupgrade-insecure-requestsを追加
-  if (!isDevelopment) {
-    cspDirectives.push("upgrade-insecure-requests");
-  }
-
-  return cspDirectives.join("; ");
-}
-
-/**
- * セキュリティヘッダーの設定
- */
-export function setSecurityHeaders(
-  response: NextResponse,
-  nonce?: string
-): NextResponse {
-  // CSP設定
-  response.headers.set("Content-Security-Policy", generateCSP(nonce));
-
-  // HSTS設定
-  response.headers.set(
-    "Strict-Transport-Security",
-    `max-age=${SECURITY_CONFIG.SECURITY_HEADERS.HSTS_MAX_AGE}; includeSubDomains; preload`
-  );
-
-  // その他のセキュリティヘッダー
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "DENY");
-  response.headers.set("X-XSS-Protection", "1; mode=block");
-  response.headers.set(
-    "Referrer-Policy",
-    SECURITY_CONFIG.SECURITY_HEADERS.REFERRER_POLICY
-  );
-
-  // Permissions Policy
-  response.headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(self), payment=(self)"
-  );
-
-  // CSRF保護
-  response.headers.set("Cross-Origin-Embedder-Policy", "credentialless");
-  response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
-  response.headers.set("Cross-Origin-Resource-Policy", "same-site");
-
-  return response;
-}
 
 /**
  * CloudFlare Workers用レート制限
@@ -256,55 +179,47 @@ export class WorkersRateLimit {
     reason?: string;
     shouldChallenge?: boolean;
   } {
+    const userAgent = request.headers.get("user-agent") || "";
+
     // 負荷テスト用の例外チェック
     if (SECURITY_CONFIG.DOS_PROTECTION.LOAD_TEST_MODE) {
-      const userAgent = request.headers.get("user-agent") || "";
       const isLoadTestUA =
         SECURITY_CONFIG.LOAD_TEST_CONFIG.ALLOWED_USER_AGENTS.some((pattern) =>
           pattern.test(userAgent)
         );
-
       if (
         isLoadTestUA &&
         SECURITY_CONFIG.LOAD_TEST_CONFIG.BYPASS_DOS_PROTECTION
       ) {
-        return { blocked: false }; // 負荷テスト時はDoS保護をバイパス
+        return { blocked: false };
       }
     }
 
-    // リクエストサイズチェック
-    const contentLength = request.headers.get("content-length");
-    if (
-      contentLength &&
-      parseInt(contentLength) > SECURITY_CONFIG.DOS_PROTECTION.MAX_REQUEST_SIZE
-    ) {
-      return { blocked: true, reason: "Request too large" };
-    }
-
     // 疑わしいリクエストの検出
-    if (
-      SECURITY_CONFIG.DOS_PROTECTION.BLOCK_SUSPICIOUS_USER_AGENTS &&
-      this.isSuspiciousRequest(request)
-    ) {
-      return { blocked: true, reason: "Suspicious user agent" };
+    if (this.isSuspiciousRequest(request)) {
+      const entry = this.requestCounts.get(clientIp);
+
+      // 通常の制限よりも厳しい制限を適用
+      const strictLimit = SECURITY_CONFIG.RATE_LIMITS.STRICT;
+      if (entry && entry.count > strictLimit) {
+        return {
+          blocked: true,
+          reason: "Suspicious request pattern detected",
+          shouldChallenge: true,
+        };
+      }
     }
 
-    // 高頻度アクセスのチェック（チャレンジ発動）
-    const challengeThreshold = SECURITY_CONFIG.DOS_PROTECTION.LOAD_TEST_MODE
-      ? SECURITY_CONFIG.DOS_PROTECTION.LOAD_TEST_CHALLENGE_THRESHOLD
-      : SECURITY_CONFIG.DOS_PROTECTION.CHALLENGE_THRESHOLD;
-
-    const highFreqLimit = this.checkRateLimit(
-      `challenge:${clientIp}`,
-      challengeThreshold,
-      60000
-    );
-
-    if (!highFreqLimit.allowed) {
+    // 高頻度リクエストの検出
+    const entry = this.requestCounts.get(clientIp);
+    if (
+      entry &&
+      entry.count > SECURITY_CONFIG.DOS_PROTECTION.MAX_REQUESTS_PER_MINUTE
+    ) {
       return {
-        blocked: false,
-        shouldChallenge: true,
-        reason: "High frequency access",
+        blocked: true,
+        reason: "Rate limit exceeded",
+        shouldChallenge: false,
       };
     }
 
@@ -324,62 +239,68 @@ export function protectAPIEndpoint(request: NextRequest): {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
-  // HTTPメソッド制限
-  const allowedMethods: Record<string, string[]> = {
-    "/api/stripe/checkout": ["POST"],
-    "/api/stripe/webhook": ["POST"],
-    "/api/security/stats": ["GET"],
-  };
+  // 危険な拡張子をブロック
+  const hasDangerousExtension =
+    SECURITY_CONFIG.API_PROTECTION.BLOCKED_EXTENSIONS.some((ext) =>
+      pathname.endsWith(ext)
+    );
 
-  const allowed = allowedMethods[pathname];
-  if (allowed && !allowed.includes(method)) {
+  if (hasDangerousExtension) {
     return {
       allowed: false,
-      status: 405,
-      message: "Method not allowed",
-      headers: { Allow: allowed.join(", ") },
+      status: 403,
+      message: "Forbidden file type",
     };
   }
 
-  // Content-Type検証（POSTリクエスト）
-  if (method === "POST" && !request.headers.get("content-type")) {
-    return {
-      allowed: false,
-      status: 400,
-      message: "Content-Type header required",
-    };
+  // POST/PUT/PATCHリクエストの Content-Type チェック
+  if (["POST", "PUT", "PATCH"].includes(method)) {
+    const contentType = request.headers.get("content-type") || "";
+    const isAllowedContentType =
+      SECURITY_CONFIG.API_PROTECTION.ALLOWED_CONTENT_TYPES.some((type) =>
+        contentType.includes(type)
+      );
+
+    if (!isAllowedContentType && contentType !== "") {
+      return {
+        allowed: false,
+        status: 415,
+        message: "Unsupported Media Type",
+      };
+    }
   }
 
   return { allowed: true };
 }
 
 /**
- * セキュリティイベントのログ記録
+ * セキュリティイベントログ
  */
 export function logSecurityEvent(
   event: string,
   details: Record<string, unknown>,
   severity: "low" | "medium" | "high" | "critical" = "medium"
 ): void {
+  const timestamp = new Date().toISOString();
   const logEntry = {
-    timestamp: new Date().toISOString(),
+    timestamp,
     event,
     severity,
     details,
-    environment: process.env.NODE_ENV,
+    source: "cloudflare-workers",
   };
 
-  // 本番環境では外部ログサービスに送信
-  if (process.env.NODE_ENV === "production") {
-    // TODO: 外部ログサービス（Cloudflare Analytics、Sentry等）に送信
-    console.warn("SECURITY_EVENT:", JSON.stringify(logEntry));
-  } else {
-    console.warn("SECURITY_EVENT:", logEntry);
+  // ローカル開発環境ではコンソールに出力
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[SECURITY-${severity.toUpperCase()}]`, logEntry);
   }
+
+  // 本番環境では適切なログ収集サービスに送信
+  // TODO: Datadog、CloudWatch、Sentryなどへの送信を実装
 }
 
 /**
- * CloudFlare Workers環境での認証チェック
+ * 認証チェック（今後の拡張用）
  */
 export async function validateAuthentication(request: NextRequest): Promise<{
   authenticated: boolean;
@@ -387,36 +308,34 @@ export async function validateAuthentication(request: NextRequest): Promise<{
   error?: string;
 }> {
   try {
-    // Authorization ヘッダーのチェック
+    // TODO: JWT トークンの検証やセッション確認を実装
     const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return {
-        authenticated: false,
-        error: "Missing or invalid authorization header",
-      };
+
+    if (!authHeader) {
+      return { authenticated: false, error: "No authorization header" };
     }
 
-    // JWTトークンの検証（簡易版）
-    const token = authHeader.slice(7);
-    if (!token || token.length < 10) {
+    // 簡易的な実装（実際には適切なJWT検証を実装）
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
       return { authenticated: false, error: "Invalid token format" };
     }
 
-    // 実際の実装では、Supabaseクライアントでトークン検証
-    // const { data, error } = await supabase.auth.getUser(token);
-
-    return { authenticated: true, userId: "user-id" };
+    // ここで実際のトークン検証を行う
+    return { authenticated: true, userId: "placeholder" };
   } catch (error) {
-    logSecurityEvent("authentication_error", { error: String(error) }, "high");
-    return { authenticated: false, error: "Authentication failed" };
+    return {
+      authenticated: false,
+      error: `Authentication failed: ${error}`,
+    };
   }
 }
 
 /**
- * CSRFトークンの生成（Workers用）
+ * CSRF トークン生成
  */
 export function generateCSRFToken(): string {
-  const array = new Uint8Array(32);
+  const array = new Uint8Array(SECURITY_CONFIG.CSRF.TOKEN_LENGTH);
   crypto.getRandomValues(array);
   return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
     ""
@@ -424,17 +343,15 @@ export function generateCSRFToken(): string {
 }
 
 /**
- * CSRFトークンの検証
+ * CSRF トークン検証
  */
 export function validateCSRFToken(request: NextRequest): boolean {
-  const cookieToken = request.cookies.get("clippymap_csrf_token")?.value;
-  const headerToken = request.headers.get("x-csrf-token");
-  const formToken = request.headers.get("x-requested-with"); // XHRリクエストの場合
+  const cookieToken = request.cookies.get(SECURITY_CONFIG.CSRF.COOKIE_NAME);
+  const headerToken = request.headers.get(SECURITY_CONFIG.CSRF.HEADER_NAME);
 
-  if (!cookieToken) {
+  if (!cookieToken?.value || !headerToken) {
     return false;
   }
 
-  // ヘッダーまたはフォームからのトークンチェック
-  return headerToken === cookieToken || formToken === "XMLHttpRequest";
+  return cookieToken.value === headerToken;
 }

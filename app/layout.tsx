@@ -17,6 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 
 const inter = Inter({
@@ -94,6 +95,9 @@ export default async function RootLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // nonceを取得
+  const nonce = (await headers()).get("x-nonce");
 
   let profileData: ProfileSettingsData | null = null;
   if (user) {
@@ -173,7 +177,7 @@ export default async function RootLayout({
           </SubscriptionProvider>
         </AuthSyncProvider>
         <Toaster />
-        <GoogleAnalytics />
+        <GoogleAnalytics nonce={nonce ?? undefined} />
       </body>
     </html>
   );

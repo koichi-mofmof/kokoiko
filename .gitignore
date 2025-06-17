@@ -60,12 +60,5 @@ node_modules/
 # wrangler
 .wrangler/
 
-# Environment variables
-.env
-.env*.local
-.env.production
-_env.local.disabled
-_env.production.disabled
-
 # Next.js
 .next/
