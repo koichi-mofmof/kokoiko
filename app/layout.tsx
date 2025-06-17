@@ -65,6 +65,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: "ClippyMap - 行きたい場所を共有できるサービス",
+        type: "image/webp",
       },
     ],
   },
@@ -72,7 +73,14 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ClippyMap",
     description: "行きたい場所を共有できるサービス",
-    images: ["/ogp-image.webp"],
+    images: [
+      {
+        url: "/ogp-image.webp",
+        alt: "ClippyMap - 行きたい場所を共有できるサービス",
+      },
+    ],
+    creator: "@your_twitter_handle",
+    site: "@your_twitter_handle",
   },
   robots: {
     index: true,
