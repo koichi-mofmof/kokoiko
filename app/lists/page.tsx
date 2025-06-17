@@ -17,10 +17,11 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     images: [
       {
-        url: "/ogp-image.png",
+        url: "/ogp-image.webp",
         width: 1200,
         height: 630,
         alt: "マイリスト一覧 - ClippyMap",
+        type: "image/webp",
       },
     ],
   },
@@ -28,7 +29,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "マイリスト一覧 | ClippyMap",
     description: "あなたが作成・共有されたリストの一覧ページ",
-    images: ["/ogp-image.png"],
+    images: [
+      {
+        url: "/ogp-image.webp",
+        alt: "マイリスト一覧 - ClippyMap",
+      },
+    ],
   },
 };
 

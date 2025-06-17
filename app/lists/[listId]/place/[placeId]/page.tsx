@@ -87,10 +87,11 @@ export async function generateMetadata({
       locale: "ja_JP",
       images: [
         {
-          url: "/ogp-image.png",
+          url: "/ogp-image.webp",
           width: 1200,
           height: 630,
           alt: `${place.name} - ${list.name} - ClippyMap`,
+          type: "image/webp",
         },
       ],
     },
@@ -98,7 +99,12 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${place.name} | ${list.name} | ClippyMap`,
       description,
-      images: ["/ogp-image.png"],
+      images: [
+        {
+          url: "/ogp-image.webp",
+          alt: `${place.name} - ${list.name} - ClippyMap`,
+        },
+      ],
     },
   };
 }

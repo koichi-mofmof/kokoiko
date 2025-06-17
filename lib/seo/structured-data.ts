@@ -11,7 +11,7 @@ export function generateOrganizationSchema() {
     name: "ClippyMap",
     description: "行きたい場所を共有できるサービス",
     url: baseUrl,
-    logo: `${baseUrl}/ogp-image.png`,
+    logo: `${baseUrl}/ogp-image.webp`,
     sameAs: [
       // SNSアカウントがあれば追加
     ],

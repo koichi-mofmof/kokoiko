@@ -1,5 +1,5 @@
-import { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
+import { MetadataRoute } from "next";
 
 // CloudFlare Workers + OpenNext環境での環境変数取得ヘルパー関数
 function getBaseUrl(env?: Record<string, string>): string {
@@ -61,12 +61,6 @@ const staticPages = [
     lastModified: new Date(),
     changeFrequency: "yearly" as const,
     priority: 0.5,
-  },
-  {
-    url: "/tokushoho",
-    lastModified: new Date(),
-    changeFrequency: "yearly" as const,
-    priority: 0.3,
   },
 ];
 
@@ -139,46 +133,6 @@ async function getPublicLists() {
   }
 }
 
-// 公開リスト内の場所を取得する関数（簡略化版）
-async function getPublicListPlaces() {
-  try {
-    const supabase = createAnonymousClient();
-
-    // 公開リストのIDを取得
-    const { data: publicListIds, error: listsError } = await supabase
-      .from("place_lists")
-      .select("id")
-      .eq("is_public", true)
-      .limit(50); // パフォーマンスのため制限
-
-    if (listsError || !publicListIds) {
-      console.error("Error fetching public list IDs:", listsError);
-      return [];
-    }
-
-    // 公開リストに含まれる場所を取得
-    const { data: publicPlaces, error: placesError } = await supabase
-      .from("list_places")
-      .select("list_id, place_id, updated_at")
-      .in(
-        "list_id",
-        publicListIds.map((list) => list.id)
-      )
-      .order("updated_at", { ascending: false })
-      .limit(200); // 最大200件に制限
-
-    if (placesError) {
-      console.error("Error fetching public list places:", placesError);
-      return [];
-    }
-
-    return publicPlaces || [];
-  } catch (error) {
-    console.error("Error in getPublicListPlaces:", error);
-    return [];
-  }
-}
-
 export async function generateSitemapEntries(
   env?: Record<string, string>
 ): Promise<MetadataRoute.Sitemap> {
@@ -217,20 +171,6 @@ export async function generateSitemapEntries(
         lastModified: list.updated_at ? new Date(list.updated_at) : new Date(),
         changeFrequency: "weekly",
         priority: 0.7,
-      });
-    }
-
-    // 公開リスト内の場所詳細ページを追加
-    const publicPlaces = await getPublicListPlaces();
-
-    for (const place of publicPlaces) {
-      entries.push({
-        url: `${baseUrl}/lists/${place.list_id}/place/${place.place_id}`,
-        lastModified: place.updated_at
-          ? new Date(place.updated_at)
-          : new Date(),
-        changeFrequency: "monthly",
-        priority: 0.6,
       });
     }
   } catch (error) {
