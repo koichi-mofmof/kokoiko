@@ -42,7 +42,7 @@ const CustomLeafletMarkerIcon = (isSelected: boolean, placeName: string) => {
         }`}
       >
         <Image
-          src="/icon0.svg"
+          src="/icon0.webp"
           alt={placeName}
           width={28}
           height={28}

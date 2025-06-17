@@ -24,6 +24,7 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
+  preload: true,
 });
 
 const notoSansJP = Noto_Sans_JP({
@@ -31,6 +32,7 @@ const notoSansJP = Noto_Sans_JP({
   weight: ["400", "500", "700"],
   display: "swap",
   variable: "--font-noto-sans-jp",
+  preload: true,
 });
 
 const quicksand = Quicksand({
@@ -38,6 +40,7 @@ const quicksand = Quicksand({
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-quicksand",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -58,7 +61,7 @@ export const metadata: Metadata = {
     siteName: "ClippyMap",
     images: [
       {
-        url: "/ogp-image.png",
+        url: "/ogp-image.webp",
         width: 1200,
         height: 630,
         alt: "ClippyMap - 行きたい場所を共有できるサービス",
@@ -69,7 +72,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ClippyMap",
     description: "行きたい場所を共有できるサービス",
-    images: ["/ogp-image.png"],
+    images: ["/ogp-image.webp"],
   },
   robots: {
     index: true,
@@ -140,6 +143,12 @@ export default async function RootLayout({
   return (
     <html lang="ja">
       <head>
+        {/* DNS プリフェッチとプリコネクト */}
+        <link rel="preconnect" href="https://images.pexels.com" />
+        <link rel="dns-prefetch" href="https://images.pexels.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
         <GoogleSearchConsole />
         <JsonLd data={generateOrganizationSchema()} />
         <JsonLd data={generateWebSiteSchema()} />

@@ -13,7 +13,11 @@
     "test:coverage": "jest --coverage",
     "preview": "cross-env NODE_ENV=production opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "dotenv -e .env.production -- opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "analyze": "cross-env ANALYZE=true next build",
+    "build:prod": "next build && next export",
+    "optimize:images": "node scripts/optimize-images.js",
+    "performance:audit": "node scripts/performance-audit.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

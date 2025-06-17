@@ -132,19 +132,28 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
             >
               <CarouselContent>
                 {Array.from({ length: 4 }).map((_, index) => {
-                  const imagePath = `/screenshots/feature${index + 1}.png`;
+                  const imagePath = `/screenshots/feature${index + 1}.webp`;
+                  const fallbackPath = `/screenshots/feature${index + 1}.png`;
                   return (
                     <CarouselItem key={index} className="md:basis-1/2">
                       <div className="p-1">
                         <Card>
                           <CardContent className="flex h-64 sm:h-60 lg:h-96 items-center justify-center p-0 bg-neutral-50 rounded-lg border-neutral-200 overflow-hidden">
-                            <Image
-                              src={imagePath}
-                              alt={`機能スクリーンショット ${index + 1}`}
-                              width={1280}
-                              height={960}
-                              className="w-full h-full object-contain"
-                            />
+                            <picture>
+                              <source srcSet={imagePath} type="image/webp" />
+                              <Image
+                                src={fallbackPath}
+                                alt={`機能スクリーンショット ${index + 1}`}
+                                width={800}
+                                height={600}
+                                className="w-full h-full object-contain"
+                                loading="lazy"
+                                quality={85}
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                                placeholder="blur"
+                                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                              />
+                            </picture>
                           </CardContent>
                         </Card>
                       </div>

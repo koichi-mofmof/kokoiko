@@ -117,7 +117,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
             className="text-lg font-medium text-gray-800 flex items-center"
           >
             <Image
-              src="/icon0.svg"
+              src="/icon0.webp"
               alt="ClippyMap icon"
               width={24}
               height={24}

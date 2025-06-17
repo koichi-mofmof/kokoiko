@@ -14,7 +14,7 @@ export default function Footer({ currentUser }: FooterProps) {
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
                 <Image
-                  src="/icon0.svg"
+                  src="/icon0.webp"
                   alt="ClippyMap icon"
                   width={24}
                   height={24}
