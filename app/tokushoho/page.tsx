@@ -33,30 +33,46 @@ export default function TokushohoPage() {
           <CardContent className="p-6 md:p-8">
             <table className="w-full text-sm border-separate border-spacing-y-1">
               <tbody>
-                <Row label="事業者名">
-                  <span>ClippyMap運営者</span>
-                  <br />
-                  <span className="text-xs text-neutral-500">
-                    （氏名・住所・電話番号は、消費者からの請求があれば遅滞なく電子メール等で開示します）
+                <Row label="販売業者の名称">
+                  <span>市川恒太</span>
+                </Row>
+                <Row label="運営統括責任者">市川恒太</Row>
+                <Row label="所在地">
+                  <span className="text-sm text-neutral-600">
+                    請求があったら遅滞なく電子メール等で開示します
                   </span>
                 </Row>
-                <Row label="運営責任者">同上</Row>
-                <Row label="所在地">同上</Row>
-                <Row label="電話番号">同上</Row>
-                <Row label="お問い合わせ先">
-                  <Button variant="secondary" asChild>
-                    <a
-                      href="https://forms.gle/vg9kMmdKiKxxN6EU6"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      お問い合わせフォームはこちら
-                    </a>
-                  </Button>
-                  <br />
-                  <span className="text-xs text-neutral-500 mt-1 block">
-                    お問い合わせへの回答は営業日の3営業日以内に行います
+                <Row label="電話番号">
+                  <span className="text-sm text-neutral-600">
+                    請求があったら遅滞なく電子メール等で開示します
                   </span>
+                </Row>
+                <Row label="お問い合わせ先">
+                  <div className="space-y-2">
+                    <div>
+                      <strong>メールアドレス：</strong>
+                      <a
+                        href="mailto:contact@clippymap.com"
+                        className="text-blue-600 hover:underline ml-1"
+                      >
+                        clippymap@gmail.com
+                      </a>
+                    </div>
+                    <div>
+                      <Button variant="secondary" asChild>
+                        <a
+                          href="https://forms.gle/vg9kMmdKiKxxN6EU6"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          お問い合わせフォームはこちら
+                        </a>
+                      </Button>
+                    </div>
+                    <div className="text-xs text-neutral-500">
+                      お問い合わせへの回答は営業日の3営業日以内に行います
+                    </div>
+                  </div>
                 </Row>
                 <Row label="販売価格">
                   <div className="space-y-1">
@@ -64,6 +80,17 @@ export default function TokushohoPage() {
                     <div>プレミアムプラン（年額）：4,200円（税込）</div>
                     <div className="text-xs text-neutral-500">
                       ※価格は予告なく変更することがあります
+                    </div>
+                  </div>
+                </Row>
+                <Row label="追加手数料等の追加料金">
+                  <div className="space-y-1">
+                    <div>基本的に追加料金は発生しません</div>
+                    <div className="text-sm text-neutral-600">
+                      ※クレジットカード決済手数料はサービス料金に含まれています
+                    </div>
+                    <div className="text-sm text-neutral-600">
+                      ※消費税は表示価格に含まれています
                     </div>
                   </div>
                 </Row>
