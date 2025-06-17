@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
+  // CloudFlare Workers環境では必須：fetch APIを使用
+  httpClient: Stripe.createFetchHttpClient(),
 });
 
 const supabase = createClient(

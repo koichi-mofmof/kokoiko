@@ -10,6 +10,16 @@ interface CreateCheckoutSessionParams {
   returnUrl: string;
 }
 
+// CloudFlare Workers環境でStripeクライアントを初期化
+function createStripeClient(): Stripe {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-05-28.basil",
+    // CloudFlare Workers環境では必須：fetch APIを使用
+    httpClient: Stripe.createFetchHttpClient(),
+  });
+  return stripe;
+}
+
 export async function createCheckoutSession({
   userId,
   priceId,
@@ -21,10 +31,8 @@ export async function createCheckoutSession({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Stripe Client
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2025-05-28.basil",
-  });
+  // CloudFlare Workers対応のStripe Client
+  const stripe = createStripeClient();
 
   try {
     // Supabase Authからユーザー情報を取得
@@ -168,9 +176,7 @@ export async function createCustomerPortalSession(
       );
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2025-05-28.basil",
-    });
+    const stripe = createStripeClient();
 
     const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing`;
 
@@ -219,9 +225,7 @@ export async function cleanupInvalidCustomer(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2025-05-28.basil",
-  });
+  const stripe = createStripeClient();
 
   try {
     const { data: subscription, error: subError } = await supabase
