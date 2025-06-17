@@ -141,7 +141,9 @@ export function ListCardActions({
   };
 
   const handleShare = async () => {
-    const url = window.location.href;
+    // 常にリスト詳細画面のURLを共有
+    const baseUrl = window.location.origin;
+    const url = `${baseUrl}/lists/${list.id}`;
     const title = list.name;
     const text = list.description || "";
 
