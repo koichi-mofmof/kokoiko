@@ -144,6 +144,7 @@ export async function createCheckoutSession({
         ...(alreadyTrialed ? {} : { trial_period_days: 14 }),
       },
       metadata: { user_id: userId },
+      allow_promotion_codes: true,
     });
 
     return { url: session.url! };
