@@ -17,7 +17,10 @@
     "analyze": "cross-env ANALYZE=true next build",
     "build:prod": "next build && next export",
     "optimize:images": "node scripts/optimize-images.js",
-    "performance:audit": "node scripts/performance-audit.js"
+    "performance:audit": "node scripts/performance-audit.js",
+    "load-test": "node scripts/load-test.js",
+    "load-test:production": "cross-env LOAD_TEST_URL=https://clippymap.com node scripts/load-test.js",
+    "load-test:development": "cross-env LOAD_TEST_URL=http://localhost:3000 node scripts/load-test.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
