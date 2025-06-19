@@ -8,18 +8,28 @@ const nextConfig: NextConfig = {
   // パフォーマンス最適化
   experimental: {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
-    turbo: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
+  },
+
+  // Turbopack設定（Next.js 15対応）
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
+    },
+    resolveAlias: {
+      // 必要に応じてエイリアス設定
     },
   },
 
-  // Webpack最適化
-  webpack: (config, { dev, isServer }) => {
+  // Webpack最適化（Turbopack使用時はスキップ）
+  webpack: (config, { dev, isServer, nextRuntime }) => {
+    // Turbopack使用時は従来のWebpack設定をスキップ
+    if (process.env.NEXT_DEV && process.env.TURBOPACK) {
+      return config;
+    }
+
     // プロダクション環境でのバンドルサイズ最適化
     if (!dev && !isServer) {
       config.optimization = {
@@ -32,25 +42,28 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // バンドル分析（開発時のみ）
-  ...(process.env.ANALYZE === "true" && {
-    webpack: (config: any) => {
-      if (process.env.ANALYZE === "true") {
-        const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: "static",
-            openAnalyzer: false,
-          })
-        );
-      }
-      return config;
-    },
-  }),
+  // バンドル分析（開発時のみ、Turbopack非使用時）
+  ...(process.env.ANALYZE === "true" &&
+    !process.env.TURBOPACK && {
+      webpack: (config: any) => {
+        if (process.env.ANALYZE === "true") {
+          const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+          config.plugins.push(
+            new BundleAnalyzerPlugin({
+              analyzerMode: "static",
+              openAnalyzer: false,
+            })
+          );
+        }
+        return config;
+      },
+    }),
 
   images: {
-    // Cloudflare Workers環境では画像最適化を無効化
-    unoptimized: process.env.CLOUDFLARE_WORKERS === "true",
+    // Cloudflare Workers環境または開発時のネットワークアクセスでは画像最適化を無効化
+    unoptimized:
+      process.env.CLOUDFLARE_WORKERS === "true" ||
+      process.env.NODE_ENV === "development",
     formats: ["image/webp", "image/avif"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -65,15 +78,21 @@ const nextConfig: NextConfig = {
 
   // キャッシュとヘッダー最適化
   async headers() {
+    const isProduction = process.env.NODE_ENV === "production";
+
     return [
       {
         source: "/(.*)",
         headers: [
-          // HTTP Strict Transport Security
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains; preload",
-          },
+          // HTTP Strict Transport Security（本番環境のみ）
+          ...(isProduction
+            ? [
+                {
+                  key: "Strict-Transport-Security",
+                  value: "max-age=31536000; includeSubDomains; preload",
+                },
+              ]
+            : []),
           // Prevent MIME type sniffing
           {
             key: "X-Content-Type-Options",

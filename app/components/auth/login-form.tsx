@@ -9,12 +9,14 @@ import {
   loginWithCredentials,
   loginWithGoogle,
 } from "@/lib/actions/auth";
+import { isGoogleOAuthBlocked } from "@/lib/utils/browser-detection";
 import { getCSRFTokenFromCookie } from "@/lib/utils/csrf-client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { GoogleLogoIcon } from "./signup-form";
+import { WebViewWarning } from "./webview-warning";
 
 // Submit ボタンコンポーネント (useFormStatusを使用)
 function SubmitButton() {
@@ -53,6 +55,7 @@ export function LoginForm() {
   const [googleError, setGoogleError] = useState<string | null>(
     searchParams.get("google_error")
   );
+  const [isWebViewBlocked, setIsWebViewBlocked] = useState(false);
 
   // CSRFトークンの取得
   const [csrfToken, setCsrfToken] = useState<string>("");
@@ -70,6 +73,11 @@ export function LoginForm() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    // WebViewからのアクセスかチェック
+    setIsWebViewBlocked(isGoogleOAuthBlocked());
+  }, []);
+
   const googleLoginAction = async () => {
     // 認証コールバック待機状態をマーク
     markAuthCallbackPending();
@@ -79,6 +87,9 @@ export function LoginForm() {
 
   return (
     <div className="space-y-4">
+      {/* WebView警告表示 */}
+      <WebViewWarning />
+
       {/* メール/パスワードログインフォーム */}
       <form
         action={dispatch}
@@ -131,28 +142,36 @@ export function LoginForm() {
         <SubmitButton /> {/* Submitボタンコンポーネントを使用 */}
       </form>
 
-      {/* 区切り線 */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            または
-          </span>
-        </div>
-      </div>
-
-      {/* Googleログインフォーム (別のform要素でactionを指定) */}
-      <form action={googleLoginAction} className="space-y-4">
-        <GoogleLoginButton /> {/* Googleログインボタンコンポーネントを使用 */}
-        {/* Googleログイン開始時のエラー表示 */}
-        {googleError && (
-          <div aria-live="polite" aria-atomic="true">
-            <p className="text-sm text-red-500">{googleError}</p>
+      {/* WebViewでない場合、またはユーザーが続行を選択した場合のみGoogleログインを表示 */}
+      {!isWebViewBlocked && (
+        <>
+          {/* 区切り線 */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                または
+              </span>
+            </div>
           </div>
-        )}
-      </form>
+
+          {/* Googleログインフォーム (別のform要素でactionを指定) */}
+          {!isWebViewBlocked && (
+            <form action={googleLoginAction} className="space-y-4">
+              <GoogleLoginButton />{" "}
+              {/* Googleログインボタンコンポーネントを使用 */}
+              {/* Googleログイン開始時のエラー表示 */}
+              {googleError && (
+                <div aria-live="polite" aria-atomic="true">
+                  <p className="text-sm text-red-500">{googleError}</p>
+                </div>
+              )}
+            </form>
+          )}
+        </>
+      )}
 
       {/* パスワード忘れリンク */}
       <div className="text-center text-sm">

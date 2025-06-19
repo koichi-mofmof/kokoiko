@@ -10,11 +10,13 @@ import {
   loginWithGoogle,
   signupWithCredentials,
 } from "@/lib/actions/auth";
+import { isGoogleOAuthBlocked } from "@/lib/utils/browser-detection";
 import { getCSRFTokenFromCookie } from "@/lib/utils/csrf-client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { WebViewWarning } from "./webview-warning";
 
 // Google Logo SVG
 export const GoogleLogoIcon = () => (
@@ -82,6 +84,7 @@ export function SignupForm() {
   const [googleError, setGoogleError] = useState<string | null>(
     searchParams.get("google_error")
   );
+  const [isWebViewBlocked, setIsWebViewBlocked] = useState(false);
 
   useEffect(() => {
     const error = searchParams.get("google_error");
@@ -89,6 +92,11 @@ export function SignupForm() {
       setGoogleError("Googleでの登録に失敗しました。");
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    // WebViewからのアクセスかチェック
+    setIsWebViewBlocked(isGoogleOAuthBlocked());
+  }, []);
 
   const googleLoginAction = async () => {
     // 認証コールバック待機状態をマーク
@@ -114,6 +122,9 @@ export function SignupForm() {
 
   return (
     <div className="space-y-6">
+      {/* WebView警告表示 */}
+      <WebViewWarning />
+
       <form action={dispatch} className="space-y-4">
         <input
           type="hidden"
@@ -239,27 +250,34 @@ export function SignupForm() {
         <SignupSubmitButton />
       </form>
 
-      {/* Separator */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            または
-          </span>
-        </div>
-      </div>
-
-      {/* Google Signup Form */}
-      <form action={googleLoginAction} className="space-y-4">
-        <GoogleButton />
-        {googleError && (
-          <div aria-live="polite" aria-atomic="true">
-            <p className="text-sm text-red-500">{googleError}</p>
+      {/* WebViewでない場合、またはユーザーが続行を選択した場合のみGoogleログインを表示 */}
+      {!isWebViewBlocked && (
+        <>
+          {/* Separator */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                または
+              </span>
+            </div>
           </div>
-        )}
-      </form>
+
+          {/* Google Signup Form */}
+          {!isWebViewBlocked && (
+            <form action={googleLoginAction} className="space-y-4">
+              <GoogleButton />
+              {googleError && (
+                <div aria-live="polite" aria-atomic="true">
+                  <p className="text-sm text-red-500">{googleError}</p>
+                </div>
+              )}
+            </form>
+          )}
+        </>
+      )}
 
       {/* Login Link */}
       <div className="mt-4 text-center text-sm">
