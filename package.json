@@ -20,7 +20,11 @@
     "performance:audit": "node scripts/performance-audit.js",
     "load-test": "node scripts/load-test.js",
     "load-test:production": "cross-env LOAD_TEST_URL=https://clippymap.com node scripts/load-test.js",
-    "load-test:development": "cross-env LOAD_TEST_URL=http://localhost:3000 node scripts/load-test.js"
+    "load-test:development": "cross-env LOAD_TEST_URL=http://localhost:3000 node scripts/load-test.js",
+    "type-check": "tsc --noEmit",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "seo:diagnose": "node scripts/seo-diagnostics.js",
+    "seo:check": "npm run seo:diagnose"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

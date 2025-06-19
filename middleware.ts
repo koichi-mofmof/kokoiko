@@ -89,6 +89,33 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 🔍 検索エンジンクローラーの検出と特別処理
+  const userAgent = request.headers.get("user-agent") || "";
+  const isSearchBot =
+    /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator/i.test(
+      userAgent
+    );
+
+  if (isSearchBot) {
+    console.log(`🤖 検索ボット検出: ${userAgent} - 最適化された処理を適用`);
+
+    // 検索ボット向けの最適化されたレスポンス
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-crawler", "true");
+
+    let response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+
+    // 検索ボット向けの最小限ヘッダー設定
+    response.headers.set("X-Robots-Tag", "index, follow");
+    response.headers.set("Cache-Control", "public, max-age=86400"); // 24時間キャッシュ
+
+    return response;
+  }
+
   // CloudFlare Workers 環境での高度なセキュリティチェック
   const clientIp =
     request.headers.get("cf-connecting-ip") ||
@@ -97,7 +124,6 @@ export async function middleware(request: NextRequest) {
     "unknown";
 
   // 負荷テスト用の例外チェック
-  const userAgent = request.headers.get("user-agent") || "";
   const isLoadTestMode = process.env.LOAD_TEST_MODE === "true";
   const isLoadTestUA =
     isLoadTestMode &&

@@ -98,6 +98,7 @@ function createAnonymousClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("❌ Supabase環境変数が設定されていません");
     throw new Error("Supabase environment variables are not set");
   }
 
@@ -119,16 +120,17 @@ async function getPublicLists() {
       .select("id, name, updated_at")
       .eq("is_public", true)
       .order("updated_at", { ascending: false })
-      .limit(100); // 最大100件に制限してパフォーマンス確保
+      .limit(50); // パフォーマンス向上のため制限を50に調整
 
     if (error) {
-      console.error("Error fetching public lists:", error);
+      console.error("❌ 公開リスト取得エラー:", error);
       return [];
     }
 
+    console.log(`✅ ${publicLists?.length || 0}件の公開リストを取得`);
     return publicLists || [];
   } catch (error) {
-    console.error("Error in getPublicLists:", error);
+    console.error("❌ getPublicLists実行エラー:", error);
     return [];
   }
 }
@@ -138,45 +140,63 @@ export async function generateSitemapEntries(
 ): Promise<MetadataRoute.Sitemap> {
   // CloudFlare Workers環境での環境変数取得を改善
   const baseUrl = getBaseUrl(env);
+  console.log(`🌐 サイトマップ生成開始: ${baseUrl}`);
 
   const entries: MetadataRoute.Sitemap = [];
 
-  // 静的ページを追加
-  for (const page of staticPages) {
-    entries.push({
-      url: `${baseUrl}${page.url}`,
-      lastModified: page.lastModified,
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-    });
-  }
-
-  // サンプルページを追加
-  for (const page of samplePages) {
-    entries.push({
-      url: `${baseUrl}${page.url}`,
-      lastModified: page.lastModified,
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-    });
-  }
-
-  // 動的な公開リストページを追加
   try {
-    const publicLists = await getPublicLists();
-
-    for (const list of publicLists) {
+    // 静的ページを追加
+    for (const page of staticPages) {
       entries.push({
-        url: `${baseUrl}/lists/${list.id}`,
-        lastModified: list.updated_at ? new Date(list.updated_at) : new Date(),
-        changeFrequency: "weekly",
-        priority: 0.7,
+        url: `${baseUrl}${page.url}`,
+        lastModified: page.lastModified,
+        changeFrequency: page.changeFrequency,
+        priority: page.priority,
       });
     }
-  } catch (error) {
-    console.error("Error adding dynamic content to sitemap:", error);
-    // エラー時も静的ページだけは返す
-  }
 
-  return entries;
+    // サンプルページを追加
+    for (const page of samplePages) {
+      entries.push({
+        url: `${baseUrl}${page.url}`,
+        lastModified: page.lastModified,
+        changeFrequency: page.changeFrequency,
+        priority: page.priority,
+      });
+    }
+
+    // 動的な公開リストページを追加
+    try {
+      const publicLists = await getPublicLists();
+
+      for (const list of publicLists) {
+        entries.push({
+          url: `${baseUrl}/lists/${list.id}`,
+          lastModified: list.updated_at
+            ? new Date(list.updated_at)
+            : new Date(),
+          changeFrequency: "weekly",
+          priority: 0.7,
+        });
+      }
+    } catch (error) {
+      console.error("❌ 公開リスト処理エラー:", error);
+      // エラー時も静的ページは返す
+    }
+
+    console.log(`✅ サイトマップ生成完了: ${entries.length}件のエントリー`);
+    return entries;
+  } catch (error) {
+    console.error("❌ サイトマップ生成エラー:", error);
+
+    // 最低限のフォールバック
+    return [
+      {
+        url: baseUrl,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 1,
+      },
+    ];
+  }
 }

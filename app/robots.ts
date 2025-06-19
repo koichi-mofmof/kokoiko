@@ -8,17 +8,22 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // プライベートな内容は除外
-        disallow: ["/api/", "/auth/", "/settings/", "/_next/", "/admin/"],
-      },
-      // 検索エンジンボット用の特別なルール
-      {
-        userAgent: "Googlebot",
-        allow: "/",
-        disallow: ["/api/", "/auth/", "/settings/", "/_next/", "/admin/"],
+        // プライベートな内容や不要なファイルを除外
+        disallow: [
+          "/api/",
+          "/auth/",
+          "/settings/",
+          "/tokushoho",
+          "/_next/",
+          "/admin/",
+          "/_vercel/",
+          "/debug/",
+          "/cookies/",
+          "*?*", // クエリパラメータ付きURL
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
-    host: baseUrl,
+    // Googleが推奨するCrawl-delayを削除（現代では不要）
   };
 }
