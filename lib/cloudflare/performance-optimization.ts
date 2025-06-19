@@ -202,29 +202,3 @@ export class EmergencyCache {
     return this.cache.size;
   }
 }
-
-/**
- * パフォーマンス監視とログ
- */
-export function logPerformanceMetrics(
-  pathname: string,
-  monitor: CPUTimeMonitor,
-  success: boolean,
-  error?: string
-): void {
-  const metrics = {
-    pathname,
-    processingTime: monitor.getElapsedTime(),
-    success,
-    error,
-    timestamp: new Date().toISOString(),
-    remainingTime: monitor.getRemainingTime(),
-  };
-
-  // 本番環境では外部監視サービスに送信
-  if (process.env.NODE_ENV === "production") {
-    console.warn("PERFORMANCE_METRICS:", JSON.stringify(metrics));
-  } else {
-    console.log("Performance metrics:", metrics);
-  }
-}

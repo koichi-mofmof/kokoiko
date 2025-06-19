@@ -2,7 +2,6 @@ import { getCacheStrategy } from "@/lib/cloudflare/cdn-cache";
 import {
   CPUTimeMonitor,
   createPerformanceOptimizedResponse,
-  logPerformanceMetrics,
   PERFORMANCE_CONFIG,
 } from "@/lib/cloudflare/performance-optimization";
 import {
@@ -175,12 +174,6 @@ export async function middleware(request: NextRequest) {
         performanceMonitor
       );
       if (fallbackResponse) {
-        logPerformanceMetrics(
-          pathname,
-          performanceMonitor,
-          false,
-          "Early fallback triggered"
-        );
         return fallbackResponse;
       }
     }, 2000);
@@ -322,12 +315,6 @@ export async function middleware(request: NextRequest) {
         performanceMonitor
       );
       if (fallbackResponse) {
-        logPerformanceMetrics(
-          pathname,
-          performanceMonitor,
-          false,
-          "CPU timeout fallback"
-        );
         return fallbackResponse;
       }
     }
@@ -346,12 +333,6 @@ export async function middleware(request: NextRequest) {
         performanceMonitor
       );
       if (fallbackResponse) {
-        logPerformanceMetrics(
-          pathname,
-          performanceMonitor,
-          false,
-          "Post-auth timeout fallback"
-        );
         return fallbackResponse;
       }
     }
@@ -471,9 +452,6 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    // パフォーマンス監視ログ
-    logPerformanceMetrics(pathname, performanceMonitor, true);
-
     return response;
   } catch (error) {
     // エラー時のフォールバック
@@ -484,22 +462,10 @@ export async function middleware(request: NextRequest) {
       performanceMonitor
     );
     if (fallbackResponse) {
-      logPerformanceMetrics(
-        pathname,
-        performanceMonitor,
-        false,
-        `Middleware error: ${error}`
-      );
       return fallbackResponse;
     }
 
     // 最終的なエラーレスポンス
-    logPerformanceMetrics(
-      pathname,
-      performanceMonitor,
-      false,
-      `Critical error: ${error}`
-    );
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

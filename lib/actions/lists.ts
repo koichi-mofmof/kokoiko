@@ -280,88 +280,91 @@ export async function joinListViaShareLink(
   userId: string,
   ownerId: string
 ) {
-  console.log("joinListViaShareLink", token, userId, ownerId);
+  // パラメータチェック
   if (!token || !userId || !ownerId) {
     return {
       success: false,
-      error: "トークン、ユーザーID、またはオーナーIDが指定されていません。",
+      error: "必要な情報が不足しています。",
     };
   }
 
   const supabase = await createClient();
 
-  // 1. トークンの有効性を再検証
-  const verifyResult = await verifyShareToken(token);
-  if (!verifyResult.success) {
-    return {
-      success: false,
-      error: verifyResult.reason || "トークンが無効です。",
-    };
-  }
-  const { listId, permission } = verifyResult;
+  try {
+    // 1. 新しいセキュリティ関数でトークン検証と情報取得を同時実行
+    const { data: tokenVerification, error: verifyError } = await supabase.rpc(
+      "verify_share_token_access",
+      { token_value: token }
+    );
 
-  // 2. shared_listsに参加ユーザーを登録（既存なら権限をupdate）
-  const { data: existing } = await supabase
-    .from("shared_lists")
-    .select("id, permission")
-    .eq("list_id", listId)
-    .eq("shared_with_user_id", userId)
-    .single();
-
-  if (existing) {
-    // 既存レコードがある場合は権限をupdate
-    const { error: updateError } = await supabase
-      .from("shared_lists")
-      .update({ permission })
-      .eq("id", existing.id);
-    if (updateError) {
-      console.error("Update error:", updateError);
-      return { success: false, error: "参加処理中にエラーが発生しました。" };
+    if (verifyError || !tokenVerification?.[0]?.is_valid) {
+      return {
+        success: false,
+        error: "無効なトークンです",
+        details: verifyError?.message,
+      };
     }
-  } else {
-    // 新規参加
-    const { error: insertError } = await supabase.from("shared_lists").insert({
+
+    const {
       list_id: listId,
-      shared_with_user_id: userId,
       permission,
-      owner_id: ownerId,
-    });
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return { success: false, error: "参加処理中にエラーが発生しました。" };
+      owner_id: tokenOwnerId,
+    } = tokenVerification[0];
+
+    // 2. shared_listsに参加ユーザーを登録（UPSERTで簡素化）
+    const { error: upsertError } = await supabase.from("shared_lists").upsert(
+      {
+        list_id: listId,
+        owner_id: tokenOwnerId, // セキュリティ関数から取得した所有者ID使用
+        shared_with_user_id: userId,
+        permission,
+      },
+      {
+        onConflict: "list_id,shared_with_user_id",
+      }
+    );
+
+    if (upsertError) {
+      console.error("参加処理エラー:", upsertError);
+      return {
+        success: false,
+        error: "参加処理中にエラーが発生しました。",
+        details: upsertError.message,
+      };
     }
-  }
 
-  // 3. list_share_tokensのcurrent_usesをインクリメント
-  // 現在の使用回数を取得してインクリメント
-  const { data: currentToken, error: getTokenError } = await supabase
-    .from("list_share_tokens")
-    .select("current_uses")
-    .eq("token", token)
-    .single();
+    // 3. list_share_tokensのcurrent_usesをインクリメント
+    const { data: currentToken, error: getTokenError } = await supabase
+      .from("list_share_tokens")
+      .select("current_uses")
+      .eq("token", token)
+      .single();
 
-  if (getTokenError || !currentToken) {
+    if (getTokenError || !currentToken) {
+      // 参加は成功したので、トークン更新エラーは警告レベル
+      console.warn("トークン使用回数更新失敗:", getTokenError);
+      return { success: true, listId, permission };
+    }
+
+    const newCurrentUses = (currentToken.current_uses || 0) + 1;
+    const { error: updateTokenError } = await supabase
+      .from("list_share_tokens")
+      .update({ current_uses: newCurrentUses })
+      .eq("token", token);
+
+    if (updateTokenError) {
+      console.warn("トークン使用回数更新失敗:", updateTokenError);
+      // 参加は成功したので、カウント更新失敗は警告レベル
+    }
+
+    return { success: true, listId, permission };
+  } catch (error) {
+    console.error("予期しないエラー:", error);
     return {
       success: false,
-      error: "トークン情報の取得中にエラーが発生しました。",
+      error: "参加処理中に予期しないエラーが発生しました。",
     };
   }
-
-  const newCurrentUses = (currentToken.current_uses || 0) + 1;
-  const { error: updateTokenError } = await supabase
-    .from("list_share_tokens")
-    .update({ current_uses: newCurrentUses })
-    .eq("token", token);
-
-  if (updateTokenError) {
-    console.error("Token update error:", updateTokenError);
-    return {
-      success: false,
-      error: "利用回数の更新中にエラーが発生しました。",
-    };
-  }
-
-  return { success: true, listId, permission };
 }
 
 // 指定リストの共有リンク一覧を取得
@@ -407,7 +410,14 @@ export async function createShareLink({
   if (authError || !user) {
     return { success: false, error: "認証エラー: ログインが必要です" };
   }
-  // オーナーまたは編集権限者か検証
+  // フェーズ1: 新しい権限チェック関数を使用
+  const { canManageShareLinks } = await import("@/lib/utils/permission-check");
+
+  if (!(await canManageShareLinks(listId, user.id))) {
+    return { success: false, error: "この操作を行う権限がありません。" };
+  }
+
+  // リスト情報取得
   const { data: listData, error: listError } = await supabase
     .from("place_lists")
     .select("created_by, name")
@@ -415,21 +425,6 @@ export async function createShareLink({
     .single();
   if (listError || !listData) {
     return { success: false, error: "リスト情報の取得に失敗しました。" };
-  }
-  let isAllowed = false;
-  if (listData.created_by === user.id) {
-    isAllowed = true;
-  } else {
-    const { data: shared } = await supabase
-      .from("shared_lists")
-      .select("permission")
-      .eq("list_id", listId)
-      .eq("shared_with_user_id", user.id)
-      .single();
-    if (shared && shared.permission === "edit") isAllowed = true;
-  }
-  if (!isAllowed) {
-    return { success: false, error: "この操作を行う権限がありません。" };
   }
   // 作成者名を取得
   let ownerName = "";
@@ -526,28 +521,10 @@ export async function deleteShareLink(id: string) {
   if (linkError || !link) {
     return { success: false, error: "リンク情報の取得に失敗しました。" };
   }
-  // オーナーまたは編集権限者か検証
-  const { data: listData, error: listError } = await supabase
-    .from("place_lists")
-    .select("created_by")
-    .eq("id", link.list_id)
-    .single();
-  if (listError || !listData) {
-    return { success: false, error: "リスト情報の取得に失敗しました。" };
-  }
-  let isAllowed = false;
-  if (listData.created_by === user.id) {
-    isAllowed = true;
-  } else {
-    const { data: shared } = await supabase
-      .from("shared_lists")
-      .select("permission")
-      .eq("list_id", link.list_id)
-      .eq("shared_with_user_id", user.id)
-      .single();
-    if (shared && shared.permission === "edit") isAllowed = true;
-  }
-  if (!isAllowed) {
+  // フェーズ1: 新しい権限チェック関数を使用
+  const { canManageShareLinks } = await import("@/lib/utils/permission-check");
+
+  if (!(await canManageShareLinks(link.list_id, user.id))) {
     return { success: false, error: "この操作を行う権限がありません。" };
   }
   // 削除
@@ -592,28 +569,10 @@ export async function updateShareLink({
   if (linkError || !link) {
     return { success: false, error: "リンク情報の取得に失敗しました。" };
   }
-  // オーナーまたは編集権限者か検証
-  const { data: listData, error: listError } = await supabase
-    .from("place_lists")
-    .select("created_by")
-    .eq("id", link.list_id)
-    .single();
-  if (listError || !listData) {
-    return { success: false, error: "リスト情報の取得に失敗しました。" };
-  }
-  let isAllowed = false;
-  if (listData.created_by === user.id) {
-    isAllowed = true;
-  } else {
-    const { data: shared } = await supabase
-      .from("shared_lists")
-      .select("permission")
-      .eq("list_id", link.list_id)
-      .eq("shared_with_user_id", user.id)
-      .single();
-    if (shared && shared.permission === "edit") isAllowed = true;
-  }
-  if (!isAllowed) {
+  // フェーズ1: 新しい権限チェック関数を使用（deleteShareLinkと統一）
+  const { canManageShareLinks } = await import("@/lib/utils/permission-check");
+
+  if (!(await canManageShareLinks(link.list_id, user.id))) {
     return { success: false, error: "この操作を行う権限がありません。" };
   }
   // 更新
@@ -649,7 +608,14 @@ export async function updateCollaboratorPermissionOnSharedList({
   if (authError || !user) {
     return { success: false, error: "認証エラー: ログインが必要です" };
   }
-  // オーナーまたは編集権限者か検証
+  // フェーズ1: 新しい権限チェック関数を使用
+  const { canManageShareLinks } = await import("@/lib/utils/permission-check");
+
+  if (!(await canManageShareLinks(listId, user.id))) {
+    return { success: false, error: "この操作を行う権限がありません。" };
+  }
+
+  // オーナー確認のため、リスト情報取得
   const { data: listData, error: listError } = await supabase
     .from("place_lists")
     .select("created_by")
@@ -658,21 +624,7 @@ export async function updateCollaboratorPermissionOnSharedList({
   if (listError || !listData) {
     return { success: false, error: "リスト情報の取得に失敗しました。" };
   }
-  let isAllowed = false;
-  if (listData.created_by === user.id) {
-    isAllowed = true;
-  } else {
-    const { data: shared } = await supabase
-      .from("shared_lists")
-      .select("permission")
-      .eq("list_id", listId)
-      .eq("shared_with_user_id", user.id)
-      .single();
-    if (shared && shared.permission === "edit") isAllowed = true;
-  }
-  if (!isAllowed) {
-    return { success: false, error: "この操作を行う権限がありません。" };
-  }
+
   // オーナー自身の権限は変更不可
   if (listData.created_by === targetUserId) {
     return { success: false, error: "オーナーの権限は変更できません。" };
@@ -709,7 +661,14 @@ export async function removeCollaboratorFromSharedList({
   if (authError || !user) {
     return { success: false, error: "認証エラー: ログインが必要です" };
   }
-  // オーナーまたは編集権限者か検証
+  // フェーズ1: 新しい権限チェック関数を使用
+  const { canManageShareLinks } = await import("@/lib/utils/permission-check");
+
+  if (!(await canManageShareLinks(listId, user.id))) {
+    return { success: false, error: "この操作を行う権限がありません。" };
+  }
+
+  // オーナー確認のため、リスト情報取得
   const { data: listData, error: listError } = await supabase
     .from("place_lists")
     .select("created_by")
@@ -718,21 +677,7 @@ export async function removeCollaboratorFromSharedList({
   if (listError || !listData) {
     return { success: false, error: "リスト情報の取得に失敗しました。" };
   }
-  let isAllowed = false;
-  if (listData.created_by === user.id) {
-    isAllowed = true;
-  } else {
-    const { data: shared } = await supabase
-      .from("shared_lists")
-      .select("permission")
-      .eq("list_id", listId)
-      .eq("shared_with_user_id", user.id)
-      .single();
-    if (shared && shared.permission === "edit") isAllowed = true;
-  }
-  if (!isAllowed) {
-    return { success: false, error: "この操作を行う権限がありません。" };
-  }
+
   // オーナー自身は解除不可
   if (listData.created_by === targetUserId) {
     return { success: false, error: "オーナーは共有解除できません。" };

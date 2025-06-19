@@ -187,9 +187,9 @@ export async function getAccessibleLists(
 }
 
 /**
- * RLSを活用してリスト詳細を取得
+ * フェーズ1修正: アプリケーション層権限チェックを使用してリスト詳細を取得
+ * - RLSに依存せず、permission-check.tsの関数を活用
  * - 公開/非公開、認証/未認証を問わず統一的に処理
- * - RLSポリシーが自動的にアクセス権限をチェック
  */
 export async function getListDetails(
   listId: string,
@@ -198,7 +198,16 @@ export async function getListDetails(
   const supabase = await createClient();
 
   try {
-    // RLSポリシーが自動的にアクセス権限をチェック
+    // フェーズ1: 新しい権限チェック関数を使用
+    const { canAccessList } = await import("@/lib/utils/permission-check");
+
+    const accessResult = await canAccessList(listId, userId);
+
+    if (!accessResult.canAccess) {
+      return null;
+    }
+
+    // リスト基本情報取得（権限チェック済み）
     const { data: list, error } = await supabase
       .from("place_lists")
       .select(
@@ -216,7 +225,6 @@ export async function getListDetails(
       .single();
 
     if (error || !list) {
-      // RLSポリシーによりアクセス拒否された場合もここに来る
       return null;
     }
 
@@ -226,21 +234,12 @@ export async function getListDetails(
       getCollaboratorsForList(listId, list.created_by),
     ]);
 
-    // 権限の判定
+    // 権限の判定（permission-check.tsの結果を使用）
     let permission = "view";
-    if (userId === list.created_by) {
+    if (accessResult.permission === "manage") {
       permission = "owner";
-    } else if (userId) {
-      const { data: sharedEntry } = await supabase
-        .from("shared_lists")
-        .select("permission")
-        .eq("list_id", listId)
-        .eq("shared_with_user_id", userId)
-        .single();
-
-      if (sharedEntry?.permission === "edit") {
-        permission = "edit";
-      }
+    } else if (accessResult.permission === "edit") {
+      permission = "edit";
     }
 
     return {

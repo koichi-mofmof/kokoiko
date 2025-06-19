@@ -30,7 +30,9 @@ export default async function JoinListPage({
 
   if (!user) {
     // 未ログインの場合はログインページへリダイレクト
-    redirect("/login?redirect=/lists/join?token=" + encodeURIComponent(token));
+    redirect(
+      "/login?redirect_url=" + encodeURIComponent("/lists/join?token=" + token)
+    );
     return null; // ここで以降の実行を防ぐ
   }
 
