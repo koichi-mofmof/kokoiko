@@ -19,7 +19,8 @@ import {
   searchPlaces,
 } from "@/lib/actions/google-maps-actions";
 import { registerPlaceToListAction } from "@/lib/actions/place-actions";
-import { Loader2, MapPin, Search, Tag as TagIcon, X } from "lucide-react";
+import { getListTags } from "@/lib/dal/lists";
+import { Loader2, MapPin, Search } from "lucide-react";
 import {
   useActionState,
   useEffect,
@@ -29,6 +30,7 @@ import {
 } from "react";
 import { useFormStatus } from "react-dom";
 import { v4 as uuidv4 } from "uuid";
+import TagInput from "./TagInput";
 
 // Autocompleteの候補の型
 interface AutocompletePrediction {
@@ -171,7 +173,9 @@ export default function AddPlaceForm({
 
   // タグ入力用の状態
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [tagInputValue, setTagInputValue] = useState("");
+  const [existingTags, setExistingTags] = useState<
+    { id: string; name: string; count: number }[]
+  >([]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -180,32 +184,21 @@ export default function AddPlaceForm({
     "not_visited"
   );
 
-  // タグ操作関連のヘルパー関数をコンポーネント内に移動
-  const handleRemoveTag = (tagToRemove: string) => {
-    setSelectedTags((prevTags) =>
-      prevTags.filter((tag) => tag !== tagToRemove)
-    );
-  };
-
-  const handleTagInputKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (event.key === "Enter" && tagInputValue.trim() !== "") {
-      event.preventDefault();
-      const newTag = tagInputValue.trim();
-      setSelectedTags((prevTags) => {
-        if (!prevTags.includes(newTag)) {
-          return [...prevTags, newTag];
-        }
-        return prevTags;
-      });
-      setTagInputValue("");
-    }
-  };
-
   useEffect(() => {
     setSessionToken(uuidv4());
-  }, []);
+
+    // リストの既存タグを取得
+    async function fetchExistingTags() {
+      try {
+        const tags = await getListTags(listId);
+        setExistingTags(tags);
+      } catch (error) {
+        console.error("Error fetching existing tags:", error);
+      }
+    }
+
+    fetchExistingTags();
+  }, [listId]);
 
   // search ステップ表示時に検索入力欄からフォーカスを外す
   useEffect(() => {
@@ -258,7 +251,6 @@ export default function AddPlaceForm({
       setSearchTerm("");
       setSelectedPredictionForDisplay(null);
       setSelectedTags([]);
-      setTagInputValue("");
       setVisitedStatus("not_visited");
       setCurrentStep("search");
       if (searchInputRef.current) {
@@ -347,7 +339,6 @@ export default function AddPlaceForm({
     setSelectedPredictionForDisplay(null);
     setSearchAttempted(false);
     setSelectedTags([]);
-    setTagInputValue("");
     setVisitedStatus("not_visited");
     setCurrentStep("search");
     if (searchInputRef.current) {
@@ -514,47 +505,11 @@ export default function AddPlaceForm({
         >
           <CardContent className="space-y-4">
             <div>
-              <Label
-                htmlFor="tags-input"
-                className="block text-sm font-medium mb-1"
-              >
-                タグ（任意）
-              </Label>
-              {/* 選択済みタグの表示エリア */}
-              <div className="flex flex-wrap gap-2 mb-2">
-                {selectedTags.map((tag, index) => (
-                  <span
-                    key={`selected-${index}`}
-                    className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200"
-                  >
-                    <TagIcon className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                    {tag}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 p-0 ml-1.5 -mr-0.5 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-600"
-                      onClick={() => handleRemoveTag(tag)}
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="sr-only">Remove {tag}</span>
-                    </Button>
-                  </span>
-                ))}
-              </div>
-              {/* 新規タグ入力 */}
-              <Input
-                id="tags-input"
-                type="text"
-                value={tagInputValue}
-                onChange={(e) => setTagInputValue(e.target.value)}
-                onKeyDown={handleTagInputKeyDown}
-                placeholder={
-                  selectedTags.length > 0
-                    ? "さらにタグを追加..."
-                    : "タグを入力してEnter"
-                }
-                className="w-full"
+              <TagInput
+                listId={listId}
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
+                existingTags={existingTags}
               />
               {/* ★追加: タグのフィールドエラー表示 */}
               {registerState.fieldErrors?.tags?.[0] && (

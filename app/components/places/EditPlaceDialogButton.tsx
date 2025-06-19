@@ -183,6 +183,7 @@ export default function EditPlaceDialogButton({
             <EditPlaceForm
               place={place}
               listPlaceId={place.listPlaceId}
+              listId={listId}
               onCancel={() => setOpen(false)}
             />
           ) : (

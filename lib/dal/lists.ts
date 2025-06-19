@@ -680,3 +680,65 @@ export async function fetchMyPageData(userId: string) {
 export async function getPublicListDetails(listId: string) {
   return getPublicListData(listId);
 }
+
+/**
+ * 特定のリストで使用されているタグを取得
+ */
+export async function getListTags(
+  listId: string
+): Promise<{ id: string; name: string; count: number }[]> {
+  const supabase = await createClient();
+
+  try {
+    const { data: tags, error } = await supabase
+      .from("list_place_tags")
+      .select(
+        `
+        tags!inner (
+          id,
+          name
+        ),
+        list_places!inner (
+          list_id
+        )
+      `
+      )
+      .eq("list_places.list_id", listId);
+
+    if (error) {
+      console.error("Error fetching list tags:", error);
+      return [];
+    }
+
+    // タグ名ごとに使用回数をカウント（同じタグ名の重複を統合）
+    const tagCounts = new Map<
+      string,
+      { id: string; name: string; count: number }
+    >();
+
+    tags?.forEach((item) => {
+      const tagData = (
+        item as unknown as {
+          tags: { id: string; name: string };
+        }
+      ).tags;
+
+      // タグ名をキーとして使用（IDではなく）
+      if (tagCounts.has(tagData.name)) {
+        tagCounts.get(tagData.name)!.count++;
+      } else {
+        tagCounts.set(tagData.name, {
+          id: tagData.id,
+          name: tagData.name,
+          count: 1,
+        });
+      }
+    });
+
+    // 使用回数が多い順にソート
+    return Array.from(tagCounts.values()).sort((a, b) => b.count - a.count);
+  } catch (error) {
+    console.error("Error in getListTags:", error);
+    return [];
+  }
+}

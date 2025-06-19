@@ -9,15 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { MapPin, Tag as TagIcon, X } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { updatePlaceDetailsAction } from "@/lib/actions/place-actions";
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
 import { useToast } from "@/hooks/use-toast";
+import { updatePlaceDetailsAction } from "@/lib/actions/place-actions";
+import { getListTags } from "@/lib/dal/lists";
+import { MapPin } from "lucide-react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
+import TagInput from "./TagInput";
 
 interface PlaceTag {
   id: string;
@@ -33,6 +33,7 @@ interface EditPlaceFormProps {
     visited?: "visited" | "not_visited";
   };
   listPlaceId: string;
+  listId: string;
   onCancel?: () => void;
 }
 
@@ -49,12 +50,15 @@ function SubmitButton() {
 export default function EditPlaceForm({
   place,
   listPlaceId,
+  listId,
   onCancel,
 }: EditPlaceFormProps) {
-  const [selectedTags, setSelectedTags] = useState<PlaceTag[]>(
-    place.tags || []
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    place.tags?.map((tag) => tag.name) || []
   );
-  const [tagInputValue, setTagInputValue] = useState("");
+  const [existingTags, setExistingTags] = useState<
+    { id: string; name: string; count: number }[]
+  >([]);
   const [visitedStatus, setVisitedStatus] = useState<"visited" | "not_visited">(
     place.visited || "not_visited"
   );
@@ -67,26 +71,19 @@ export default function EditPlaceForm({
     initialState
   );
 
-  // タグ追加
-  const handleTagInputKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (event.key === "Enter" && tagInputValue.trim() !== "") {
-      event.preventDefault();
-      const newTag = tagInputValue.trim();
-      if (!selectedTags.some((t) => t.name === newTag)) {
-        setSelectedTags((prev) => [
-          ...prev,
-          { id: `new-${newTag}`, name: newTag },
-        ]);
+  // 既存タグを取得
+  useEffect(() => {
+    async function fetchExistingTags() {
+      try {
+        const tags = await getListTags(listId);
+        setExistingTags(tags);
+      } catch (error) {
+        console.error("Error fetching existing tags:", error);
       }
-      setTagInputValue("");
     }
-  };
-  // タグ削除
-  const handleRemoveTag = (tagId: string) => {
-    setSelectedTags((prev) => prev.filter((t) => t.id !== tagId));
-  };
+
+    fetchExistingTags();
+  }, [listId]);
 
   useEffect(() => {
     if (toastShownRef.current) return;
@@ -123,49 +120,17 @@ export default function EditPlaceForm({
           <input
             type="hidden"
             name="tags"
-            value={JSON.stringify(selectedTags)}
+            value={JSON.stringify(
+              selectedTags.map((tag) => ({ id: `new-${tag}`, name: tag }))
+            )}
           />
 
           <div>
-            <Label
-              htmlFor="tags-input"
-              className="block text-sm font-medium mb-1"
-            >
-              タグ（任意）
-            </Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {selectedTags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200"
-                >
-                  <TagIcon className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                  {tag.name}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 p-0 ml-1.5 -mr-0.5 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-600"
-                    onClick={() => handleRemoveTag(tag.id)}
-                  >
-                    <X className="h-3 w-3" />
-                    <span className="sr-only">Remove {tag.name}</span>
-                  </Button>
-                </span>
-              ))}
-            </div>
-            <Input
-              id="tags-input"
-              type="text"
-              value={tagInputValue}
-              onChange={(e) => setTagInputValue(e.target.value)}
-              onKeyDown={handleTagInputKeyDown}
-              placeholder={
-                selectedTags.length > 0
-                  ? "さらにタグを追加..."
-                  : "タグを入力してEnter"
-              }
-              className="w-full"
+            <TagInput
+              listId={listId}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+              existingTags={existingTags}
             />
           </div>
           {/* 訪問ステータス */}
