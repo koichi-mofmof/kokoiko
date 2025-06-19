@@ -1,10 +1,7 @@
-/**
- * CloudFlare CDN キャッシュ設定
- * Phase 3.2: キャッシュ戦略実装
- */
-
-import { NextRequest, NextResponse } from "next/server";
+// CloudFlare CDN キャッシュ設定
+import { createClient } from "@/lib/supabase/server";
 import { revalidateTag } from "next/cache";
+import { NextRequest, NextResponse } from "next/server";
 
 // キャッシュ設定の定数
 export const CACHE_CONTROL = {
@@ -33,10 +30,7 @@ export const CACHE_CONTROL = {
 /**
  * リクエストパスに基づいてキャッシュ戦略を決定
  */
-export function getCacheStrategy(
-  pathname: string,
-  isPublic: boolean = false
-): string {
+export function getCacheStrategy(pathname: string, isPublic?: boolean): string {
   // 静的アセット
   if (pathname.match(/\.(js|css|woff2?|png|jpg|jpeg|gif|svg|ico|webp)$/)) {
     return CACHE_CONTROL.STATIC_ASSETS;
@@ -57,14 +51,15 @@ export function getCacheStrategy(
     return CACHE_CONTROL.PUBLIC_LISTS;
   }
 
-  // 公開リスト
-  if (pathname.match(/^\/lists\/[^/]+$/) && isPublic) {
-    return CACHE_CONTROL.PUBLIC_LISTS;
-  }
+  // リスト詳細ページ：公開/非公開で適切に分岐
+  if (pathname.startsWith("/lists/") && pathname !== "/lists") {
+    // isPublicが明示的に指定された場合はそれを使用
+    if (typeof isPublic === "boolean") {
+      return isPublic ? CACHE_CONTROL.PUBLIC_LISTS : CACHE_CONTROL.PRIVATE;
+    }
 
-  // プライベートページ
-  if (pathname.startsWith("/lists/") && !isPublic) {
-    return CACHE_CONTROL.SESSION_DEPENDENT;
+    // isPublicが不明な場合はセキュア側（キャッシュ無効）に倒す
+    return CACHE_CONTROL.PRIVATE;
   }
 
   // その他のページ（ホーム、About等）
@@ -78,6 +73,7 @@ export function getCacheStrategy(
 
 /**
  * キャッシュヘッダーを設定するミドルウェア
+ * 注意: リスト詳細ページの正確な判定は各ページコンポーネントで行う
  */
 export function applyCacheHeaders(
   request: NextRequest,
@@ -85,10 +81,8 @@ export function applyCacheHeaders(
 ): NextResponse {
   const pathname = request.nextUrl.pathname;
 
-  // パブリックリストかどうかの判定（実際の実装では動的に判定）
-  const isPublicList = checkIfPublicList(pathname);
-
-  const cacheControl = getCacheStrategy(pathname, isPublicList);
+  // ミドルウェアでは安全側（非公開）として処理
+  const cacheControl = getCacheStrategy(pathname);
 
   // Cache-Control ヘッダーを設定
   response.headers.set("Cache-Control", cacheControl);
@@ -116,12 +110,59 @@ export function applyCacheHeaders(
 }
 
 /**
- * パブリックリストかどうかの簡易判定
+ * URLパスからlistIdを抽出してデータベースから公開状態を確認
+ * セキュリティ上、不明な場合は非公開として扱う
  */
-function checkIfPublicList(pathname: string): boolean {
-  // 実際の実装では、データベースから取得するか、
-  // リクエストコンテキストから判定する
-  return pathname.startsWith("/sample/");
+export async function checkListPublicStatus(
+  pathname: string
+): Promise<boolean> {
+  // URLパターンマッチング: /lists/[listId] または /lists/[listId]/place/[placeId]
+  const listIdMatch = pathname.match(/^\/lists\/([^\/]+)/);
+
+  if (!listIdMatch) {
+    return false; // リストページでない場合は非公開扱い
+  }
+
+  const listId = listIdMatch[1];
+
+  // 特殊なパス（join等）は非公開扱い
+  if (listId === "join") {
+    return false;
+  }
+
+  try {
+    const supabase = await createClient();
+
+    // データベースから公開状態を確認
+    const { data, error } = await supabase
+      .from("place_lists")
+      .select("is_public")
+      .eq("id", listId)
+      .single();
+
+    if (error || !data) {
+      // エラーまたはリストが見つからない場合は非公開扱い
+      return false;
+    }
+
+    return data.is_public === true;
+  } catch (error) {
+    // エラーが発生した場合は安全側に倒して非公開扱い
+    console.warn("Failed to check list public status:", error);
+    return false;
+  }
+}
+
+/**
+ * リスト詳細ページ用の適切なキャッシュヘッダーを設定
+ * ページコンポーネント内で呼び出し、リストの公開状態に基づいて適切なキャッシュを設定
+ */
+export function setListPageCacheHeaders(isPublic: boolean): string {
+  const cacheControl = isPublic
+    ? CACHE_CONTROL.PUBLIC_LISTS // 公開リスト: 10分キャッシュ
+    : CACHE_CONTROL.PRIVATE; // 非公開リスト: キャッシュ無効
+
+  return cacheControl;
 }
 
 /**

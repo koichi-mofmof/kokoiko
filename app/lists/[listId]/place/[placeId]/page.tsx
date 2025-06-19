@@ -25,6 +25,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import PlaceMapClient from "./PlaceMapClient";
 
 interface PlaceDetailPageProps {
@@ -138,6 +139,11 @@ export default async function PlaceDetailPage({
   if (!list || !list.places) notFound();
   const place = list.places.find((p) => p.id === placeId);
   if (!place) notFound();
+
+  // 💡 キャッシュ制御: 非公開リストの場合はキャッシュを無効化
+  if (!list.is_public) {
+    noStore();
+  }
 
   // コメント一覧取得
   let comments: ListPlaceComment[] = [];

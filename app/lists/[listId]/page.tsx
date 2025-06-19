@@ -15,6 +15,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { unstable_noStore as noStore } from "next/cache";
 
 interface ListDetailPageProps {
   params: Promise<{ listId: string }>;
@@ -113,6 +114,11 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     // 未ログインで非公開リストアクセス、またはリストが存在しない場合
     // アクセス権限がない場合は統一してNoAccessコンポーネントを表示
     return <NoAccess />;
+  }
+
+  // 💡 キャッシュ制御: 非公開リストの場合はキャッシュを無効化
+  if (!listDetails.is_public) {
+    noStore();
   }
 
   const owner = listDetails.collaborators.find((c: Collaborator) => c.isOwner);

@@ -426,10 +426,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Apply cache headers based on the route
-    const isPublicRoute =
-      pathname.startsWith("/sample/") ||
-      (pathname.startsWith("/lists/") && pathname !== "/lists");
-    const cacheControl = getCacheStrategy(pathname, isPublicRoute);
+    const cacheControl = getCacheStrategy(pathname);
 
     // Set cache control headers
     response.headers.set("Cache-Control", cacheControl);
