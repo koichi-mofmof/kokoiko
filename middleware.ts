@@ -1,4 +1,8 @@
-import { getCacheStrategy } from "@/lib/cloudflare/cdn-cache";
+import {
+  getCacheStrategy,
+  checkListPublicStatus,
+  getAdaptiveCacheStrategy,
+} from "@/lib/cloudflare/cdn-cache";
 import {
   CPUTimeMonitor,
   createPerformanceOptimizedResponse,
@@ -426,7 +430,22 @@ export async function middleware(request: NextRequest) {
     }
 
     // Apply cache headers based on the route
-    const cacheControl = getCacheStrategy(pathname);
+    let cacheControl = getCacheStrategy(pathname);
+
+    // リスト詳細ページの場合は適応的キャッシュ戦略を使用
+    const listIdMatch = pathname.match(/^\/lists\/([^\/]+)$/);
+    if (listIdMatch) {
+      const listId = listIdMatch[1];
+      if (listId !== "join") {
+        try {
+          const isPublic = await checkListPublicStatus(pathname);
+          cacheControl = await getAdaptiveCacheStrategy(listId, isPublic);
+        } catch (error) {
+          console.warn("Failed to apply adaptive cache strategy:", error);
+          // エラー時はデフォルト戦略を使用
+        }
+      }
+    }
 
     // Set cache control headers
     response.headers.set("Cache-Control", cacheControl);

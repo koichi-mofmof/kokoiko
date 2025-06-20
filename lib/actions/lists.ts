@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateListCache } from "@/lib/cloudflare/cdn-cache";
 import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getSharedListCount } from "@/lib/utils/subscription-utils";
@@ -64,9 +65,14 @@ export async function createList(formData: FormData) {
 
     // キャッシュを更新してリスト一覧ページにリダイレクト
     revalidatePath("/lists");
+
+    // エッジキャッシュも無効化（公開リストの場合）
+    const listId = rpcData.id || rpcData;
+    await revalidateListCache(listId);
+
     return {
       success: true,
-      listId: rpcData.id || rpcData,
+      listId,
     };
   } catch (error) {
     console.error("予期せぬエラー:", error);
@@ -136,6 +142,11 @@ export async function updateList(formData: {
 
     // キャッシュを更新
     revalidatePath("/lists");
+    revalidatePath(`/lists/${id}`);
+
+    // エッジキャッシュも即座に無効化
+    await revalidateListCache(id);
+
     return {
       success: true,
       list: {
@@ -193,6 +204,11 @@ export async function deleteList(listId: string) {
 
     // キャッシュを更新
     revalidatePath("/lists");
+    revalidatePath(`/lists/${listId}`);
+
+    // エッジキャッシュも無効化
+    await revalidateListCache(listId);
+
     return {
       success: true,
     };

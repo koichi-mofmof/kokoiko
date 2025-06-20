@@ -16,6 +16,7 @@ import {
   UpdatePlaceDetailsSchema,
 } from "@/lib/validators/place";
 import { ListPlaceComment } from "@/types";
+import { revalidateListCache } from "@/lib/cloudflare/cdn-cache";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -178,6 +179,9 @@ export async function registerPlaceToListAction(
     // キャッシュの無効化
     revalidatePath(`/lists/${listId}`); // リスト詳細ページ
     revalidatePath("/lists"); // リスト一覧ページ (もしあれば)
+
+    // エッジキャッシュも即座に無効化
+    await revalidateListCache(listId);
 
     return {
       success: true,
@@ -444,6 +448,13 @@ export async function deleteListPlaceAction(formData: FormData) {
   const { listPlaceId } = validatedFields.data;
 
   try {
+    // 削除前にリストIDを取得
+    const { data: listPlaceData } = await supabase
+      .from("list_places")
+      .select("list_id")
+      .eq("id", listPlaceId)
+      .single();
+
     const { error: rpcError } = await supabase.rpc(
       "delete_list_place_cascade",
       {
@@ -453,7 +464,12 @@ export async function deleteListPlaceAction(formData: FormData) {
 
     if (rpcError) throw rpcError;
 
-    revalidatePath(`/lists/${listPlaceId}`);
+    const listId = listPlaceData?.list_id;
+    if (listId) {
+      revalidatePath(`/lists/${listId}`);
+      // エッジキャッシュも即座に無効化
+      await revalidateListCache(listId);
+    }
     revalidatePath("/settings/account");
 
     return { success: "場所を削除しました。" };

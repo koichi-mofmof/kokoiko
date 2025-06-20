@@ -14,8 +14,12 @@ export const CACHE_CONTROL = {
   // API レスポンス（5分）
   API_SHORT: "public, max-age=300, s-maxage=300",
 
-  // 公開リスト（10分）
-  PUBLIC_LISTS: "public, max-age=600, s-maxage=600",
+  // 公開リスト（2分）- 段階的最適化: リアルタイム性とコストのバランス
+  PUBLIC_LISTS: "public, max-age=120, s-maxage=120",
+
+  // 公開リスト（Stale-While-Revalidate）- 高頻度更新時の最適化
+  PUBLIC_LISTS_SWR:
+    "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
 
   // プライベートデータ（キャッシュしない）
   PRIVATE: "private, no-cache, no-store, must-revalidate",
@@ -155,14 +159,23 @@ export async function checkListPublicStatus(
 
 /**
  * リスト詳細ページ用の適切なキャッシュヘッダーを設定
- * ページコンポーネント内で呼び出し、リストの公開状態に基づいて適切なキャッシュを設定
+ * ページコンポーネント内で呼び出し、リストの公開状態と更新頻度に基づいて最適なキャッシュを設定
  */
-export function setListPageCacheHeaders(isPublic: boolean): string {
-  const cacheControl = isPublic
-    ? CACHE_CONTROL.PUBLIC_LISTS // 公開リスト: 10分キャッシュ
-    : CACHE_CONTROL.PRIVATE; // 非公開リスト: キャッシュ無効
+export async function setListPageCacheHeaders(
+  isPublic: boolean,
+  listId?: string
+): Promise<string> {
+  if (!isPublic) {
+    return CACHE_CONTROL.PRIVATE;
+  }
 
-  return cacheControl;
+  // listIdが提供されている場合は適応的キャッシュ戦略を使用
+  if (listId) {
+    return await getAdaptiveCacheStrategy(listId, isPublic);
+  }
+
+  // listIdが不明な場合はデフォルト（2分キャッシュ）
+  return CACHE_CONTROL.PUBLIC_LISTS;
 }
 
 /**
@@ -213,12 +226,43 @@ export async function revalidateUserCache(userId: string): Promise<void> {
 
 /**
  * リスト関連キャッシュの無効化
+ * 公開リストの場合は即座にキャッシュクリア
  */
 export async function revalidateListCache(listId: string): Promise<void> {
   await revalidateCache([
     CacheTags.LIST_DETAILS(listId),
     CacheTags.PUBLIC_LISTS,
   ]);
+
+  // CloudFlare Workers Cache API を使用してエッジキャッシュもクリア
+  await purgeListFromEdgeCache(listId);
+}
+
+/**
+ * CloudFlare Workers Cache API を使用したエッジキャッシュクリア
+ * データ更新時に特定リストのキャッシュを即座に無効化
+ */
+export async function purgeListFromEdgeCache(listId: string): Promise<void> {
+  if (typeof globalThis !== "undefined" && "caches" in globalThis) {
+    try {
+      const cache = (
+        globalThis as unknown as { caches: { default: CloudFlareCache } }
+      ).caches.default;
+
+      // 対象リストのURLパターンを生成
+      const listUrls = [`/lists/${listId}`, `/lists/${listId}/`];
+
+      // 各URLのキャッシュを削除
+      for (const url of listUrls) {
+        const request = new Request(url);
+        await cache.delete(request);
+      }
+
+      console.log(`✅ Edge cache cleared for list: ${listId}`);
+    } catch (error) {
+      console.warn("❌ Failed to clear edge cache:", error);
+    }
+  }
 }
 
 /**
@@ -311,4 +355,83 @@ export class WorkersCacheAPI {
 
   // Note: パターンマッチでのキャッシュ削除は CloudFlare Workers では制限があるため、
   // タグベースの削除（revalidateCache関数）を使用してください。
+}
+
+/**
+ * 適応的キャッシュ戦略
+ * リストの更新頻度に基づいて最適なキャッシュ時間を決定
+ */
+export async function getAdaptiveCacheStrategy(
+  listId: string,
+  isPublic: boolean
+): Promise<string> {
+  if (!isPublic) {
+    return CACHE_CONTROL.PRIVATE;
+  }
+
+  try {
+    const supabase = await createClient();
+
+    // 過去1時間の更新履歴を確認
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+    const { data: recentUpdates } = await supabase
+      .from("list_places")
+      .select("id")
+      .eq("list_id", listId)
+      .gte("updated_at", oneHourAgo)
+      .limit(5);
+
+    const updateCount = recentUpdates?.length || 0;
+
+    // 更新頻度に応じたキャッシュ戦略
+    if (updateCount >= 3) {
+      // 高頻度更新: Stale-While-Revalidate戦略
+      return CACHE_CONTROL.PUBLIC_LISTS_SWR;
+    } else if (updateCount >= 1) {
+      // 中頻度更新: 短期キャッシュ
+      return CACHE_CONTROL.PUBLIC_LISTS;
+    } else {
+      // 低頻度更新: 長期キャッシュ（10分）
+      return "public, max-age=600, s-maxage=600";
+    }
+  } catch (error) {
+    console.warn("Failed to determine adaptive cache strategy:", error);
+    // エラー時は安全側に倒す
+    return CACHE_CONTROL.PUBLIC_LISTS;
+  }
+}
+
+/**
+ * クライアントサイド楽観的更新のヘルパー
+ */
+export const OptimisticUpdateHelpers = {
+  /**
+   * リスト更新の楽観的更新用キー生成
+   */
+  getListUpdateKey: (listId: string) => `optimistic-list-${listId}`,
+
+  /**
+   * 場所追加の楽観的更新用キー生成
+   */
+  getPlaceUpdateKey: (listId: string, placeId: string) =>
+    `optimistic-place-${listId}-${placeId}`,
+
+  /**
+   * 楽観的更新のタイムスタンプ
+   */
+  getTimestamp: () => Date.now(),
+} as const;
+
+/**
+ * リスト詳細ページ用の簡易ログ関数
+ * 適応的キャッシュ戦略の動作確認用
+ */
+export async function logAdaptiveCacheStrategy(
+  listId: string,
+  isPublic: boolean
+): Promise<string> {
+  const cacheControl = await getAdaptiveCacheStrategy(listId, isPublic);
+  console.log(`📊 Adaptive cache strategy for list ${listId}: ${cacheControl}`);
+  return cacheControl;
 }

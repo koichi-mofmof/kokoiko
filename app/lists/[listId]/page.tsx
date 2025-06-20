@@ -3,7 +3,8 @@ import ListDetailView from "@/app/components/lists/ListDetailView";
 import JsonLd from "@/components/seo/JsonLd";
 import { ParticipantAvatars } from "@/components/ui/avatar";
 import NoAccess from "@/components/ui/NoAccess";
-import type { ListForClient, Collaborator } from "@/lib/dal/lists";
+import { logAdaptiveCacheStrategy } from "@/lib/cloudflare/cdn-cache";
+import type { Collaborator, ListForClient } from "@/lib/dal/lists";
 import { getListDetails, getPublicListData } from "@/lib/dal/lists";
 import {
   generateBreadcrumbSchema,
@@ -12,10 +13,10 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { unstable_noStore as noStore } from "next/cache";
 
 interface ListDetailPageProps {
   params: Promise<{ listId: string }>;
@@ -116,9 +117,16 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     return <NoAccess />;
   }
 
-  // 💡 キャッシュ制御: 非公開リストの場合はキャッシュを無効化
+  // 💡 キャッシュ制御: 適応的キャッシュ戦略を確認・適用
   if (!listDetails.is_public) {
     noStore();
+  } else {
+    // 公開リストの場合は適応的キャッシュ戦略をログ出力
+    try {
+      await logAdaptiveCacheStrategy(listId, listDetails.is_public);
+    } catch (error) {
+      console.warn("Failed to log adaptive cache strategy:", error);
+    }
   }
 
   const owner = listDetails.collaborators.find((c: Collaborator) => c.isOwner);
