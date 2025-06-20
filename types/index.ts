@@ -19,6 +19,14 @@ export interface Place {
   rating?: number;
   googlePlaceId?: string;
   listPlaceId?: string;
+  // 階層地域情報
+  countryCode?: string;
+  countryName?: string;
+  adminAreaLevel1?: string;
+  regionHierarchy?: {
+    level1: string; // 国名
+    level2?: string; // 州/省/都道府県
+  };
 }
 
 export interface User {
@@ -42,11 +50,15 @@ export interface FilterOptions {
   tagsCondition: "OR" | "AND";
   visited: "visited" | "not_visited" | null;
   groupId: string | null;
-  prefecture: string[];
   dateRange: {
     start: Date | null;
     end: Date | null;
   } | null;
+  // 階層地域フィルター
+  hierarchicalRegion?: {
+    country?: string;
+    states?: string[]; // 複数選択対応
+  };
 }
 
 export type ViewMode = "map" | "list" | "ranking";

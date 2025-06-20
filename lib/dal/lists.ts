@@ -12,6 +12,14 @@ import type { Database } from "@/types/supabase";
 // Type definitions
 type PlaceRow = Database["public"]["Tables"]["places"]["Row"];
 
+// 階層地域情報を含む拡張PlaceRow型
+type ExtendedPlaceRow = PlaceRow & {
+  country_code?: string | null;
+  country_name?: string | null;
+  admin_area_level_1?: string | null;
+  region_hierarchy?: { level1: string; level2?: string } | null;
+};
+
 export interface Collaborator extends User {
   permission?: string;
   isOwner?: boolean;
@@ -45,7 +53,7 @@ export interface ListsPageData {
  * PlaceRowをPlace型に変換するヘルパー関数
  */
 const mapPlaceRowToPlace = (
-  placeRow: PlaceRow,
+  placeRow: ExtendedPlaceRow,
   currentUserId?: string
 ): Place => {
   return {
@@ -68,6 +76,11 @@ const mapPlaceRowToPlace = (
     rating: undefined,
     googlePlaceId: placeRow.google_place_id || undefined,
     listPlaceId: undefined,
+    // 階層地域情報
+    countryCode: placeRow.country_code || undefined,
+    countryName: placeRow.country_name || undefined,
+    adminAreaLevel1: placeRow.admin_area_level_1 || undefined,
+    regionHierarchy: placeRow.region_hierarchy || undefined,
   };
 };
 
@@ -324,7 +337,7 @@ async function getPlacesForList(
         place_id: string;
         user_id: string;
         visited_status: string | null;
-        places: PlaceRow | null;
+        places: ExtendedPlaceRow | null;
         list_place_tags: {
           tags: { id: string; name: string } | null;
         }[];

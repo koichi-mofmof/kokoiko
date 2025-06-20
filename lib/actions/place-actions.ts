@@ -89,6 +89,10 @@ export async function registerPlaceToListAction(
     memo,
     listId,
     visited_status, // ★追加
+    countryCode,
+    countryName,
+    adminAreaLevel1,
+    regionHierarchy,
   } = validationResult.data;
 
   // ★追加: 住所から郵便番号を除去
@@ -133,6 +137,11 @@ export async function registerPlaceToListAction(
         tag_names_input: tags,
         user_comment_input: memo,
         visited_status_input: visited_status, // ★追加
+        // 階層地域情報の追加
+        country_code_input: countryCode,
+        country_name_input: countryName,
+        admin_area_level_1_input: adminAreaLevel1,
+        region_hierarchy_input: regionHierarchy,
       }
     );
 

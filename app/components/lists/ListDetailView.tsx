@@ -4,7 +4,6 @@ import RankingView from "@/app/components/lists/RankingView";
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/components/ui/FilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
-import { sortPrefectures } from "@/lib/utils/geography";
 import { FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
@@ -46,7 +45,7 @@ export default function ListDetailView({
     visited: null,
     groupId: null,
     dateRange: null,
-    prefecture: [],
+    hierarchicalRegion: {},
   });
 
   const availableTags = useMemo(() => {
@@ -56,20 +55,6 @@ export default function ListDetailView({
     return Array.from(new Set(allTagNames)).sort((a, b) =>
       a.localeCompare(b, "ja")
     );
-  }, [places]);
-
-  const availablePrefectures = useMemo(() => {
-    const prefectures = places
-      .map((place) => {
-        if (!place.address) return null;
-        const match = place.address.match(
-          /^(東京都|北海道|(?:京都|大阪)府|.{2,3}県)/
-        );
-        return match ? match[0] : null;
-      })
-      .filter((pref): pref is string => pref !== null);
-
-    return sortPrefectures(Array.from(new Set(prefectures)));
   }, [places]);
 
   useEffect(() => {
@@ -97,14 +82,23 @@ export default function ListDetailView({
     if (filters.visited !== null) {
       result = result.filter((place) => place.visited === filters.visited);
     }
-    if (filters.prefecture.length > 0) {
+
+    // 階層地域フィルター
+    if (filters.hierarchicalRegion?.country) {
       result = result.filter((place) => {
-        if (!place.address) return false;
-        const match = place.address.match(
-          /^(東京都|北海道|(?:京都|大阪)府|.{2,3}県)/
+        return place.countryCode === filters.hierarchicalRegion?.country;
+      });
+    }
+
+    if (
+      filters.hierarchicalRegion?.states &&
+      filters.hierarchicalRegion.states.length > 0
+    ) {
+      result = result.filter((place) => {
+        return (
+          place.adminAreaLevel1 &&
+          filters.hierarchicalRegion?.states?.includes(place.adminAreaLevel1)
         );
-        const prefecture = match ? match[0] : null;
-        return prefecture && filters.prefecture.includes(prefecture);
       });
     }
     setFilteredPlaces(result);
@@ -135,7 +129,7 @@ export default function ListDetailView({
               onFilterChange={setFilters}
               initialFilters={filters}
               availableTags={availableTags}
-              availablePrefectures={availablePrefectures}
+              listId={listId}
             />
           )}
         </div>

@@ -4,6 +4,10 @@ import {
   autocompleteSchema,
   placeDetailsSchema,
 } from "@/lib/validators/google-maps";
+import {
+  extractHierarchicalRegionSafe,
+  type HierarchicalRegion,
+} from "@/lib/utils/hierarchical-region-extraction";
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
@@ -22,6 +26,13 @@ interface AutocompleteSuggestion {
   };
 }
 
+interface AddressComponent {
+  longText: string;
+  shortText: string;
+  types: string[];
+  languageCode: string;
+}
+
 interface PlaceDetailsResult {
   id: string; // placeId
   formattedAddress?: string;
@@ -30,6 +41,8 @@ interface PlaceDetailsResult {
     latitude: number;
     longitude: number;
   };
+  addressComponents?: AddressComponent[];
+  hierarchicalRegion?: HierarchicalRegion;
 }
 
 interface ClientAutocompletePrediction {
@@ -159,7 +172,7 @@ export async function getPlaceDetails(
   const { placeId, sessionToken, languageCode, regionCode } =
     validatedFields.data;
 
-  const fields = "id,formattedAddress,location";
+  const fields = "id,formattedAddress,location,addressComponents";
 
   const url = `https://places.googleapis.com/v1/places/${placeId}?sessionToken=${sessionToken}&languageCode=${languageCode}&regionCode=${regionCode}`;
 
@@ -177,6 +190,7 @@ export async function getPlaceDetails(
       id?: string;
       formattedAddress?: string;
       location?: { latitude: number; longitude: number };
+      addressComponents?: AddressComponent[];
       error?: { message?: string; details?: Array<{ reason?: string }> };
     };
 
@@ -188,6 +202,11 @@ export async function getPlaceDetails(
       return { error: data.error?.message || errorMessage };
     }
 
+    // 階層地域情報の抽出
+    const hierarchicalRegion = data.addressComponents
+      ? extractHierarchicalRegionSafe(data.addressComponents)
+      : null;
+
     const clientPlaceDetails: PlaceDetailsResult = {
       id: data.id || "",
       formattedAddress: data.formattedAddress,
@@ -197,6 +216,8 @@ export async function getPlaceDetails(
             longitude: data.location.longitude,
           }
         : undefined,
+      addressComponents: data.addressComponents,
+      hierarchicalRegion: hierarchicalRegion || undefined,
     };
 
     return { placeDetails: clientPlaceDetails };

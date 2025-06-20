@@ -50,6 +50,16 @@ interface PlaceDetailsResult {
     longitude: number;
   };
   formattedAddress?: string;
+  hierarchicalRegion?: {
+    countryCode: string;
+    countryName: string;
+    adminAreaLevel1?: string;
+    adminAreaLevel1Type: "prefecture" | "state" | "province" | "region";
+    hierarchy: {
+      level1: string;
+      level2?: string;
+    };
+  };
 }
 
 const initialSearchState: {
@@ -327,6 +337,15 @@ export default function AddPlaceForm({
       memo,
       listId: listId,
       visited_status: visitedStatus,
+      // 階層地域情報の追加
+      countryCode:
+        placeDetailsState.placeDetails!.hierarchicalRegion?.countryCode,
+      countryName:
+        placeDetailsState.placeDetails!.hierarchicalRegion?.countryName,
+      adminAreaLevel1:
+        placeDetailsState.placeDetails!.hierarchicalRegion?.adminAreaLevel1,
+      regionHierarchy:
+        placeDetailsState.placeDetails!.hierarchicalRegion?.hierarchy,
     };
 
     startTransition(() => {

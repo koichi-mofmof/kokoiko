@@ -22,6 +22,11 @@ export const PlaceToRegisterSchema = z.object({
     .optional(),
   listId: z.string().uuid(),
   visited_status: VisitedStatusEnum.optional(),
+  // 階層地域情報（オプション）
+  countryCode: z.string().optional(),
+  countryName: z.string().optional(),
+  adminAreaLevel1: z.string().optional(),
+  regionHierarchy: z.record(z.any()).optional(), // JSONB形式
 });
 
 export const UpdatePlaceDetailsSchema = z.object({
