@@ -39,6 +39,7 @@ export interface Group {
 
 export interface FilterOptions {
   tags: string[];
+  tagsCondition: "OR" | "AND";
   visited: "visited" | "not_visited" | null;
   groupId: string | null;
   prefecture: string[];

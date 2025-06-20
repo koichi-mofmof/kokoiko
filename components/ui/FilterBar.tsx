@@ -26,6 +26,7 @@ export default function FilterBar({
   const [filters, setFilters] = useState<FilterOptions>(() => ({
     ...initialFilters,
     prefecture: initialFilters.prefecture || [],
+    tagsCondition: initialFilters.tagsCondition || "OR",
   }));
 
   const handleTagToggle = (tag: string) => {
@@ -34,6 +35,14 @@ export default function FilterBar({
       : [...filters.tags, tag];
 
     const newFilters = { ...filters, tags: newTags };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
+  };
+
+  const handleTagsConditionToggle = () => {
+    const newCondition: "OR" | "AND" =
+      filters.tagsCondition === "OR" ? "AND" : "OR";
+    const newFilters = { ...filters, tagsCondition: newCondition };
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
@@ -65,7 +74,9 @@ export default function FilterBar({
             filters.tags.length > 0 ||
             filters.visited !== null ||
             filters.prefecture.length > 0
-              ? "border-primary-300 text-primary-700 bg-primary-50"
+              ? filters.tagsCondition === "AND" && filters.tags.length > 1
+                ? "border-green-300 text-green-700 bg-green-50"
+                : "border-primary-300 text-primary-700 bg-primary-50"
               : "border-neutral-200 text-neutral-700 bg-white"
           } rounded-soft shadow-soft text-sm hover:bg-neutral-50 transition-colors`}
         >
@@ -88,7 +99,26 @@ export default function FilterBar({
         className="w-80 max-h-[70vh] overflow-y-auto bg-white rounded-soft shadow-medium p-4 z-[1100] border border-neutral-200 animate-fadeIn"
       >
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-neutral-800 mb-2">タグ</h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-neutral-800">タグ</h4>
+            {filters.tags.length > 1 && (
+              <button
+                onClick={handleTagsConditionToggle}
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  filters.tagsCondition === "AND"
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "bg-blue-100 text-blue-800 border border-blue-200"
+                }`}
+                title={
+                  filters.tagsCondition === "OR"
+                    ? "現在：いずれかのタグを含む（クリックで「全てのタグを含む」に変更）"
+                    : "現在：全てのタグを含む（クリックで「いずれかのタグを含む」に変更）"
+                }
+              >
+                {filters.tagsCondition === "OR" ? "いずれか" : "全て"}
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
             {availableTags.map((tag) => (
               <button
@@ -96,7 +126,9 @@ export default function FilterBar({
                 onClick={() => handleTagToggle(tag)}
                 className={`px-2.5 py-1.5 rounded-full text-xs ${
                   filters.tags.includes(tag)
-                    ? "bg-primary-100 text-primary-800 border border-primary-200"
+                    ? filters.tagsCondition === "AND"
+                      ? "bg-green-100 text-green-800 border border-green-200"
+                      : "bg-primary-100 text-primary-800 border border-primary-200"
                     : "bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200"
                 } transition-colors`}
               >

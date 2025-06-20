@@ -4,6 +4,7 @@ import RankingView from "@/app/components/lists/RankingView";
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/components/ui/FilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
+import { sortPrefectures } from "@/lib/utils/geography";
 import { FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
@@ -41,6 +42,7 @@ export default function ListDetailView({
   const [hasMapBeenViewed, setHasMapBeenViewed] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     tags: [],
+    tagsCondition: "OR",
     visited: null,
     groupId: null,
     dateRange: null,
@@ -51,35 +53,59 @@ export default function ListDetailView({
     const allTagNames = places.flatMap((place) =>
       (place.tags || []).map((tagObj) => tagObj.name)
     );
-    return Array.from(new Set(allTagNames));
+    return Array.from(new Set(allTagNames)).sort((a, b) =>
+      a.localeCompare(b, "ja")
+    );
   }, [places]);
 
   const availablePrefectures = useMemo(() => {
     const prefectures = places
       .map((place) => {
-        const match = place.address?.match(
+        if (!place.address) return null;
+        const match = place.address.match(
           /^(東京都|北海道|(?:京都|大阪)府|.{2,3}県)/
         );
         return match ? match[0] : null;
       })
       .filter((pref): pref is string => pref !== null);
-    return Array.from(new Set(prefectures));
+
+    return sortPrefectures(Array.from(new Set(prefectures)));
   }, [places]);
 
   useEffect(() => {
     let result = [...places];
+
+    // タグフィルター（AND/OR条件対応）
     if (filters.tags.length > 0) {
-      result = result.filter((place) =>
-        place.tags?.some((tagObj) => filters.tags.includes(tagObj.name))
-      );
+      result = result.filter((place) => {
+        const placeTags = place.tags?.map((tagObj) => tagObj.name) || [];
+
+        if (filters.tagsCondition === "OR") {
+          // OR条件：選択されたタグのいずれかを持つ
+          return filters.tags.some((filterTag) =>
+            placeTags.includes(filterTag)
+          );
+        } else {
+          // AND条件：選択されたタグを全て持つ
+          return filters.tags.every((filterTag) =>
+            placeTags.includes(filterTag)
+          );
+        }
+      });
     }
+
     if (filters.visited !== null) {
       result = result.filter((place) => place.visited === filters.visited);
     }
     if (filters.prefecture.length > 0) {
-      result = result.filter((place) =>
-        filters.prefecture.some((pref) => place.address?.startsWith(pref))
-      );
+      result = result.filter((place) => {
+        if (!place.address) return false;
+        const match = place.address.match(
+          /^(東京都|北海道|(?:京都|大阪)府|.{2,3}県)/
+        );
+        const prefecture = match ? match[0] : null;
+        return prefecture && filters.prefecture.includes(prefecture);
+      });
     }
     setFilteredPlaces(result);
     setSelectedPlace(null);
