@@ -1,10 +1,10 @@
-import ListDetailView from "@/app/components/lists/ListDetailView";
+import SampleListDetailView from "@/app/components/sample/SampleListDetailView";
+import { ParticipantAvatars } from "@/components/ui/avatar";
+import { getPlaceListDetails, mockUsers } from "@/lib/mockData";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getPlaceListDetails, mockUsers } from "@/lib/mockData";
-import { ParticipantAvatars } from "@/components/ui/avatar";
 
 interface SampleListDetailPageProps {
   params: Promise<{ listId: string }>;
@@ -73,11 +73,7 @@ export default async function SampleListDetailPage({
           <div className="text-center p-8">リスト詳細を読み込み中...</div>
         }
       >
-        <ListDetailView
-          places={listDetails.places}
-          listId={listId}
-          isSample={true}
-        />
+        <SampleListDetailView places={listDetails.places} listId={listId} />
       </Suspense>
     </>
   );

@@ -111,7 +111,7 @@ describe("ListDetailView", () => {
   it("場所が0件の場合、未登録メッセージが表示される", () => {
     render(<ListDetailView places={[]} listId="list1" permission="owner" />);
     expect(
-      screen.getByText(/このリストにはまだ場所が登録されていません/)
+      screen.getByText("このリストにはまだ場所が登録されていません。")
     ).toBeInTheDocument();
   });
 
@@ -126,8 +126,10 @@ describe("ListDetailView", () => {
     ).toBeInTheDocument();
   });
 
-  it("isSample=trueの場合、追加ボタンが表示されない", () => {
-    render(<ListDetailView places={basePlaces} listId="list1" isSample />);
+  it("権限がない場合、追加ボタンが表示されない", () => {
+    render(
+      <ListDetailView places={basePlaces} listId="list1" permission="view" />
+    );
     expect(
       screen.queryByTestId("AddPlaceButtonClient")
     ).not.toBeInTheDocument();

@@ -2,17 +2,15 @@
 
 import RankingView from "@/app/components/lists/RankingView";
 import PlaceList from "@/app/components/places/PlaceList";
-import FilterBar from "@/components/ui/FilterBar";
+import SampleFilterBar from "@/app/components/sample/SampleFilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
 import { FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
 
-interface ListDetailViewProps {
+interface SampleListDetailViewProps {
   places: Place[];
   listId: string;
-  permission?: string;
 }
 
 // OpenStreetMapView を動的にインポートし、SSRを無効にする
@@ -28,11 +26,10 @@ const DynamicOpenStreetMapView = dynamic(
   }
 );
 
-export default function ListDetailView({
+export default function SampleListDetailView({
   places,
   listId,
-  permission,
-}: ListDetailViewProps) {
+}: SampleListDetailViewProps) {
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>(places);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -120,10 +117,10 @@ export default function ListDetailView({
   return (
     <div>
       <div className="inline-flex items-center justify-between mb-4 w-full">
-        {/* 左：FilterBar */}
+        {/* 左：SampleFilterBar */}
         <div className="flex justify-start">
           {viewMode !== "ranking" && (
-            <FilterBar
+            <SampleFilterBar
               onFilterChange={setFilters}
               initialFilters={filters}
               availableTags={availableTags}
@@ -135,12 +132,9 @@ export default function ListDetailView({
         <div className="flex justify-center">
           <ViewToggle currentView={viewMode} onViewChange={handleViewChange} />
         </div>
-        {/* 右：場所を追加ボタン */}
+        {/* 右：場所を追加ボタン（サンプルでは表示しない） */}
         <div className="flex justify-end">
-          {viewMode !== "ranking" &&
-            (permission === "edit" || permission === "owner") && (
-              <AddPlaceButtonClient listId={listId} />
-            )}
+          {/* サンプル画面では場所追加機能は無効 */}
         </div>
       </div>
 
@@ -157,6 +151,7 @@ export default function ListDetailView({
               places={filteredPlaces}
               listId={listId}
               selectedPlaceId={selectedPlace?.id}
+              isSample={true}
             />
           )}
         </div>
@@ -164,14 +159,14 @@ export default function ListDetailView({
 
       {/* Ranking View */}
       <div className={`${viewMode === "ranking" ? "block" : "hidden"}`}>
-        <RankingView listId={listId} places={places} permission={permission} />
+        <RankingView listId={listId} places={places} permission={undefined} />
       </div>
 
       {/* Places Not Found Message */}
       {viewMode !== "ranking" && places.length === 0 && (
         <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
           <p className="text-sm text-neutral-600 mb-4">
-            このリストにはまだ場所が登録されていません。
+            このサンプルリストにはまだ場所が登録されていません。
           </p>
         </div>
       )}
@@ -197,6 +192,7 @@ export default function ListDetailView({
               places={filteredPlaces}
               onPlaceSelect={handlePlaceSelect}
               listId={listId}
+              isSample={true}
             />
           )}
         </div>

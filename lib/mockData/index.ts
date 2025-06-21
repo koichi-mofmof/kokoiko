@@ -58,6 +58,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJN8zS-kGWGGARn5lIbmoV80Q",
     imageUrl:
       "https://images.pexels.com/photos/30968027/pexels-photo-30968027.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "神奈川県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "神奈川県",
+    },
   },
   // Additional Date Spots (Indices 12-19)
   {
@@ -80,6 +87,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJcQfQ3kKFGGAREk8y3mI-B9k",
     imageUrl:
       "https://images.pexels.com/photos/29112375/pexels-photo-29112375.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "神奈川県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "神奈川県",
+    },
   },
   {
     id: "date-spot-004",
@@ -101,6 +115,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJgUBK7_K9ImARt7rM2G37L9o",
     imageUrl:
       "https://images.pexels.com/photos/14159605/pexels-photo-14159605.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "茨城県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "茨城県",
+    },
   },
   {
     id: "date-spot-005",
@@ -122,6 +143,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJm5_zL0iAImARJ4i_9Z1C0kU",
     imageUrl:
       "https://images.pexels.com/photos/31968757/pexels-photo-31968757.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "千葉県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "千葉県",
+    },
   },
   {
     id: "date-spot-006",
@@ -140,6 +168,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[1].id,
     rating: 4,
     googlePlaceId: "ChIJq9q-S9SAImARZ2Lw0C5D0F8",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "千葉県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "千葉県",
+    },
   },
   {
     id: "date-spot-008",
@@ -159,6 +194,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[1].id,
     rating: 4,
     googlePlaceId: "ChIJ_c9Z2Tj4GGARf-5I9T5W0tI",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "東京都",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "東京都",
+    },
   },
   {
     id: "date-spot-010",
@@ -178,6 +220,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[1].id,
     rating: 4,
     googlePlaceId: "ChIJq-lB5-GfGGARf-pE7z9c6QY",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "埼玉県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "埼玉県",
+    },
   },
   // Osaka Spots (Indices 20-26)
   {
@@ -200,6 +249,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJoc_c50fnAGAR59GZkQkJVW8",
     imageUrl:
       "https://images.pexels.com/photos/4058530/pexels-photo-4058530.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "大阪府",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "大阪府",
+    },
   },
   {
     id: "osaka-spot-002",
@@ -221,6 +277,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJoz0xQ9fnAGARvKP3aj4dYqs",
     imageUrl:
       "https://images.pexels.com/photos/5432843/pexels-photo-5432843.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "大阪府",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "大阪府",
+    },
   },
   {
     id: "osaka-spot-003",
@@ -242,6 +305,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJH9R2pkTnAGARU95rU6y9Fzs",
     imageUrl:
       "https://images.pexels.com/photos/7729468/pexels-photo-7729468.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "大阪府",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "大阪府",
+    },
   },
   {
     id: "osaka-spot-004",
@@ -260,6 +330,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[1].id,
     rating: 5,
     googlePlaceId: "ChIJq_9K0sPnAGARH9R1o0qH5QY",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "大阪府",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "大阪府",
+    },
   },
   {
     id: "osaka-spot-005",
@@ -282,6 +359,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJ4-Rk_kLnAGAR4pY6q_X8L6o",
     imageUrl:
       "https://images.pexels.com/photos/31196085/pexels-photo-31196085.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "大阪府",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "大阪府",
+    },
   },
   // New Sauna Spots
   {
@@ -302,6 +386,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[0].id,
     rating: 5,
     googlePlaceId: "ChIJSAUNA_Shikiji", // Dummy ID
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "静岡県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "静岡県",
+    },
   },
   {
     id: "sauna-002",
@@ -321,6 +412,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[1].id,
     rating: 5,
     googlePlaceId: "ChIJSAUNA_Soka", // Dummy ID
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "埼玉県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "埼玉県",
+    },
   },
   {
     id: "sauna-003",
@@ -340,6 +438,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[2].id,
     rating: 5,
     googlePlaceId: "ChIJSAUNA_Yulax", // Dummy ID
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "熊本県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "熊本県",
+    },
   },
   {
     id: "sauna-004",
@@ -361,6 +466,13 @@ export const mockPlaces: Place[] = [
     googlePlaceId: "ChIJSAUNA_Rakan", // Dummy ID
     imageUrl:
       "https://images.pexels.com/photos/5582214/pexels-photo-5582214.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "佐賀県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "佐賀県",
+    },
   },
   {
     id: "sauna-005",
@@ -379,6 +491,13 @@ export const mockPlaces: Place[] = [
     createdBy: mockUsers[4].id,
     rating: 5,
     googlePlaceId: "ChIJSAUNA_SpaMetsä", // Dummy ID
+    countryCode: "JP",
+    countryName: "日本",
+    adminAreaLevel1: "千葉県",
+    regionHierarchy: {
+      level1: "日本",
+      level2: "千葉県",
+    },
   },
 ];
 
@@ -820,3 +939,109 @@ export const mockListPlaceComments = [
     updated_at: "2024-06-20T10:00:00Z",
   },
 ];
+
+// --- Mock Data用階層フィルター関数 ---
+
+export interface MockFilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
+/**
+ * mockData用：指定されたリストで利用可能な国一覧を取得
+ * @param listId リストID
+ * @returns 国のフィルター選択肢（使用頻度順）
+ */
+export async function getMockAvailableCountries(
+  listId: string
+): Promise<MockFilterOption[]> {
+  // ネットワーク遅延をシミュレート
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  // 指定されたリストを取得
+  const list = mockPlaceLists.find((list) => list.id === listId);
+  if (!list) {
+    return [];
+  }
+
+  // 国ごとの地点数をカウント
+  const countryMap = new Map<string, { name: string; count: number }>();
+
+  list.places.forEach((place) => {
+    if (place.countryCode && place.countryName) {
+      const existing = countryMap.get(place.countryCode);
+      countryMap.set(place.countryCode, {
+        name: place.countryName,
+        count: (existing?.count || 0) + 1,
+      });
+    }
+  });
+
+  // フィルター選択肢として整形（使用頻度順）
+  return Array.from(countryMap.entries())
+    .map(([code, info]) => ({
+      value: code,
+      label: info.name,
+      count: info.count,
+    }))
+    .sort((a, b) => {
+      // 使用頻度 → アルファベット順
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return a.label.localeCompare(b.label);
+    });
+}
+
+/**
+ * mockData用：指定された国・リストで利用可能な州/省一覧を取得
+ * @param listId リストID
+ * @param countryCode 国コード
+ * @returns 州/省のフィルター選択肢（使用頻度順）
+ */
+export async function getMockAvailableStates(
+  listId: string,
+  countryCode: string
+): Promise<MockFilterOption[]> {
+  // ネットワーク遅延をシミュレート
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  // 指定されたリストを取得
+  const list = mockPlaceLists.find((list) => list.id === listId);
+  if (!list) {
+    return [];
+  }
+
+  // 指定された国の地点のみをフィルター
+  const countryPlaces = list.places.filter(
+    (place) => place.countryCode === countryCode
+  );
+
+  // 州/省ごとの地点数をカウント
+  const stateMap = new Map<string, number>();
+
+  countryPlaces.forEach((place) => {
+    if (place.adminAreaLevel1) {
+      stateMap.set(
+        place.adminAreaLevel1,
+        (stateMap.get(place.adminAreaLevel1) || 0) + 1
+      );
+    }
+  });
+
+  // フィルター選択肢として整形（使用頻度順）
+  return Array.from(stateMap.entries())
+    .map(([state, count]) => ({
+      value: state,
+      label: state,
+      count,
+    }))
+    .sort((a, b) => {
+      // 使用頻度 → アルファベット順
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return a.label.localeCompare(b.label);
+    });
+}
