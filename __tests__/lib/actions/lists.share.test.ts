@@ -1,20 +1,31 @@
 import { jest } from "@jest/globals";
 
-// 型定義を明示的に指定
-type MockRpcFunction = jest.MockedFunction<
-  (name: string, params?: any) => Promise<any>
+// 型安全なモック定義
+const mockSupabaseRpc = jest.fn() as jest.MockedFunction<
+  (fn: string, params?: any) => Promise<{ data: any; error: any }>
 >;
 
-// モックしたSupabaseクライアント（型安全）
-const mockSupabaseRpc: MockRpcFunction = jest
-  .fn()
-  .mockResolvedValue({ data: null, error: null });
-const mockSupabaseFrom = jest.fn();
-const mockSupabaseUpsert = jest.fn();
-const mockSupabaseSelect = jest.fn();
-const mockSupabaseUpdate = jest.fn();
-const mockSupabaseEq = jest.fn();
-const mockSupabaseSingle = jest.fn();
+const mockSupabaseFrom = jest.fn() as jest.MockedFunction<
+  (table: string) => any
+>;
+
+const mockSupabaseUpsert = jest.fn() as jest.MockedFunction<
+  (data: any, options?: any) => any
+>;
+
+const mockSupabaseSelect = jest.fn() as jest.MockedFunction<
+  (columns?: string) => any
+>;
+
+const mockSupabaseUpdate = jest.fn() as jest.MockedFunction<(data: any) => any>;
+
+const mockSupabaseEq = jest.fn() as jest.MockedFunction<
+  (column: string, value: any) => any
+>;
+
+const mockSupabaseSingle = jest.fn() as jest.MockedFunction<
+  () => { data: any; error: any }
+>;
 
 jest.mock("@/lib/supabase/server", () => ({
   createClient: () => ({
@@ -69,7 +80,6 @@ describe("joinListViaShareLink", () => {
 
   test("有効なトークン・新規参加ユーザーで正常に処理されること", async () => {
     // セキュリティ関数の正常レスポンス
-    // @ts-ignore - テスト用のモック設定
     mockSupabaseRpc.mockResolvedValueOnce({
       data: [
         {
@@ -155,7 +165,6 @@ describe("joinListViaShareLink", () => {
 
   test("無効なトークン（is_valid=false）の場合はエラーになること", async () => {
     // セキュリティ関数が無効なトークンを返す
-    // @ts-ignore - テスト用のモック設定
     mockSupabaseRpc.mockResolvedValueOnce({
       data: [
         {
@@ -256,15 +265,19 @@ describe("joinListViaShareLink", () => {
       error: null,
     });
 
-    // current_uses取得は成功、更新で失敗
+    // current_uses取得は成功
     mockSupabaseSingle.mockReturnValueOnce({
       data: { current_uses: 0 },
       error: null,
     });
 
-    // update でエラー
-    mockSupabaseEq.mockReturnValueOnce({
+    // updateチェーンの最終的なeqでエラーを返すよう設定
+    const mockUpdateEq = jest.fn().mockReturnValueOnce({
       error: { message: "update error" },
+    });
+
+    mockSupabaseUpdate.mockReturnValueOnce({
+      eq: mockUpdateEq,
     });
 
     const result = await joinListViaShareLink("token-1", "user-1", "owner-1");

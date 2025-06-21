@@ -235,7 +235,10 @@ describe("認証機能テスト: loginWithCredentials", () => {
     // エラーレスポンスを確認
     expect(result.success).toBe(false);
     expect(result.message).toMatch(
-      /メールアドレスまたはパスワードが正しくありません/
+      /ログインに失敗しました。メールアドレスとパスワードを確認してください。/
+    );
+    expect(result.errors?.general).toContain(
+      "メールアドレスまたはパスワードが正しくありません。"
     );
   });
 

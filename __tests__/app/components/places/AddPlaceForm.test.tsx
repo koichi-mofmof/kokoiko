@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import AddPlaceForm from "@/app/components/places/AddPlaceForm";
 
@@ -14,6 +14,12 @@ jest.mock("@/lib/actions/place-actions", () => ({
     message: "登録成功",
   })),
 }));
+
+// getListTagsのモック
+jest.mock("@/lib/dal/lists", () => ({
+  getListTags: jest.fn().mockResolvedValue([]),
+}));
+
 const toastMock = jest.fn();
 jest.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: toastMock }),
@@ -26,8 +32,11 @@ describe("AddPlaceForm", () => {
     onResetRequest: jest.fn(),
   };
 
-  it("初期表示で検索欄・ボタンが表示される", () => {
-    render(<AddPlaceForm {...baseProps} />);
+  it("初期表示で検索欄・ボタンが表示される", async () => {
+    await act(async () => {
+      render(<AddPlaceForm {...baseProps} />);
+    });
+
     expect(screen.getByText("場所を検索")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("例: 東京タワー")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /検索/ })).toBeInTheDocument();

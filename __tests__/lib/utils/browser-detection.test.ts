@@ -97,7 +97,7 @@ describe("browser-detection", () => {
       );
       const advice = getExternalBrowserAdvice();
       expect(advice).toContain(
-        "LINEアプリの右上メニューから「他のアプリで開く」を選択"
+        "右下のメニューから「ブラウザで開く」を選択し、標準ブラウザで開いてください"
       );
     });
 

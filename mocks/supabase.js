@@ -35,9 +35,9 @@ export const mockSupabaseClient = {
     order: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     range: jest.fn().mockReturnThis(),
-    single: jest.fn().mockReturnThis(),
-    maybeSingle: jest.fn().mockReturnThis(),
-    csv: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data: null, error: null }),
+    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+    csv: jest.fn(),
     then: jest.fn(),
     catch: jest.fn(),
     finally: jest.fn(),
@@ -63,6 +63,13 @@ export const mockSupabaseClient = {
 
   // RPCハンドラ
   rpc: jest.fn(),
+
+  // テスト用ヘルパーメソッド
+  mockSuccess: (data) => ({ data, error: null }),
+  mockError: (message = "Supabase error", code = "PGRST000") => ({
+    data: null,
+    error: { message, code },
+  }),
 };
 
 // モックSupabase関数
