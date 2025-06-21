@@ -28,9 +28,9 @@ async function fetchProfileDataInternal(
   userId: string
 ): Promise<UserProfileSettingsResult> {
   try {
-    // profiles_decryptedビューを使用して復号化されたデータを取得
+    // profilesテーブルから直接データを取得
     const { data: profile, error: profileError } = await supabase
-      .from("profiles_decrypted")
+      .from("profiles")
       .select("username, display_name, bio, avatar_url")
       .eq("id", userId)
       .single();
