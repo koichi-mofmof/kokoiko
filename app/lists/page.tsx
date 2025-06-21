@@ -1,7 +1,6 @@
 import { ErrorMessageToast } from "@/app/components/lists/ErrorMessageToast";
 import { MyLists } from "@/app/components/lists/MyLists";
 import { MyPageDataLoader } from "@/app/components/lists/MyPageDataLoader";
-import { List } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -47,7 +46,6 @@ export default async function MyPage() {
 
       <header className="mb-4 flex flex-row flex-wrap items-center justify-between">
         <h1 className="text-xl font-bold text-neutral-900 flex items-center">
-          <List className="h-6 w-6 text-primary-600 mr-3" />
           マイリスト一覧
         </h1>
       </header>
