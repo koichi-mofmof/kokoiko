@@ -12,7 +12,7 @@ import {
   getAvailableStates,
 } from "@/lib/actions/hierarchical-filter-actions";
 import { FilterOptions } from "@/types";
-import { Filter } from "lucide-react";
+import { ArrowLeftRight, Filter } from "lucide-react";
 import { useEffect, useState } from "react";
 
 // 地域ラベルの多言語対応
@@ -256,18 +256,21 @@ export default function FilterBar({
             {filters.tags.length > 1 && (
               <button
                 onClick={handleTagsConditionToggle}
-                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 group ${
                   filters.tagsCondition === "AND"
-                    ? "bg-green-100 text-green-800 border border-green-200"
-                    : "bg-blue-100 text-blue-800 border border-blue-200"
-                }`}
+                    ? "bg-green-100 text-green-800 border border-green-200 hover:bg-green-200"
+                    : "bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200"
+                } hover:shadow-sm`}
                 title={
                   filters.tagsCondition === "OR"
                     ? "現在：いずれかのタグを含む（クリックで「全てのタグを含む」に変更）"
                     : "現在：全てのタグを含む（クリックで「いずれかのタグを含む」に変更）"
                 }
               >
-                {filters.tagsCondition === "OR" ? "いずれか" : "全て"}
+                <span className="flex items-center gap-1">
+                  {filters.tagsCondition === "OR" ? "いずれか" : "全て"}
+                  <ArrowLeftRight className="h-3 w-3 transition-transform duration-200 group-hover:rotate-180" />
+                </span>
               </button>
             )}
           </div>
