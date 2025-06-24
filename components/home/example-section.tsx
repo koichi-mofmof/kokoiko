@@ -33,7 +33,7 @@ export function ExampleSection() {
             <div className="h-60 bg-primary-100 flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0">
                 <Image
-                  src="https://images.pexels.com/photos/5911145/pexels-photo-5911145.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                  src="https://images.pexels.com/photos/5086619/pexels-photo-5086619.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                   alt="カップル"
                   fill
                   style={{ objectFit: "cover" }}
