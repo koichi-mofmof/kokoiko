@@ -249,8 +249,15 @@ export async function purgeListFromEdgeCache(listId: string): Promise<void> {
         globalThis as unknown as { caches: { default: CloudFlareCache } }
       ).caches.default;
 
-      // 対象リストのURLパターンを生成
-      const listUrls = [`/lists/${listId}`, `/lists/${listId}/`];
+      // 環境変数からベースURLを取得
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "https://clippymap.com";
+
+      // 対象リストの完全URLパターンを生成
+      const listUrls = [
+        new URL(`/lists/${listId}`, baseUrl).toString(),
+        new URL(`/lists/${listId}/`, baseUrl).toString(),
+      ];
 
       // 各URLのキャッシュを削除
       for (const url of listUrls) {

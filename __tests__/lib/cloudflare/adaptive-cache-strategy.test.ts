@@ -239,6 +239,18 @@ describe("適応的キャッシュ戦略テスト", () => {
   });
 
   describe("purgeListFromEdgeCache", () => {
+    beforeEach(() => {
+      // 環境変数をモック
+      process.env.NEXT_PUBLIC_APP_URL = "https://test.example.com";
+      // モックをクリア
+      mockCache.delete.mockClear();
+    });
+
+    afterEach(() => {
+      // 環境変数をクリーンアップ
+      delete process.env.NEXT_PUBLIC_APP_URL;
+    });
+
     it("CloudFlare Cache APIでリストキャッシュを削除すること", async () => {
       const consoleSpy = jest.spyOn(console, "log").mockImplementation();
 
@@ -246,10 +258,10 @@ describe("適応的キャッシュ戦略テスト", () => {
 
       expect(mockCache.delete).toHaveBeenCalledTimes(2);
       expect(mockCache.delete).toHaveBeenCalledWith(
-        new Request("/lists/test-list-id")
+        new Request("https://test.example.com/lists/test-list-id")
       );
       expect(mockCache.delete).toHaveBeenCalledWith(
-        new Request("/lists/test-list-id/")
+        new Request("https://test.example.com/lists/test-list-id/")
       );
 
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -260,6 +272,8 @@ describe("適応的キャッシュ戦略テスト", () => {
     });
 
     it("Cache APIエラー時は警告ログを出力すること", async () => {
+      // テスト用にmockを再設定
+      mockCache.delete.mockClear();
       mockCache.delete.mockRejectedValue(new Error("Cache API error"));
       const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
 
@@ -268,6 +282,29 @@ describe("適応的キャッシュ戦略テスト", () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         "❌ Failed to clear edge cache:",
         expect.any(Error)
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it("環境変数が未設定時はデフォルトURLを使用すること", async () => {
+      // 環境変数をクリア
+      delete process.env.NEXT_PUBLIC_APP_URL;
+
+      // mockCacheをリセット（成功時のresolved値に戻す）
+      mockCache.delete.mockClear();
+      mockCache.delete.mockResolvedValue(undefined);
+
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+
+      await purgeListFromEdgeCache("fallback-test-id");
+
+      expect(mockCache.delete).toHaveBeenCalledTimes(2);
+      expect(mockCache.delete).toHaveBeenCalledWith(
+        new Request("https://clippymap.com/lists/fallback-test-id")
+      );
+      expect(mockCache.delete).toHaveBeenCalledWith(
+        new Request("https://clippymap.com/lists/fallback-test-id/")
       );
 
       consoleSpy.mockRestore();
