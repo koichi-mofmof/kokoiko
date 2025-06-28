@@ -127,3 +127,21 @@ export const trackPerformanceEvents = {
     sendGAEvent("api_response_time", "performance", endpoint, responseTime);
   },
 };
+
+// コンバージョン関連のイベント
+export const trackConversionEvents = {
+  // ポップアップ表示
+  promptShown: (listId: string) => {
+    sendGAEvent("signup_prompt_shown", "conversion", listId);
+  },
+
+  // ポップアップクリック
+  promptClicked: (listId: string) => {
+    sendGAEvent("signup_prompt_clicked", "conversion", listId);
+  },
+
+  // ポップアップ閉じる
+  promptDismissed: (listId: string) => {
+    sendGAEvent("signup_prompt_dismissed", "conversion", listId);
+  },
+};

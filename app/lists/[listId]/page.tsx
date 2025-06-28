@@ -1,3 +1,4 @@
+import { SignupPromptWrapper } from "@/app/components/conversion/SignupPromptWrapper";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
 import JsonLd from "@/components/seo/JsonLd";
@@ -214,6 +215,9 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           />
         </Suspense>
       </div>
+
+      {/* 非ログインユーザー向けコンバージョンポップアップ */}
+      <SignupPromptWrapper listId={listId} />
     </>
   );
 }
