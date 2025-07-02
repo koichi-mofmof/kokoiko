@@ -8,17 +8,20 @@ import type { NextRequest } from "next/server";
  */
 export const SECURITY_CONFIG = {
   RATE_LIMITS: {
-    DEFAULT: 60, // 1分あたりのリクエスト数
-    STRICT: 30,
-    API: 30,
-    AUTH: 10,
+    DEFAULT: 120, // 60 → 120 に引き上げ（通常ページ）
+    STRICT: 60, // 30 → 60 に引き上げ（疑わしいリクエスト向け）
+    API: 60, // 30 → 60 に引き上げ（API）
+    AUTH: 20, // 10 → 20 に引き上げ（認証）
+    // ページ別の制限値
+    HEAVY_PAGE: 150, // リスト詳細など重いページ用
+    HOME_PAGE: 100, // ホームページ用
   },
   SECURITY_HEADERS: {
     HSTS_MAX_AGE: 31536000, // 1年
     REFERRER_POLICY: "strict-origin-when-cross-origin",
   },
   DOS_PROTECTION: {
-    MAX_REQUESTS_PER_MINUTE: 100,
+    MAX_REQUESTS_PER_MINUTE: 180, // 100 → 180 に引き上げ（通常ユーザーも考慮）
     SUSPICIOUS_THRESHOLD: 200,
     BLOCK_DURATION: 300000, // 5分
     // 負荷テスト用の設定
@@ -54,6 +57,43 @@ export const SECURITY_CONFIG = {
     BYPASS_DOS_PROTECTION: true,
   },
 } as const;
+
+/**
+ * ページ別レート制限値を取得
+ */
+export function getPageRateLimit(pathname: string): number {
+  // リスト詳細ページ
+  if (pathname.startsWith("/lists/") && pathname !== "/lists") {
+    return SECURITY_CONFIG.RATE_LIMITS.HEAVY_PAGE;
+  }
+
+  // ホームページ
+  if (pathname === "/") {
+    return SECURITY_CONFIG.RATE_LIMITS.HOME_PAGE;
+  }
+
+  // サンプルページ（データ量が多い）
+  if (pathname.startsWith("/sample/")) {
+    return SECURITY_CONFIG.RATE_LIMITS.HEAVY_PAGE;
+  }
+
+  // API エンドポイント
+  if (pathname.startsWith("/api/")) {
+    return SECURITY_CONFIG.RATE_LIMITS.API;
+  }
+
+  // 認証関連
+  if (
+    pathname.startsWith("/auth/") ||
+    pathname === "/login" ||
+    pathname === "/signup"
+  ) {
+    return SECURITY_CONFIG.RATE_LIMITS.AUTH;
+  }
+
+  // デフォルト
+  return SECURITY_CONFIG.RATE_LIMITS.DEFAULT;
+}
 
 /**
  * CloudFlare Workers用レート制限

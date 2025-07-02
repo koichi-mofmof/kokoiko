@@ -8,6 +8,7 @@ import {
   extractHierarchicalRegionSafe,
   type HierarchicalRegion,
 } from "@/lib/utils/hierarchical-region-extraction";
+import { fetchWithRateLimitServer } from "@/lib/utils/rate-limit-handler";
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
@@ -91,14 +92,20 @@ export async function searchPlaces(
   };
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+    const response = await fetchWithRateLimitServer(
+      url,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+        },
+        body: JSON.stringify(requestBody),
       },
-      body: JSON.stringify(requestBody),
-    });
+      {
+        maxRetries: 2, // Google Maps APIは制限が厳しいため少なめに設定
+      }
+    );
 
     const data = (await response.json()) as {
       suggestions?: AutocompleteSuggestion[];
@@ -177,14 +184,20 @@ export async function getPlaceDetails(
   const url = `https://places.googleapis.com/v1/places/${placeId}?sessionToken=${sessionToken}&languageCode=${languageCode}&regionCode=${regionCode}`;
 
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
-        "X-Goog-FieldMask": fields,
+    const response = await fetchWithRateLimitServer(
+      url,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+          "X-Goog-FieldMask": fields,
+        },
       },
-    });
+      {
+        maxRetries: 2,
+      }
+    );
 
     const data = (await response.json()) as {
       id?: string;

@@ -9,6 +9,7 @@ import {
   PERFORMANCE_CONFIG,
 } from "@/lib/cloudflare/performance-optimization";
 import {
+  getPageRateLimit,
   logSecurityEvent,
   protectAPIEndpoint,
   SECURITY_CONFIG,
@@ -226,11 +227,16 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // WorkersRateLimit による統合レート制限チェック
-    const rateLimitCheck = WorkersRateLimit.checkRateLimit(clientIp);
+    // ページ別レート制限チェック
+    const pageRateLimit = getPageRateLimit(pathname);
+    const rateLimitCheck = WorkersRateLimit.checkRateLimit(
+      clientIp,
+      pageRateLimit
+    );
+
     if (!rateLimitCheck.allowed) {
       console.warn(
-        `Rate limit exceeded for IP: ${clientIp}, Path: ${pathname}`
+        `Rate limit exceeded for IP: ${clientIp}, Path: ${pathname}, Limit: ${pageRateLimit}`
       );
 
       // セキュリティ監視システムに記録
@@ -247,6 +253,7 @@ export async function middleware(request: NextRequest) {
           path: pathname,
           count: rateLimitCheck.count,
           violations: rateLimitCheck.violations,
+          limit: pageRateLimit,
         },
         "medium"
       );
@@ -255,9 +262,10 @@ export async function middleware(request: NextRequest) {
         status: 429,
         headers: {
           "Retry-After": "60",
-          "X-RateLimit-Limit": "60",
+          "X-RateLimit-Limit": pageRateLimit.toString(),
           "X-RateLimit-Remaining": "0",
           "X-RateLimit-Reset": Math.ceil(Date.now() / 1000 + 60).toString(),
+          "X-Page-Type": pathname.startsWith("/lists/") ? "heavy" : "normal",
         },
       });
     }
@@ -274,11 +282,12 @@ export async function middleware(request: NextRequest) {
 
     // セキュリティヘッダーを設定
     response.headers.set("X-Request-ID", crypto.randomUUID());
-    response.headers.set("X-RateLimit-Limit", "60");
+    response.headers.set("X-RateLimit-Limit", pageRateLimit.toString());
     response.headers.set(
       "X-RateLimit-Remaining",
-      (60 - rateLimitCheck.count).toString()
+      (pageRateLimit - rateLimitCheck.count).toString()
     );
+    response.headers.set("X-Page-Rate-Limit", pageRateLimit.toString());
 
     // CSPヘッダーを設定
     response.headers.set(
