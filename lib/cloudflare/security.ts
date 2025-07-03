@@ -8,13 +8,12 @@ import type { NextRequest } from "next/server";
  */
 export const SECURITY_CONFIG = {
   RATE_LIMITS: {
-    DEFAULT: 120, // 60 → 120 に引き上げ（通常ページ）
-    STRICT: 60, // 30 → 60 に引き上げ（疑わしいリクエスト向け）
-    API: 60, // 30 → 60 に引き上げ（API）
-    AUTH: 20, // 10 → 20 に引き上げ（認証）
-    // ページ別の制限値
-    HEAVY_PAGE: 150, // リスト詳細など重いページ用
-    HOME_PAGE: 100, // ホームページ用
+    DEFAULT: 120,
+    STRICT: 60,
+    API: 60,
+    AUTH: 60,
+    HEAVY_PAGE: 150,
+    HOME_PAGE: 100,
   },
   SECURITY_HEADERS: {
     HSTS_MAX_AGE: 31536000, // 1年
