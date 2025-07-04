@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { trackConversionEvents } from "@/lib/analytics/events";
-import { Check, MapPin, Sparkles, X } from "lucide-react";
+import { Heart, MapPin, PartyPopper, Plane, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -83,37 +83,54 @@ export function SignupPromptModal({
 
           {/* 簡潔で魅力的なタイトル */}
           <DialogTitle className="text-base font-bold text-neutral-800 leading-tight">
-            あなたも{" "}
+            恋人や友達と。
+            <br />
+            あなたも、
             <span className="font-extrabold text-primary-600">
-              オリジナルの行きたい場所リスト
-            </span>{" "}
+              みんなで育てる場所リスト
+            </span>
             を
             <br />
             作ってみませんか。
           </DialogTitle>
 
           {/* 機能説明セクション */}
-          <div className="space-y-2">
-            <p className="text-sm text-neutral-800">こんな使い方ができます</p>
-            <div className="space-y-1.5 text-sm font-medium bg-neutral-50 rounded-lg p-4 text-neutral-900">
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                <span>友達と一緒に旅行プランを作成</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                <span>女子会のお店候補をピックアップ</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                <span>SNSで見つけた気になるカフェをリスト化</span>
-              </div>
+          <div className="space-y-3 pt-2">
+            <div className="space-y-2 text-sm text-neutral-800 font-medium rounded-lg p-4">
+              {[
+                {
+                  icon: Plane,
+                  text: "旅行プランをリアルタイムで共同編集",
+                },
+                {
+                  icon: PartyPopper,
+                  text: "女子会で行きたいお店をピックアップ",
+                },
+                {
+                  icon: Heart,
+                  text: "共通の趣味の仲間とスポットを共有",
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className="flex animate-in fade-in-0 slide-in-from-top-2 duration-500 items-center gap-3"
+                  style={{
+                    animationDelay: `${index * 200 + 300}ms`,
+                    animationFillMode: "forwards",
+                  }}
+                >
+                  <div className="flex-shrink-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <item.icon className="w-5 h-5 text-primary-600" />
+                  </div>
+                  <span>{item.text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* CTA部分 */}
-        <div className="mt-5 space-y-3">
+        <div className="mt-6 space-y-3">
           {/* 簡単さアピール */}
           <p className="text-xs text-gray-500 text-center">
             登録は30秒 • 無料で試せる • いつでも退会OK
