@@ -37,7 +37,7 @@ export default function AddPlaceButtonClient({
   const [showLimitAlert, setShowLimitAlert] = useState(false);
   const {
     plan,
-    registeredPlacesThisMonth,
+    registeredPlacesTotal, // registeredPlacesThisMonth → registeredPlacesTotal
     maxPlaces,
     loading,
     refreshSubscription,
@@ -58,7 +58,7 @@ export default function AddPlaceButtonClient({
       !loading &&
       plan === "free" &&
       maxPlaces !== null &&
-      registeredPlacesThisMonth >= maxPlaces
+      registeredPlacesTotal >= maxPlaces // プロパティ名変更
     ) {
       setShowLimitAlert(true);
       return;
@@ -117,10 +117,10 @@ export default function AddPlaceButtonClient({
               <Info className="w-6 h-6 text-primary-500 mr-2" />
               登録地点数の上限に達しました！
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-yellow-900">
-              フリープランでは登録できる地点は{" "}
+            <AlertDialogDescription className="text-yellow-900 text-left">
+              フリープランで登録できる地点は{" "}
               <span className="font-bold">
-                {SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH}件/月
+                {SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL}件
               </span>{" "}
               までです。
               <br />
@@ -130,14 +130,16 @@ export default function AddPlaceButtonClient({
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <AlertDialogAction
-              className="bg-primary-700 hover:bg-primary-800"
+              className="w-full sm:w-auto bg-primary-700 hover:bg-primary-800"
               onClick={handleUpgradeClick}
             >
               今すぐアップグレード
             </AlertDialogAction>
-            <AlertDialogCancel>閉じる</AlertDialogCancel>
+            <AlertDialogCancel className="w-full sm:w-auto">
+              閉じる
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

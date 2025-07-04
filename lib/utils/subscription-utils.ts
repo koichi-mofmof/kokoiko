@@ -50,41 +50,23 @@ export async function getSharedListCount(
 }
 
 /**
- * 今月の登録済み地点数をカウント（サーバー・クライアント共通）
+ * 累計登録済み地点数をカウント（サーバー・クライアント共通）
  * @param supabase Supabaseクライアント
  * @param userId 対象ユーザーID
- * @returns count: 今月登録済み地点数
+ * @returns count: 累計登録済み地点数
  */
-export async function getRegisteredPlacesCountThisMonth(
+export async function getRegisteredPlacesCountTotal(
   supabase: SupabaseClient,
   userId: string
 ): Promise<number> {
-  // 今月の開始・終了日時
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(
-    now.getFullYear(),
-    now.getMonth() + 1,
-    0,
-    23,
-    59,
-    59,
-    999
-  );
-  // list_placesテーブルから自分が登録した今月分の件数を取得
+  // 全期間の登録済み地点数を取得
   const { data, error } = await supabase
     .from("list_places")
     .select("created_at, user_id")
     .eq("user_id", userId);
+
   if (error || !data) return 0;
-  let count = 0;
-  data.forEach((row) => {
-    const createdAt = new Date(row.created_at);
-    if (createdAt >= start && createdAt <= end) {
-      count++;
-    }
-  });
-  return count;
+  return data.length;
 }
 
 // StripeのSubscription.statusの型

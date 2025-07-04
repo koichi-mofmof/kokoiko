@@ -3,7 +3,7 @@
 import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { getActiveSubscription } from "@/lib/dal/subscriptions";
 import { createClient } from "@/lib/supabase/server";
-import { getRegisteredPlacesCountThisMonth } from "@/lib/utils/subscription-utils";
+import { getRegisteredPlacesCountTotal } from "@/lib/utils/subscription-utils";
 import {
   AddCommentInput,
   AddCommentSchema,
@@ -49,23 +49,23 @@ export async function registerPlaceToListAction(
     return { success: false, error: "認証が必要です。" };
   }
 
-  // ★追加: サブスクリプション情報取得＆今月の登録数チェック
+  // ★追加: サブスクリプション情報取得＆累計の登録数チェック
   const sub = await getActiveSubscription(user.id);
   const isPremium =
     sub && (sub.status === "active" || sub.status === "trialing");
   const maxPlaces = isPremium
-    ? SUBSCRIPTION_LIMITS.premium.MAX_PLACES_PER_MONTH
-    : SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH;
+    ? SUBSCRIPTION_LIMITS.premium.MAX_PLACES_TOTAL
+    : SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL;
   if (!isPremium) {
-    // 今月の登録済み地点数をカウント（共通ユーティリティ利用）
-    const count = await getRegisteredPlacesCountThisMonth(supabase, user.id);
+    // 累計登録済み地点数をカウント（共通ユーティリティ利用）
+    const count = await getRegisteredPlacesCountTotal(supabase, user.id);
     if (maxPlaces !== null && count >= maxPlaces) {
       return {
         success: false,
         error:
           "フリープランの地点登録上限（" +
           maxPlaces +
-          "件/月）に達しています。\nプレミアムプランにアップグレードすると無制限に登録できます。\n\n→ プランのアップグレードはこちらからご検討ください。",
+          "件）に達しています。\nプレミアムプランにアップグレードすると無制限に登録できます。\n\n→ プランのアップグレードはこちらからご検討ください。",
       };
     }
   }

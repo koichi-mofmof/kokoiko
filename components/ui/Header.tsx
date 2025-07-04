@@ -36,7 +36,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
   const [isClient, setIsClient] = useState(false);
   const {
     plan: subscriptionPlan,
-    registeredPlacesThisMonth,
+    registeredPlacesTotal, // registeredPlacesThisMonth → registeredPlacesTotal
     maxPlaces,
     sharedListCount,
     loading: planLoading,
@@ -152,8 +152,8 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
               <div className="hidden md:flex items-center space-x-4">
                 <div className="w-36">
                   <SubscriptionStatus
-                    label="今月の地点登録数"
-                    currentValue={registeredPlacesThisMonth}
+                    label="累計地点登録数" // "今月の地点登録数" → "累計地点登録数"
+                    currentValue={registeredPlacesTotal} // プロパティ名変更
                     maxValue={maxPlaces}
                     loading={planLoading}
                   />
@@ -233,8 +233,8 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                         </p>
                         <div className="space-y-2">
                           <SubscriptionStatus
-                            label="今月の地点登録数"
-                            currentValue={registeredPlacesThisMonth}
+                            label="累計地点登録数" // "今月の地点登録数" → "累計地点登録数"
+                            currentValue={registeredPlacesTotal} // プロパティ名変更
                             maxValue={maxPlaces}
                             loading={planLoading}
                           />

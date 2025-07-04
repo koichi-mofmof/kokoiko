@@ -12,7 +12,7 @@ import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { getActiveSubscription } from "@/lib/dal/subscriptions";
 import { createClient } from "@/lib/supabase/client";
 import {
-  getRegisteredPlacesCountThisMonth,
+  getRegisteredPlacesCountTotal,
   getSharedListCount,
 } from "@/lib/utils/subscription-utils";
 
@@ -24,7 +24,7 @@ export interface SubscriptionState {
   isTrial: boolean;
   trialEnd: string | null;
   maxPlaces: number | null; // null=無制限
-  registeredPlacesThisMonth: number;
+  registeredPlacesTotal: number; // 名前変更：registeredPlacesThisMonth → registeredPlacesTotal
   sharedListCount: number;
   isSharedListLimitExceeded: boolean;
   loading: boolean;
@@ -40,8 +40,8 @@ const initialState: SubscriptionState = {
   isPremium: false,
   isTrial: false,
   trialEnd: null,
-  maxPlaces: SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH,
-  registeredPlacesThisMonth: 0,
+  maxPlaces: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL, // 定数名変更
+  registeredPlacesTotal: 0, // プロパティ名変更
   sharedListCount: 0,
   isSharedListLimitExceeded: false,
   loading: true,
@@ -67,7 +67,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       const supabase = createClient();
       const [sub, placesCount, { count: sharedCount }] = await Promise.all([
         getActiveSubscription(user.id),
-        getRegisteredPlacesCountThisMonth(supabase, user.id),
+        getRegisteredPlacesCountTotal(supabase, user.id), // 関数名変更
         getSharedListCount(supabase, user.id),
       ]);
 
@@ -82,9 +82,9 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         isTrial: !!trial,
         trialEnd: sub?.trial_end || null,
         maxPlaces: premium
-          ? SUBSCRIPTION_LIMITS.premium.MAX_PLACES_PER_MONTH
-          : SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH,
-        registeredPlacesThisMonth: placesCount,
+          ? SUBSCRIPTION_LIMITS.premium.MAX_PLACES_TOTAL
+          : SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL,
+        registeredPlacesTotal: placesCount, // プロパティ名変更
         sharedListCount: sharedCount,
         isSharedListLimitExceeded:
           !premium && sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS,

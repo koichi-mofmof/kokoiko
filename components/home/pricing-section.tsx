@@ -49,8 +49,7 @@ export function PricingSection() {
                     </div>
                     登録地点数：
                     <span className="font-semibold ml-1">
-                      毎月{SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH}
-                      件まで
+                      累計{SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL}件まで
                     </span>
                   </li>
                   <li className="flex items-center">

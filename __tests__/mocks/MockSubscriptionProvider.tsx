@@ -12,8 +12,8 @@ const mockSubscriptionData: SubscriptionContextType = {
   isPremium: false,
   isTrial: false,
   trialEnd: null,
-  maxPlaces: SUBSCRIPTION_LIMITS.free.MAX_PLACES_PER_MONTH,
-  registeredPlacesThisMonth: 0,
+  maxPlaces: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL, // 定数名変更
+  registeredPlacesTotal: 0, // プロパティ名変更
   sharedListCount: 0,
   isSharedListLimitExceeded: false,
   loading: false,

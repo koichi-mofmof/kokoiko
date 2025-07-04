@@ -322,7 +322,7 @@ export function ShareSettingsDialog({
               </div>
               <div className="text-sm text-yellow-900 mb-3 text-left">
                 <span>
-                  フリープランでは共有できるリストは{" "}
+                  フリープランで共有できるリストは{" "}
                   <span className="font-bold">1件まで</span> です。
                 </span>
                 <div className="mt-2">

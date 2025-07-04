@@ -477,7 +477,7 @@ export async function createShareLink({
     if (sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS) {
       return {
         success: false,
-        error: `フリープランでは共有できるリストは${
+        error: `フリープランで共有できるリストは${
           SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS
         }件までです。\n\n現在共有中のリスト: ${sharedListNames.join(
           ", "
