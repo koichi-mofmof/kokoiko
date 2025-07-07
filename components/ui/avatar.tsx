@@ -54,7 +54,7 @@ const AvatarFallback = React.forwardRef<
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
 interface ParticipantAvatarsProps {
-  owner: Collaborator;
+  owner?: Collaborator;
   participants: Collaborator[];
   viewers?: Collaborator[];
   maxDisplay?: number;
@@ -79,7 +79,9 @@ export function ParticipantAvatars({
   viewers = [],
   maxDisplay = 10,
 }: ParticipantAvatarsProps) {
-  const otherParticipants = participants.filter((p) => p.id !== owner.id);
+  const otherParticipants = owner
+    ? participants.filter((p) => p.id !== owner.id)
+    : participants;
   const displayMembers = otherParticipants.slice(0, maxDisplay - 1);
   const remainingCount = Math.max(
     0,
@@ -92,26 +94,28 @@ export function ParticipantAvatars({
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center flex-wrap gap-2">
-        <Tooltip key={owner.id}>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">
-              <span className="text-primary-700 font-medium">作成者</span>
-              <Avatar className="h-5 w-5">
-                <AvatarImage src={owner.avatarUrl} alt={owner.name} />
-                <AvatarFallback className="text-[10px]">
-                  {getInitials(owner.name)}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            align="center"
-            className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
-          >
-            <p>{owner.name}</p>
-          </TooltipContent>
-        </Tooltip>
+        {owner && (
+          <Tooltip key={owner.id}>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">
+                <span className="text-primary-700 font-medium">作成者</span>
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={owner.avatarUrl} alt={owner.name} />
+                  <AvatarFallback className="text-[10px]">
+                    {getInitials(owner.name)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              align="center"
+              className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
+            >
+              <p>{owner.name}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {(displayMembers.length > 0 || remainingCount > 0) && (
           <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">

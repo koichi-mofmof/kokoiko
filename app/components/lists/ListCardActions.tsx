@@ -28,12 +28,14 @@ type ListCardActionsProps = {
   list: ListForClient;
   className?: string;
   onSuccess?: () => void;
+  variant?: "default" | "inline";
 };
 
 export function ListCardActions({
   list: initialList,
   className = "",
   onSuccess,
+  variant = "default",
 }: ListCardActionsProps) {
   const [list, setList] = useState(initialList);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -181,9 +183,9 @@ export function ListCardActions({
                 ref={buttonRef}
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 absolute top-2 right-2 ${
-                  !hasPermission ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`h-8 w-8 ${
+                  variant === "default" ? "absolute top-2 right-2" : ""
+                } ${!hasPermission ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleClick}
                 disabled={!hasPermission}
                 aria-label="リストアクション"

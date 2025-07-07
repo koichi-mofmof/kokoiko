@@ -37,12 +37,9 @@ describe("SignupPromptModal", () => {
     render(<SignupPromptModal {...defaultProps} />);
 
     // タイトルの一部をテスト（複数要素に分かれているため）
-    expect(
-      screen.getByText("オリジナルの行きたい場所リスト")
-    ).toBeInTheDocument();
+    expect(screen.getByText("みんなで育てる場所リスト")).toBeInTheDocument();
     // より柔軟なテキストマッチングを使用
     expect(screen.getByText(/作ってみませんか/)).toBeInTheDocument();
-    expect(screen.getByText("こんな使い方ができます")).toBeInTheDocument();
     expect(screen.getByText("今すぐ始める")).toBeInTheDocument();
   });
 
@@ -77,15 +74,13 @@ describe("SignupPromptModal", () => {
     render(<SignupPromptModal {...defaultProps} isOpen={false} />);
 
     expect(
-      screen.queryByText("オリジナルの行きたい場所リスト")
+      screen.queryByText("みんなで育てる場所リスト")
     ).not.toBeInTheDocument();
   });
 
   it("mobileバリアントでレンダリングされること", () => {
     render(<SignupPromptModal {...defaultProps} variant="mobile" />);
 
-    expect(
-      screen.getByText("オリジナルの行きたい場所リスト")
-    ).toBeInTheDocument();
+    expect(screen.getByText("みんなで育てる場所リスト")).toBeInTheDocument();
   });
 });

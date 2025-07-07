@@ -1,4 +1,5 @@
 import { SignupPromptWrapper } from "@/app/components/conversion/SignupPromptWrapper";
+import { CreatorInfoCard } from "@/app/components/lists/CreatorInfoCard";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
 import JsonLd from "@/components/seo/JsonLd";
@@ -7,6 +8,7 @@ import NoAccess from "@/components/ui/NoAccess";
 import { logAdaptiveCacheStrategy } from "@/lib/cloudflare/cdn-cache";
 import type { Collaborator, ListForClient } from "@/lib/dal/lists";
 import { getListDetails, getPublicListData } from "@/lib/dal/lists";
+import { getUserProfile } from "@/lib/dal/user-public-lists";
 import {
   generateBreadcrumbSchema,
   generateItemListSchema,
@@ -118,6 +120,9 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     return <NoAccess />;
   }
 
+  // Creator profile
+  const creatorProfile = await getUserProfile(listDetails.created_by);
+
   // 💡 キャッシュ制御: 適応的キャッシュ戦略を確認・適用
   if (!listDetails.is_public) {
     noStore();
@@ -165,8 +170,8 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           </Link>
         </div>
 
-        <div className="mb-1 relative">
-          <h1 className="text-lg sm:text-xl font-semibold text-neutral-900 flex items-center gap-2">
+        <h1 className="flex items-start justify-between gap-4 text-lg sm:text-xl font-semibold text-neutral-900">
+          <span className="flex items-center gap-2">
             {listDetails.name}
             {typeof listDetails.is_public === "boolean" ? (
               <span className="ml-1">
@@ -184,40 +189,36 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
                 </span>
               </span>
             ) : null}
-            <div className="absolute right-0 top-0 flex items-center gap-2">
-              <ListCardActions list={listDetails} />
-            </div>
-          </h1>
-          {listDetails.description && (
-            <p className="mt-1 text-sm text-neutral-500">
-              {listDetails.description}
-            </p>
-          )}
+          </span>
+          <div className="flex-shrink-0">
+            <ListCardActions list={listDetails} variant="inline" />
+          </div>
+        </h1>
+        {listDetails.description && (
+          <p className="mt-1 text-sm text-neutral-500">
+            {listDetails.description}
+          </p>
+        )}
+
+        <div className="my-4">
+          <CreatorInfoCard creator={creatorProfile} />
         </div>
 
         <div className="mb-4 flex justify-between">
           <ParticipantAvatars
-            owner={owner}
             participants={otherParticipants}
             viewers={viewers}
           />
         </div>
-
-        <Suspense
-          fallback={
-            <div className="text-center p-8">リスト詳細を読み込み中...</div>
-          }
-        >
+        <Suspense fallback={<div>Loading places...</div>}>
           <ListDetailView
-            places={listDetails.places}
             listId={listId}
+            places={listDetails.places}
             permission={listDetails.permission}
           />
         </Suspense>
+        <SignupPromptWrapper listId={listId} />
       </div>
-
-      {/* 非ログインユーザー向けコンバージョンポップアップ */}
-      <SignupPromptWrapper listId={listId} />
     </>
   );
 }

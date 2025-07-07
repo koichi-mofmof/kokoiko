@@ -1,0 +1,62 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import type { Database } from "@/types/supabase";
+import Image from "next/image";
+import Link from "next/link";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+
+type CreatorInfoCardProps = {
+  creator: Pick<
+    Profile,
+    "id" | "username" | "display_name" | "bio" | "avatar_url"
+  > | null;
+};
+
+export function CreatorInfoCard({ creator }: CreatorInfoCardProps) {
+  if (!creator) {
+    return null;
+  }
+
+  const displayName = creator.display_name || creator.username || "ユーザー";
+  const avatarUrl = creator.avatar_url;
+
+  return (
+    <div className="border-b border-gray-200 py-4 dark:border-gray-800">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-center space-x-3">
+          {avatarUrl ? (
+            <Image
+              src={avatarUrl}
+              alt={displayName}
+              width={48}
+              height={48}
+              sizes="48px"
+              className="h-12 w-12 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-200 dark:bg-gray-700">
+              <span className="text-xl font-medium text-neutral-500 dark:text-gray-400">
+                {displayName[0]?.toUpperCase()}
+              </span>
+            </div>
+          )}
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-neutral-500 dark:text-gray-400">
+              このリストの作成者
+            </p>
+            <h2 className="truncate font-semibold text-neutral-900 dark:text-white">
+              {displayName}
+            </h2>
+          </div>
+        </div>
+
+        <Button asChild variant="secondary" className="ml-3 flex-shrink-0">
+          <Link href={`/users/${creator.id}`}>他のリストを見る</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
