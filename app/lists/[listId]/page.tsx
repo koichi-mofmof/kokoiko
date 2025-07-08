@@ -1,4 +1,5 @@
 import { SignupPromptWrapper } from "@/app/components/conversion/SignupPromptWrapper";
+import { BookmarkButton } from "@/app/components/lists/BookmarkButton";
 import { CreatorInfoCard } from "@/app/components/lists/CreatorInfoCard";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
@@ -190,7 +191,14 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
               </span>
             ) : null}
           </span>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center gap-2">
+            {listDetails.created_by !== user?.id && listDetails.is_public && (
+              <BookmarkButton
+                listId={listDetails.id}
+                initialIsBookmarked={listDetails.isBookmarked}
+                listName={listDetails.name}
+              />
+            )}
             <ListCardActions list={listDetails} variant="inline" />
           </div>
         </h1>

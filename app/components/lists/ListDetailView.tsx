@@ -12,7 +12,7 @@ import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
 interface ListDetailViewProps {
   places: Place[];
   listId: string;
-  permission?: string;
+  permission?: string | null;
 }
 
 // OpenStreetMapView を動的にインポートし、SSRを無効にする

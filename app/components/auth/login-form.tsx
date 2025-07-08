@@ -81,8 +81,29 @@ export function LoginForm() {
   const googleLoginAction = async () => {
     // 認証コールバック待機状態をマーク
     markAuthCallbackPending();
-    // loginWithGoogleはリダイレクトするかエラーを投げるので、返り値は直接使わない
-    await loginWithGoogle(redirectUrl || undefined);
+
+    // ブックマーク情報とリダイレクト先を取得
+    const bookmark = searchParams.get("bookmark");
+    const returnTo = searchParams.get("returnTo");
+
+    // 認証コールバックURLにブックマーク情報を含める
+    let finalRedirectUrl = redirectUrl || returnTo || "/lists";
+    if (bookmark) {
+      const params = new URLSearchParams();
+      params.set("bookmark", bookmark);
+      if (returnTo) params.set("redirect_url", returnTo);
+      finalRedirectUrl = `/auth/callback?${params.toString()}`;
+    }
+
+    const result = await loginWithGoogle(finalRedirectUrl);
+
+    if (result.success && result.googleUrl) {
+      // クライアントサイドでGoogleの認証ページにリダイレクト
+      window.location.href = result.googleUrl;
+    } else {
+      // エラー処理
+      setGoogleError(result.message || "Googleログインの開始に失敗しました。");
+    }
   };
 
   return (
@@ -98,6 +119,20 @@ export function LoginForm() {
       >
         {redirectUrl && (
           <input type="hidden" name="redirect_url" value={redirectUrl} />
+        )}
+        {searchParams.get("bookmark") && (
+          <input
+            type="hidden"
+            name="bookmark"
+            value={searchParams.get("bookmark")!}
+          />
+        )}
+        {searchParams.get("returnTo") && (
+          <input
+            type="hidden"
+            name="returnTo"
+            value={searchParams.get("returnTo")!}
+          />
         )}
         <input type="hidden" name="csrf_token" value={csrfToken} />
         <div className="space-y-2">

@@ -80,11 +80,11 @@ export async function getUserPublicLists(
     const { list_places, ...rest } = list;
     return {
       ...rest,
-      place_count:
-        Array.isArray(list_places) && list_places[0] ? list_places[0].count : 0,
+      place_count: list_places[0]?.count || 0,
       places: [],
       collaborators: [],
       permission: "view",
+      isBookmarked: false,
     };
   });
 }

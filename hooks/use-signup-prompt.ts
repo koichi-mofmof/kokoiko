@@ -37,6 +37,21 @@ export function useSignupPrompt() {
     }
   }, []);
 
+  // 手動でプロンプトを表示する関数
+  const showPrompt = useCallback(() => {
+    // ログイン済みユーザーには表示しない
+    if (isLoggedIn) return;
+
+    // 即時表示
+    setShouldShow(true);
+
+    // localStorage に表示履歴を記録
+    if (typeof window !== "undefined") {
+      const sessionId = generateSessionId();
+      localStorage.setItem(STORAGE_KEYS.PROMPT_SHOWN, sessionId);
+    }
+  }, [isLoggedIn]);
+
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
@@ -121,6 +136,7 @@ export function useSignupPrompt() {
   return {
     shouldShow: shouldShow && isLoggedIn === false, // 非ログインユーザーのみ
     hidePrompt,
+    showPrompt,
     isLoggedIn,
   };
 }

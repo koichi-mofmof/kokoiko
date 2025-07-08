@@ -163,6 +163,100 @@ export async function updateList(formData: {
   }
 }
 
+// ブックマーク追加アクション
+export async function bookmarkList(listId: string) {
+  if (!listId) {
+    return { success: false, error: "リストIDが無効です。" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: "ログインが必要です。" };
+  }
+
+  try {
+    // 対象リストが公開されているか確認
+    const { data: listData, error: listError } = await supabase
+      .from("place_lists")
+      .select("is_public")
+      .eq("id", listId)
+      .single();
+
+    if (listError || !listData) {
+      return { success: false, error: "リストが見つかりません。" };
+    }
+
+    if (!listData.is_public) {
+      return { success: false, error: "このリストはブックマークできません。" };
+    }
+
+    // ブックマークを挿入
+    const { error: insertError } = await supabase
+      .from("list_bookmarks")
+      .insert({ list_id: listId, user_id: user.id });
+
+    if (insertError) {
+      // 複合ユニークキー制約違反(23505)の場合は、すでにブックマーク済みとして扱う
+      if (insertError.code === "23505") {
+        return { success: true, alreadyExists: true };
+      }
+      console.error("ブックマーク追加エラー:", insertError);
+      return { success: false, error: "ブックマークの追加に失敗しました。" };
+    }
+
+    revalidatePath("/lists"); // 自分のリスト一覧を再検証
+    revalidatePath(`/lists/${listId}`); // 対象のリストページを再検証
+
+    return { success: true };
+  } catch (error) {
+    console.error("予期せぬエラー:", error);
+    return { success: false, error: "予期せぬエラーが発生しました。" };
+  }
+}
+
+// ブックマーク削除アクション
+export async function unbookmarkList(listId: string) {
+  if (!listId) {
+    return { success: false, error: "リストIDが無効です。" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: "ログインが必要です。" };
+  }
+
+  try {
+    const { error: deleteError } = await supabase
+      .from("list_bookmarks")
+      .delete()
+      .eq("list_id", listId)
+      .eq("user_id", user.id);
+
+    if (deleteError) {
+      console.error("ブックマーク削除エラー:", deleteError);
+      return { success: false, error: "ブックマークの削除に失敗しました。" };
+    }
+
+    revalidatePath("/lists");
+    revalidatePath(`/lists/${listId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("予期せぬエラー:", error);
+    return { success: false, error: "予期せぬエラーが発生しました。" };
+  }
+}
+
 // リスト削除アクション
 export async function deleteList(listId: string) {
   if (!listId || typeof listId !== "string" || listId.trim() === "") {

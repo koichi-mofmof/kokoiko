@@ -16,6 +16,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { bookmarkList } from "./lists";
 
 // 認証状態の型定義 (useFormState用)
 export interface AuthState {
@@ -28,6 +29,7 @@ export interface AuthState {
     general?: string[];
   };
   success: boolean;
+  googleUrl?: string; // Googleログイン用の認証URLを追加
 }
 
 export async function loginWithCredentials(
@@ -87,7 +89,7 @@ export async function loginWithCredentials(
 
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -114,9 +116,51 @@ export async function loginWithCredentials(
     };
   }
 
-  // ログイン成功
-  const redirectUrl = formData.get("redirect_url")?.toString() || "/lists";
-  redirect(redirectUrl);
+  // ログイン成功 - ブックマーク情報を処理
+  if (signInData.session) {
+    // セッションがあればログイン成功
+    const bookmark = formData.get("bookmark")?.toString();
+    const returnTo = formData.get("returnTo")?.toString() || "/lists";
+
+    // ブックマーク情報がある場合は、ここで直接処理
+    if (bookmark) {
+      console.log(
+        `ログイン成功。リストID: ${bookmark} のブックマーク処理を開始します。`
+      );
+      const result = await bookmarkList(bookmark);
+      if (result.success) {
+        console.log(`リストID: ${bookmark} のブックマークに成功しました。`);
+      } else {
+        console.error(
+          `リストID: ${bookmark} のブックマークに失敗しました。`,
+          result.error
+        );
+        // ここではエラーをログに出力するのみで、リダイレクトは継続
+      }
+    }
+
+    // 認証後にキャッシュを無効化してセッション状態を即座に反映
+    revalidatePath("/", "layout");
+    revalidatePath("/lists"); // マイリストページのキャッシュも無効化
+
+    redirect(returnTo);
+  } else if (signInData.user) {
+    // メール確認が必要な場合
+    return {
+      message:
+        "確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。",
+      errors: {},
+      success: true,
+      googleUrl: undefined, // AuthStateに合わせる
+    };
+  } else {
+    // 予期せぬケース
+    return {
+      message: "ユーザー登録中に予期せぬエラーが発生しました。",
+      errors: { general: ["ユーザー登録中に予期せぬエラーが発生しました。"] },
+      success: false,
+    };
+  }
 }
 
 // サインアップ用 Server Action
@@ -193,14 +237,37 @@ export async function signupWithCredentials(
   // メール確認が不要な場合、または自動で確認される場合 (例: localhost)
   if (signUpData.session) {
     // セッションがあればログイン成功とみなしリダイレクト
-    redirect("/lists"); // 登録後のリダイレクト先を /lists に変更
+    const bookmark = formData.get("bookmark")?.toString();
+    const returnTo = formData.get("returnTo")?.toString() || "/lists";
+
+    // ブックマーク情報がある場合は、ここで直接処理
+    if (bookmark) {
+      console.log(
+        `サインアップ成功。リストID: ${bookmark} のブックマーク処理を開始します。`
+      );
+      const result = await bookmarkList(bookmark);
+      if (result.success) {
+        console.log(`リストID: ${bookmark} のブックマークに成功しました。`);
+      } else {
+        console.error(
+          `リストID: ${bookmark} のブックマークに失敗しました。`,
+          result.error
+        );
+      }
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/lists");
+
+    redirect(returnTo);
   } else if (signUpData.user) {
     // メール確認が必要な場合
     return {
       message:
         "確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。",
       errors: {},
-      success: true, // サインアッププロセス自体は開始された
+      success: true,
+      googleUrl: undefined, // AuthStateに合わせる
     };
   } else {
     // 予期せぬケース
@@ -218,18 +285,30 @@ export async function loginWithGoogle(
 ): Promise<AuthState> {
   const supabase = await createClient();
 
-  const redirectTo = new URL(
-    "/auth/callback",
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  );
-  if (redirectUrl) {
-    redirectTo.searchParams.set("redirect_url", redirectUrl);
+  let redirectTo: URL;
+
+  // redirectUrlが既に/auth/callbackで始まる場合（ブックマーク情報を含む場合）
+  if (redirectUrl && redirectUrl.startsWith("/auth/callback")) {
+    redirectTo = new URL(
+      redirectUrl,
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    );
+  } else {
+    // 通常の場合は従来通りredirect_urlパラメータとして追加
+    redirectTo = new URL(
+      "/auth/callback",
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    );
+    if (redirectUrl) {
+      redirectTo.searchParams.set("redirect_url", redirectUrl);
+    }
   }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: redirectTo.toString(),
+      skipBrowserRedirect: true, // サーバーサイドでURLを取得するため
     },
   });
 
@@ -243,7 +322,13 @@ export async function loginWithGoogle(
   }
 
   if (data.url) {
-    redirect(data.url); // Googleの認証ページへリダイレクト
+    // redirect(data.url); // サーバーサイドのリダイレクトを削除
+    return {
+      message: null,
+      errors: {},
+      success: true,
+      googleUrl: data.url, // Googleの認証URLを返す
+    };
   } else {
     // 通常ここには来ないはずだが、念のため
     return {

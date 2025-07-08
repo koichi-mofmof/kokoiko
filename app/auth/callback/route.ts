@@ -1,3 +1,4 @@
+import { bookmarkList } from "@/lib/actions/lists";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
@@ -7,6 +8,8 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   // if "redirect_url" is in param, use it as the redirect URL
   const redirectUrl = searchParams.get("redirect_url") || "/lists";
+  // ブックマーク対象のリストID
+  const bookmarkListId = searchParams.get("bookmark");
 
   if (code) {
     const supabase = await createClient();
@@ -60,6 +63,20 @@ export async function GET(request: Request) {
               avatar_url: googleAvatarUrl,
             });
           }
+        }
+      }
+
+      // ブックマーク処理（ユーザーがブックマーク意図でサインアップ/ログインした場合）
+      if (bookmarkListId && user) {
+        try {
+          const bookmarkResult = await bookmarkList(bookmarkListId);
+          if (bookmarkResult.success) {
+            console.log(`リスト ${bookmarkListId} を自動ブックマークしました`);
+          } else {
+            console.error("自動ブックマーク失敗:", bookmarkResult.error);
+          }
+        } catch (error) {
+          console.error("自動ブックマーク処理エラー:", error);
         }
       }
 

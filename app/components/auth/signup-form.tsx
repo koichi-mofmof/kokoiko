@@ -101,8 +101,21 @@ export function SignupForm() {
   const googleLoginAction = async () => {
     // 認証コールバック待機状態をマーク
     markAuthCallbackPending();
-    // 新規登録画面からはリダイレクトURLを引き継がないので引数はなし
-    await loginWithGoogle();
+
+    // ブックマーク情報とリダイレクト先を取得
+    const bookmark = searchParams.get("bookmark");
+    const returnTo = searchParams.get("returnTo");
+
+    // 認証コールバックURLにブックマーク情報を含める
+    let redirectUrl = returnTo || "/lists";
+    if (bookmark) {
+      const params = new URLSearchParams();
+      params.set("bookmark", bookmark);
+      if (returnTo) params.set("redirect_url", returnTo);
+      redirectUrl = `/auth/callback?${params.toString()}`;
+    }
+
+    await loginWithGoogle(redirectUrl);
   };
 
   if (state.success && state.message?.includes("確認メール")) {
@@ -131,6 +144,20 @@ export function SignupForm() {
           name="csrf_token"
           value={getCSRFTokenFromCookie() || ""}
         />
+        {searchParams.get("bookmark") && (
+          <input
+            type="hidden"
+            name="bookmark"
+            value={searchParams.get("bookmark")!}
+          />
+        )}
+        {searchParams.get("returnTo") && (
+          <input
+            type="hidden"
+            name="returnTo"
+            value={searchParams.get("returnTo")!}
+          />
+        )}
         {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email">メールアドレス</Label>

@@ -27,7 +27,7 @@ export type ListDisplayItem = {
   places: Place[];
   place_count?: number;
   collaborators?: User[];
-  permission?: string;
+  permission?: string | null;
   is_public?: boolean;
   created_by?: string;
   created_at?: string | null;
@@ -280,39 +280,40 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                     </div>
                     <CardContent className="p-4 flex flex-col flex-grow">
                       <div className="mb-3">
-                        <CardTitle
-                          className="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2 group-hover:text-primary-700 flex items-center gap-2"
-                          data-testid="list-name"
-                        >
-                          {list.name}
-                          {typeof list.is_public === "boolean" ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span
-                                  aria-label={
-                                    list.is_public
-                                      ? "公開リスト"
-                                      : "非公開リスト"
-                                  }
-                                >
-                                  {list.is_public ? (
-                                    <LockKeyholeOpen className="h-4 w-4 text-primary-500" />
-                                  ) : (
-                                    <LockKeyhole className="h-4 w-4 text-neutral-400" />
-                                  )}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" align="center">
-                                {list.is_public ? "公開リスト" : "非公開リスト"}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : null}
-                        </CardTitle>
-                        {list.description && (
-                          <CardDescription className="text-sm text-neutral-600 line-clamp-2">
-                            {list.description}
-                          </CardDescription>
-                        )}
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-lg font-bold text-neutral-800 group-hover:text-primary-600 transition-colors duration-200">
+                              {list.name}
+                            </CardTitle>
+                            {typeof list.is_public === "boolean" ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span
+                                    aria-label={
+                                      list.is_public
+                                        ? "公開リスト"
+                                        : "非公開リスト"
+                                    }
+                                  >
+                                    {list.is_public ? (
+                                      <LockKeyholeOpen className="h-4 w-4 text-primary-500" />
+                                    ) : (
+                                      <LockKeyhole className="h-4 w-4 text-neutral-400" />
+                                    )}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" align="center">
+                                  {list.is_public
+                                    ? "公開リスト"
+                                    : "非公開リスト"}
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : null}
+                          </div>
+                        </div>
+                        <CardDescription className="text-sm text-neutral-500 line-clamp-2 mt-1">
+                          {list.description}
+                        </CardDescription>
                       </div>
                       <div className="flex-grow"></div>
                       <div className="flex items-center justify-between mt-auto pt-3 border-t border-neutral-100">

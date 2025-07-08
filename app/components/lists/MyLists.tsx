@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ListForClient as MyListClientData } from "@/lib/dal/lists";
 import { ArrowDown, ArrowUp, ListFilter, Search } from "lucide-react";
@@ -95,6 +96,7 @@ export function MyLists({ initialLists }: MyListsProps) {
   const viewerLists = processedLists.filter(
     (list) => list.permission === "view"
   );
+  const bookmarkedLists = processedLists.filter((list) => list.isBookmarked);
 
   return (
     <TooltipProvider>
@@ -150,94 +152,126 @@ export function MyLists({ initialLists }: MyListsProps) {
           </div>
         </div>
 
-        {initialLists.length > 0 ? (
-          processedLists.length > 0 ? (
-            <div className="space-y-8">
-              {/* セクションごとにリストを表示（Accordion化） */}
-              <Accordion
-                type="multiple"
-                defaultValue={
-                  [
-                    ownerLists.length > 0 ? "owner" : null,
-                    editorLists.length > 0 ? "editor" : null,
-                    viewerLists.length > 0 ? "viewer" : null,
-                  ].filter(Boolean) as string[]
-                }
-                className="space-y-4"
-              >
-                {ownerLists.length > 0 && (
-                  <AccordionItem value="owner">
-                    <AccordionTrigger>
-                      自分が作成したリスト（{ownerLists.length}件）
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <PlaceListGrid
-                        initialLists={ownerLists.map((list) => ({
-                          ...list,
-                          is_public:
-                            list.is_public === null
-                              ? undefined
-                              : list.is_public,
-                        }))}
-                        getLinkHref={(list) => `/lists/${list.id}`}
-                        renderCollaborators={renderLabeledCollaborators}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-                {editorLists.length > 0 && (
-                  <AccordionItem value="editor">
-                    <AccordionTrigger>
-                      共同編集者として参加しているリスト（{editorLists.length}
-                      件）
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <PlaceListGrid
-                        initialLists={editorLists.map((list) => ({
-                          ...list,
-                          is_public:
-                            list.is_public === null
-                              ? undefined
-                              : list.is_public,
-                        }))}
-                        getLinkHref={(list) => `/lists/${list.id}`}
-                        renderCollaborators={renderLabeledCollaborators}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-                {viewerLists.length > 0 && (
-                  <AccordionItem value="viewer">
-                    <AccordionTrigger>
-                      閲覧者として招待されたリスト（{viewerLists.length}件）
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <PlaceListGrid
-                        initialLists={viewerLists.map((list) => ({
-                          ...list,
-                          is_public:
-                            list.is_public === null
-                              ? undefined
-                              : list.is_public,
-                        }))}
-                        getLinkHref={(list) => `/lists/${list.id}`}
-                        renderCollaborators={renderLabeledCollaborators}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-              </Accordion>
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">
-              検索条件に一致するリストはありません。
-            </p>
-          )
-        ) : (
-          <p className="text-center text-muted-foreground py-8">
-            まだリストは作成されていません。
-          </p>
-        )}
+        <Tabs defaultValue="my-lists" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="my-lists">作成・共有リスト</TabsTrigger>
+            <TabsTrigger value="bookmarked">ブックマーク</TabsTrigger>
+          </TabsList>
+          <TabsContent value="my-lists" className="mt-4">
+            {initialLists.length > 0 ? (
+              processedLists.filter(
+                (l) =>
+                  l.permission !== null &&
+                  ["owner", "edit", "view"].includes(l.permission)
+              ).length > 0 ? (
+                <div className="space-y-8">
+                  {/* セクションごとにリストを表示（Accordion化） */}
+                  <Accordion
+                    type="multiple"
+                    defaultValue={
+                      [
+                        ownerLists.length > 0 ? "owner" : null,
+                        editorLists.length > 0 ? "editor" : null,
+                        viewerLists.length > 0 ? "viewer" : null,
+                      ].filter(Boolean) as string[]
+                    }
+                    className="space-y-4"
+                  >
+                    {ownerLists.length > 0 && (
+                      <AccordionItem value="owner">
+                        <AccordionTrigger>
+                          自分が作成したリスト（{ownerLists.length}件）
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <PlaceListGrid
+                            initialLists={ownerLists.map((list) => ({
+                              ...list,
+                              is_public:
+                                list.is_public === null
+                                  ? undefined
+                                  : list.is_public,
+                            }))}
+                            getLinkHref={(list) => `/lists/${list.id}`}
+                            renderCollaborators={renderLabeledCollaborators}
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                    {editorLists.length > 0 && (
+                      <AccordionItem value="editor">
+                        <AccordionTrigger>
+                          共同編集者として参加しているリスト（
+                          {editorLists.length}
+                          件）
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <PlaceListGrid
+                            initialLists={editorLists.map((list) => ({
+                              ...list,
+                              is_public:
+                                list.is_public === null
+                                  ? undefined
+                                  : list.is_public,
+                            }))}
+                            getLinkHref={(list) => `/lists/${list.id}`}
+                            renderCollaborators={renderLabeledCollaborators}
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                    {viewerLists.length > 0 && (
+                      <AccordionItem value="viewer">
+                        <AccordionTrigger>
+                          閲覧者として招待されたリスト（{viewerLists.length}件）
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <PlaceListGrid
+                            initialLists={viewerLists.map((list) => ({
+                              ...list,
+                              is_public:
+                                list.is_public === null
+                                  ? undefined
+                                  : list.is_public,
+                            }))}
+                            getLinkHref={(list) => `/lists/${list.id}`}
+                            renderCollaborators={renderLabeledCollaborators}
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                  </Accordion>
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  検索条件に一致するリストはありません。
+                </p>
+              )
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                まだリストは作成されていません。
+              </p>
+            )}
+          </TabsContent>
+          <TabsContent value="bookmarked" className="mt-4">
+            {bookmarkedLists.length > 0 ? (
+              <PlaceListGrid
+                initialLists={bookmarkedLists.map((list) => ({
+                  ...list,
+                  is_public:
+                    list.is_public === null ? undefined : list.is_public,
+                }))}
+                getLinkHref={(list) => `/lists/${list.id}`}
+                renderCollaborators={renderLabeledCollaborators}
+              />
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                {searchQuery
+                  ? "検索条件に一致するブックマークはありません。"
+                  : "ブックマークしたリストはありません。"}
+              </p>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </TooltipProvider>
   );

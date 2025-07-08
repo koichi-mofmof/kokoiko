@@ -36,13 +36,15 @@ export type ListForClient = {
   places: Place[];
   place_count: number;
   collaborators: Collaborator[];
-  permission?: string;
+  permission: "owner" | "edit" | "view" | "manage" | null;
+  isBookmarked: boolean;
 };
 
 export interface ListsPageData {
   lists: ListForClient[];
   userId: string;
   error?: string;
+  permission?: string;
 }
 
 // ===================================
@@ -101,75 +103,113 @@ export async function getAccessibleLists(
   if (!userId) return [];
 
   try {
-    // 1. 自分が作成したリストを取得
-    const { data: ownedLists, error: ownedError } = await supabase
-      .from("place_lists")
-      .select(
-        `
-        id,
-        name,
-        description,
-        is_public,
-        created_at,
-        updated_at,
-        created_by
-      `
-      )
-      .eq("created_by", userId)
-      .order("created_at", { ascending: false });
+    // Define types for Supabase query results
+    type BaseListInfo = {
+      id: string;
+      name: string;
+      description: string | null;
+      is_public: boolean | null;
+      created_at: string | null;
+      updated_at: string | null;
+      created_by: string;
+    };
 
-    if (ownedError) {
-      console.error("Error fetching owned lists:", ownedError);
-      return [];
-    }
+    type SharedListResult = {
+      permission: "view" | "edit";
+      place_lists: BaseListInfo;
+    };
 
-    // 2. 明示的に共有されたリストを取得
-    const { data: sharedListIds, error: sharedError } = await supabase
-      .from("shared_lists")
-      .select(
-        `
-        list_id,
-        permission,
-        place_lists!inner (
-          id,
-          name,
-          description,
-          is_public,
-          created_at,
-          updated_at,
-          created_by
+    type BookmarkedListResult = {
+      place_lists: BaseListInfo;
+    };
+
+    // 1. 自分が作成したリスト、共有されたリスト、ブックマークしたリストを並列で取得
+    const [ownedResult, sharedResult, bookmarkedResult] = await Promise.all([
+      // 自分が作成したリスト
+      supabase
+        .from("place_lists")
+        .select(
+          `id, name, description, is_public, created_at, updated_at, created_by`
         )
-      `
-      )
-      .eq("shared_with_user_id", userId);
+        .eq("created_by", userId),
+      // 自分に共有されたリスト
+      supabase
+        .from("shared_lists")
+        .select(
+          `permission, place_lists!inner(id, name, description, is_public, created_at, updated_at, created_by)`
+        )
+        .eq("shared_with_user_id", userId),
+      // ブックマークしたリスト
+      supabase
+        .from("list_bookmarks")
+        .select(
+          `place_lists!inner(id, name, description, is_public, created_at, updated_at, created_by)`
+        )
+        .eq("user_id", userId),
+    ]);
 
-    if (sharedError) {
-      console.error("Error fetching shared lists:", sharedError);
-      return [];
+    if (ownedResult.error) {
+      console.error("Error fetching owned lists:", ownedResult.error);
+    }
+    if (sharedResult.error) {
+      console.error("Error fetching shared lists:", sharedResult.error);
+    }
+    if (bookmarkedResult.error) {
+      console.error("Error fetching bookmarked lists:", bookmarkedResult.error);
     }
 
-    // 3. 結果をマージ
-    const allLists = [
-      ...(ownedLists || []).map((list) => ({ ...list, permission: "owner" })),
-      ...(sharedListIds || []).map((item) => {
-        const sharedItem = item as unknown as {
-          permission: string;
-          place_lists: {
-            id: string;
-            name: string;
-            description: string | null;
-            is_public: boolean | null;
-            created_at: string | null;
-            updated_at: string | null;
-            created_by: string;
-          };
-        };
-        return {
-          ...sharedItem.place_lists,
-          permission: sharedItem.permission,
-        };
-      }),
-    ];
+    // 3. 結果をマージして型を統一
+    type ListWithoutDetails = Omit<
+      ListForClient,
+      "places" | "place_count" | "collaborators"
+    >;
+    const allListsMap = new Map<string, ListWithoutDetails>();
+
+    // 作成したリストを追加
+    (ownedResult.data || []).forEach((list) => {
+      allListsMap.set(list.id, {
+        ...list,
+        permission: "owner",
+        isBookmarked: false,
+      });
+    });
+
+    // 共有されたリストを追加（または権限を更新）
+    ((sharedResult.data as unknown as SharedListResult[]) || []).forEach(
+      (item) => {
+        const { permission, place_lists: list } = item;
+        if (list && !allListsMap.has(list.id)) {
+          allListsMap.set(list.id, {
+            ...list,
+            permission,
+            isBookmarked: false,
+          });
+        }
+      }
+    );
+
+    // ブックマークしたリストを処理
+    (
+      (bookmarkedResult.data as unknown as BookmarkedListResult[]) || []
+    ).forEach((item) => {
+      const { place_lists: list } = item;
+      if (list) {
+        if (allListsMap.has(list.id)) {
+          // 既知のリスト（作成or共有）なら、isBookmarkedフラグを立てる
+          const existing = allListsMap.get(list.id)!;
+          allListsMap.set(list.id, { ...existing, isBookmarked: true });
+        } else {
+          // 未知のリスト（ブックマークのみ）なら、新しいエントリとして追加
+          allListsMap.set(list.id, {
+            ...list,
+            permission: "view",
+            isBookmarked: true,
+          });
+        }
+      }
+    });
+
+    const allLists = Array.from(allListsMap.values());
 
     // 4. 各リストの詳細情報を並列取得
     const listsWithDetails = await Promise.all(
@@ -241,19 +281,27 @@ export async function getListDetails(
       return null;
     }
 
-    // 詳細情報を並列取得
-    const [places, collaborators] = await Promise.all([
-      getPlacesForList(listId, userId || list.created_by),
+    const [places, collaborators, bookmarkedResult] = await Promise.all([
+      getPlacesForList(listId, userId),
       getCollaboratorsForList(listId, list.created_by),
+      userId
+        ? supabase
+            .from("list_bookmarks")
+            .select("id")
+            .eq("list_id", listId)
+            .eq("user_id", userId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
-    // 権限の判定（permission-check.tsの結果を使用）
-    let permission = "view";
-    if (accessResult.permission === "manage") {
+    let permission: ListForClient["permission"];
+    if (userId && list.created_by === userId) {
       permission = "owner";
-    } else if (accessResult.permission === "edit") {
-      permission = "edit";
+    } else {
+      permission = accessResult.permission;
     }
+
+    const isBookmarked = !!bookmarkedResult?.data;
 
     return {
       ...list,
@@ -261,6 +309,7 @@ export async function getListDetails(
       place_count: places.length,
       collaborators,
       permission,
+      isBookmarked,
     };
   } catch (error) {
     console.error("Error in getListDetails:", error);

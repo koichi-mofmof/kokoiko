@@ -9,10 +9,17 @@ import { createClient } from "@/lib/supabase/server";
 jest.mock("@/lib/supabase/server");
 
 const mockSupabase = {
-  from: jest.fn(),
+  from: jest.fn().mockReturnThis(),
+  select: jest.fn().mockReturnThis(),
+  eq: jest.fn().mockReturnThis(),
+  single: jest.fn(),
+  storage: {
+    from: jest.fn().mockReturnThis(),
+    getPublicUrl: jest.fn(),
+  },
 };
 
-(createClient as jest.Mock).mockResolvedValue(mockSupabase);
+(createClient as jest.Mock).mockReturnValue(mockSupabase);
 
 describe("DAL - user-public-lists", () => {
   beforeEach(() => {
@@ -29,10 +36,12 @@ describe("DAL - user-public-lists", () => {
         bio: "This is a test bio.",
         avatar_url: "avatar.jpg",
       };
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
+      mockSupabase.single.mockResolvedValue({ data: mockProfile, error: null });
+      mockSupabase.storage.from("profile_images").getPublicUrl.mockReturnValue({
+        data: {
+          publicUrl:
+            "https://mock.supabase.co/storage/v1/object/public/profile_images/avatar.png",
+        },
       });
 
       const profile = await getUserProfile("user-1");
@@ -42,11 +51,7 @@ describe("DAL - user-public-lists", () => {
     });
 
     it("プロファイルが存在しない場合はnullを返す", async () => {
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      });
+      mockSupabase.single.mockResolvedValue({ data: null, error: null });
 
       const profile = await getUserProfile("non-existent-user");
 

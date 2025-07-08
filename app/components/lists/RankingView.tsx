@@ -11,7 +11,7 @@ import RankingEditModal from "./RankingEditModal";
 interface RankingViewProps {
   listId: string;
   places?: Place[];
-  permission?: string;
+  permission?: string | null;
 }
 
 export default function RankingView({
