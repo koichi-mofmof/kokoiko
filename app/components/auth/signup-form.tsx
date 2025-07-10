@@ -115,7 +115,14 @@ export function SignupForm() {
       redirectUrl = `/auth/callback?${params.toString()}`;
     }
 
-    await loginWithGoogle(redirectUrl);
+    const result = await loginWithGoogle(redirectUrl);
+    if (result.success && result.googleUrl) {
+      // クライアントサイドでGoogleの認証ページにリダイレクト
+      window.location.href = result.googleUrl;
+    } else {
+      // エラー処理
+      setGoogleError(result.message || "Google登録の開始に失敗しました。");
+    }
   };
 
   if (state.success && state.message?.includes("確認メール")) {
