@@ -1,8 +1,8 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/types/supabase";
-import Image from "next/image";
 import Link from "next/link";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -26,22 +26,12 @@ export function CreatorInfoCard({ creator }: CreatorInfoCardProps) {
     <div className="border-b border-gray-200 py-4 dark:border-gray-800">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 flex-1 items-center space-x-3">
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              alt={displayName}
-              width={48}
-              height={48}
-              sizes="48px"
-              className="h-12 w-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-200 dark:bg-gray-700">
-              <span className="text-xl font-medium text-neutral-500 dark:text-gray-400">
-                {displayName[0]?.toUpperCase()}
-              </span>
-            </div>
-          )}
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+            <AvatarFallback className="text-xl font-medium">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
 
           <div className="min-w-0 flex-1">
             <p className="text-sm text-neutral-500 dark:text-gray-400">

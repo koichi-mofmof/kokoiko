@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlaceListGrid } from "@/components/ui/placelist-grid";
@@ -13,7 +14,6 @@ import {
 import type { ListForClient } from "@/lib/dal/lists";
 import type { Database } from "@/types/supabase";
 import { ArrowDown, ArrowUp, ListFilter, ListX, Search } from "lucide-react";
-import Image from "next/image";
 import { useMemo, useState } from "react";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -104,22 +104,12 @@ export function UserProfileView({
     <div className="py-8">
       {/* User Info Section */}
       <header className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-8 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-        {avatarUrl ? (
-          <Image
-            src={avatarUrl}
-            alt={displayName}
-            width={96}
-            height={96}
-            sizes="(max-width: 640px) 64px, 96px"
-            className="h-16 w-16 sm:h-24 sm:w-24 rounded-full object-cover ring-4 ring-white dark:ring-gray-800"
-          />
-        ) : (
-          <div className="flex h-16 w-16 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
-            <span className="text-4xl font-bold text-gray-500 dark:text-gray-400">
-              {displayName[0]?.toUpperCase()}
-            </span>
-          </div>
-        )}
+        <Avatar className="h-16 w-16 sm:h-24 sm:w-24 rounded-full object-cover ring-4 ring-white dark:ring-gray-800">
+          <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+          <AvatarFallback className="text-4xl font-bold">
+            {displayName.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
         <div className="flex-1 text-center sm:text-left">
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
             {displayName}
