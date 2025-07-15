@@ -20,7 +20,7 @@ import {
 } from "@/lib/actions/google-maps-actions";
 import { registerPlaceToListAction } from "@/lib/actions/place-actions";
 import { getListTags } from "@/lib/dal/lists";
-import { Loader2, MapPin, Search } from "lucide-react";
+import { Lightbulb, Loader2, MapPin, Search } from "lucide-react";
 import {
   useActionState,
   useEffect,
@@ -370,7 +370,7 @@ export default function AddPlaceForm({
 
   if (currentStep === "search") {
     return (
-      <Card className="w-full max-w-lg mx-auto">
+      <Card className="text-neutral-900 w-full max-w-lg mx-auto">
         <CardHeader>
           <CardTitle>場所を検索</CardTitle>
           <CardDescription>
@@ -411,8 +411,13 @@ export default function AddPlaceForm({
             </div>
           </form>
         </CardContent>
-        <CardFooter className="text-sm text-muted-foreground">
-          Enterキーでも検索できます。
+        <CardFooter className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <p className="text-sm">
+              地名を追加すると見つかりやすくなります（例：○○カフェ 渋谷）
+            </p>
+          </div>
         </CardFooter>
       </Card>
     );
