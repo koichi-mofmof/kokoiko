@@ -99,10 +99,10 @@ export function useSignupPrompt() {
           }
         }
 
-        // 4. 7秒後に表示（ユーザーがリストの価値を理解するのに最適なタイミング）
+        // 4. 5秒後に表示（ユーザーがリストの価値を理解するのに最適なタイミング）
         timeoutId = setTimeout(() => {
           setShouldShow(true);
-        }, 7000); // 7秒
+        }, 5000); // 5秒
       } catch (error) {
         console.error("Error initializing signup prompt:", error);
       }
