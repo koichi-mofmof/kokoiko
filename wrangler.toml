@@ -22,6 +22,7 @@ compatibility_date = "2025-05-05"
 compatibility_flags = [
   "nodejs_compat"
 ]
+minify = true
 
 # 本番環境のルート設定
 routes = [
@@ -39,6 +40,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_live_51RW7WVGWuYESGCDjSQowBqDsDhG3l9tHc
 NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY = "price_1RZkoDGWuYESGCDjvz5iTg2T"
 NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY = "price_1RZkoDGWuYESGCDjoWSXqrjo"
 NEXT_PUBLIC_GA_MEASUREMENT_ID = "G-BZZ21WY1L2"
+NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS = "5000"
 
 # Workers KV設定 (本番環境)
 [[kv_namespaces]]

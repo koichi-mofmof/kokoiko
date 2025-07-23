@@ -1,53 +1,58 @@
 import { sendGAEvent } from "@/app/components/analytics/GoogleAnalytics";
 
+// 地図関連のイベント
+export const trackMapEvents = {
+  // 地図表示
+  viewMap: (listId: string) => {
+    sendGAEvent("view_map", "map_interaction", listId);
+  },
+
+  // 地図スタイル変更
+  changeMapStyle: (style: "roadmap" | "satellite" | "hybrid" | "terrain") => {
+    sendGAEvent("change_map_style", "map_interaction", style);
+  },
+
+  // ズーム操作
+  zoom: (zoomLevel: number) => {
+    sendGAEvent("map_zoom", "map_interaction", zoomLevel.toString());
+  },
+
+  // 地点クリック
+  clickPlace: (placeId: string) => {
+    sendGAEvent("click_place", "map_interaction", placeId);
+  },
+};
+
 // リスト関連のイベント
 export const trackListEvents = {
   // リスト作成
-  createList: (listName: string, isPublic: boolean) => {
-    sendGAEvent("create_list", "engagement", listName, isPublic ? 1 : 0);
+  createList: () => {
+    sendGAEvent("create_list", "list_management");
   },
 
   // リスト表示
-  viewList: (listId: string, listName: string) => {
-    sendGAEvent("view_list", "engagement", `${listId}-${listName}`);
+  viewList: (listId: string) => {
+    sendGAEvent("view_list", "list_engagement", listId);
   },
 
   // リスト共有
-  shareList: (listId: string, shareMethod: string) => {
-    sendGAEvent("share_list", "engagement", `${listId}-${shareMethod}`);
+  shareList: (listId: string, shareMethod: "link" | "social") => {
+    sendGAEvent("share_list", "list_engagement", `${listId}_${shareMethod}`);
+  },
+
+  // リスト編集
+  editList: (listId: string) => {
+    sendGAEvent("edit_list", "list_management", listId);
   },
 
   // リスト削除
   deleteList: (listId: string) => {
-    sendGAEvent("delete_list", "engagement", listId);
-  },
-};
-
-// 場所関連のイベント
-export const trackPlaceEvents = {
-  // 場所追加
-  addPlace: (listId: string, placeName: string) => {
-    sendGAEvent("add_place", "engagement", `${listId}-${placeName}`);
+    sendGAEvent("delete_list", "list_management", listId);
   },
 
-  // 場所表示
-  viewPlace: (placeId: string, placeName: string) => {
-    sendGAEvent("view_place", "engagement", `${placeId}-${placeName}`);
-  },
-
-  // 場所編集
-  editPlace: (placeId: string) => {
-    sendGAEvent("edit_place", "engagement", placeId);
-  },
-
-  // 場所削除
-  deletePlace: (placeId: string) => {
-    sendGAEvent("delete_place", "engagement", placeId);
-  },
-
-  // Google Maps で開く
-  openInGoogleMaps: (placeId: string, placeName: string) => {
-    sendGAEvent("open_google_maps", "engagement", `${placeId}-${placeName}`);
+  // リストブックマーク
+  bookmarkList: (listId: string) => {
+    sendGAEvent("bookmark_list", "list_engagement", listId);
   },
 };
 
@@ -74,74 +79,87 @@ export const trackUserEvents = {
   },
 };
 
-// UI/UX関連のイベント
-export const trackUIEvents = {
-  // 検索実行
-  search: (query: string, resultsCount: number) => {
-    sendGAEvent("search", "engagement", query, resultsCount);
+// 地点関連のイベント
+export const trackPlaceEvents = {
+  // 地点追加
+  addPlace: (listId: string) => {
+    sendGAEvent("add_place", "place_management", listId);
   },
 
-  // フィルター使用
+  // 地点編集
+  editPlace: (placeId: string) => {
+    sendGAEvent("edit_place", "place_management", placeId);
+  },
+
+  // 地点削除
+  deletePlace: (placeId: string) => {
+    sendGAEvent("delete_place", "place_management", placeId);
+  },
+
+  // 地点詳細表示
+  viewPlaceDetail: (placeId: string) => {
+    sendGAEvent("view_place_detail", "place_engagement", placeId);
+  },
+
+  // 地点ランキング変更
+  rankPlace: (placeId: string, rank: number) => {
+    sendGAEvent("rank_place", "place_engagement", `${placeId}_${rank}`);
+  },
+};
+
+// 検索関連のイベント
+export const trackSearchEvents = {
+  // 地点検索
+  searchPlace: (query: string) => {
+    sendGAEvent("search_place", "search", query);
+  },
+
+  // フィルタ使用
   useFilter: (filterType: string, filterValue: string) => {
-    sendGAEvent("use_filter", "engagement", `${filterType}-${filterValue}`);
+    sendGAEvent("use_filter", "search", `${filterType}_${filterValue}`);
   },
 
-  // ビュー切り替え（地図/リスト）
-  toggleView: (viewType: "map" | "list") => {
-    sendGAEvent("toggle_view", "engagement", viewType);
-  },
-
-  // ランキング編集
-  editRanking: (listId: string) => {
-    sendGAEvent("edit_ranking", "engagement", listId);
+  // 検索結果クリック
+  clickSearchResult: (resultIndex: number) => {
+    sendGAEvent("click_search_result", "search", resultIndex.toString());
   },
 };
 
-// エラー関連のイベント
-export const trackErrorEvents = {
-  // API エラー
-  apiError: (endpoint: string, errorCode: string) => {
-    sendGAEvent("api_error", "error", `${endpoint}-${errorCode}`);
+// 階層的地域フィルタ関連のイベント
+export const trackHierarchicalFilterEvents = {
+  // 都道府県選択
+  selectPrefecture: (prefecture: string) => {
+    sendGAEvent("select_prefecture", "hierarchical_filter", prefecture);
   },
 
-  // 認証エラー
-  authError: (errorType: string) => {
-    sendGAEvent("auth_error", "error", errorType);
+  // 市区町村選択
+  selectCity: (prefecture: string, city: string) => {
+    sendGAEvent("select_city", "hierarchical_filter", `${prefecture}_${city}`);
   },
 
-  // フォームエラー
-  formError: (formName: string, errorType: string) => {
-    sendGAEvent("form_error", "error", `${formName}-${errorType}`);
-  },
-};
-
-// パフォーマンス関連のイベント
-export const trackPerformanceEvents = {
-  // ページロード時間
-  pageLoadTime: (pageName: string, loadTime: number) => {
-    sendGAEvent("page_load_time", "performance", pageName, loadTime);
-  },
-
-  // API レスポンス時間
-  apiResponseTime: (endpoint: string, responseTime: number) => {
-    sendGAEvent("api_response_time", "performance", endpoint, responseTime);
+  // フィルタリセット
+  resetFilter: () => {
+    sendGAEvent("reset_hierarchical_filter", "hierarchical_filter");
   },
 };
 
 // コンバージョン関連のイベント
 export const trackConversionEvents = {
   // ポップアップ表示
-  promptShown: (listId: string) => {
-    sendGAEvent("signup_prompt_shown", "conversion", listId);
+  promptShown: (listId: string, variant?: string) => {
+    const eventValue = variant ? `${listId}_${variant}` : listId;
+    sendGAEvent("signup_prompt_shown", "conversion", eventValue);
   },
 
   // ポップアップクリック
-  promptClicked: (listId: string) => {
-    sendGAEvent("signup_prompt_clicked", "conversion", listId);
+  promptClicked: (listId: string, variant?: string) => {
+    const eventValue = variant ? `${listId}_${variant}` : listId;
+    sendGAEvent("signup_prompt_clicked", "conversion", eventValue);
   },
 
   // ポップアップ閉じる
-  promptDismissed: (listId: string) => {
-    sendGAEvent("signup_prompt_dismissed", "conversion", listId);
+  promptDismissed: (listId: string, variant?: string) => {
+    const eventValue = variant ? `${listId}_${variant}` : listId;
+    sendGAEvent("signup_prompt_dismissed", "conversion", eventValue);
   },
 };

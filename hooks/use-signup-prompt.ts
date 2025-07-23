@@ -9,6 +9,22 @@ const STORAGE_KEYS = {
   PROMPT_DISMISSED: "clippy_signup_prompt_dismissed",
 } as const;
 
+// ダイアログ表示までの遅延時間（ミリ秒）
+// 環境変数から取得、デフォルトは5秒（5000ms）
+const getPromptDelay = (): number => {
+  if (typeof window === "undefined") return 5000;
+
+  const envDelay = process.env.NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS;
+  if (envDelay) {
+    const parsed = parseInt(envDelay, 10);
+    if (!isNaN(parsed) && parsed >= 0) {
+      return parsed;
+    }
+  }
+
+  return 5000; // デフォルト: 5秒
+};
+
 // セッション ID 生成
 const generateSessionId = () => {
   if (typeof window !== "undefined" && window.crypto?.randomUUID) {
@@ -99,10 +115,10 @@ export function useSignupPrompt() {
           }
         }
 
-        // 4. 5秒後に表示（ユーザーがリストの価値を理解するのに最適なタイミング）
+        // 4. 設定された秒数後に表示（環境変数 NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS で制御可能、デフォルト5秒）
         timeoutId = setTimeout(() => {
           setShouldShow(true);
-        }, 5000); // 5秒
+        }, getPromptDelay()); // 環境変数またはデフォルト5秒
       } catch (error) {
         console.error("Error initializing signup prompt:", error);
       }
