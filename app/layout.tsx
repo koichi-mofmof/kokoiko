@@ -166,6 +166,13 @@ export default async function RootLayout({
         <GoogleSearchConsole />
         <JsonLd data={generateOrganizationSchema()} />
         <JsonLd data={generateWebSiteSchema()} />
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9713366549691329"
+          crossOrigin="anonymous"
+          nonce={nonce ?? undefined}
+        />
       </head>
       <body
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}

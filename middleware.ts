@@ -41,12 +41,12 @@ function getContentSecurityPolicyHeaderValue(nonce: string): string {
   // 開発環境用のCSP設定（Next.jsの開発サーバー対応）
   const developmentCSP = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://pagead2.googlesyndication.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob: http://127.0.0.1:54321 http://localhost:54321 http://192.168.10.104:3000 https://images.pexels.com https://lh3.googleusercontent.com https://maps.googleapis.com https://maps.gstatic.com https://*.openstreetmap.org https://*.tile.openstreetmap.org",
-    "connect-src 'self' http://127.0.0.1:54321 http://localhost:54321 http://192.168.10.104:3000 https: *.stripe.com *.googleapis.com *.google-analytics.com *.googletagmanager.com",
-    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    "img-src 'self' data: blob: http://127.0.0.1:54321 http://localhost:54321 http://192.168.10.104:3000 https://images.pexels.com https://lh3.googleusercontent.com https://maps.googleapis.com https://maps.gstatic.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google https://pagead2.googlesyndication.com https://tpc.googlesyndication.com",
+    "connect-src 'self' http://127.0.0.1:54321 http://localhost:54321 http://192.168.10.104:3000 https: *.stripe.com *.googleapis.com *.google-analytics.com *.googletagmanager.com *.googlesyndication.com *.doubleclick.net",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://ep2.adtrafficquality.google",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -57,12 +57,12 @@ function getContentSecurityPolicyHeaderValue(nonce: string): string {
   // 本番環境用のCSP設定（Next.js 15.3.3対応：style-srcはunsafe-inlineのみ）
   const productionCSP = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com https://maps.googleapis.com https://www.google.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com https://pagead2.googlesyndication.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https: *.supabase.co *.googleapis.com *.gstatic.com *.google-analytics.com *.googletagmanager.com",
-    "connect-src 'self' https: *.supabase.co *.stripe.com *.googleapis.com https://cloudflareinsights.com *.google-analytics.com *.googletagmanager.com",
-    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    "img-src 'self' data: blob: https: *.supabase.co *.googleapis.com *.gstatic.com *.google-analytics.com *.googletagmanager.com *.adtrafficquality.google *.googlesyndication.com",
+    "connect-src 'self' https: *.supabase.co *.stripe.com *.googleapis.com https://cloudflareinsights.com *.google-analytics.com *.googletagmanager.com *.googlesyndication.com *.doubleclick.net",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://ep2.adtrafficquality.google",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
