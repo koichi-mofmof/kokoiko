@@ -10,19 +10,25 @@ const STORAGE_KEYS = {
 } as const;
 
 // ダイアログ表示までの遅延時間（ミリ秒）
-// 環境変数から取得、デフォルトは5秒（5000ms）
-const getPromptDelay = (): number => {
-  if (typeof window === "undefined") return 5000;
+// 動的に設定を取得、デフォルトは10秒（10000ms）
+const getPromptDelay = async (): Promise<number> => {
+  if (typeof window === "undefined") return 10000;
 
-  const envDelay = process.env.NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS;
-  if (envDelay) {
-    const parsed = parseInt(envDelay, 10);
-    if (!isNaN(parsed) && parsed >= 0) {
-      return parsed;
+  try {
+    // 動的に設定を取得
+    const response = await fetch("/api/config/signup-prompt-delay");
+    if (response.ok) {
+      const data = (await response.json()) as { delay: string };
+      const delay = parseInt(data.delay, 10);
+      if (!isNaN(delay) && delay >= 0) {
+        return delay;
+      }
     }
+  } catch (error) {
+    console.warn("Failed to fetch signup prompt delay config:", error);
   }
 
-  return 5000; // デフォルト: 5秒
+  return 10000; // デフォルト: 10秒
 };
 
 // セッション ID 生成
@@ -118,7 +124,7 @@ export function useSignupPrompt() {
         // 4. 設定された秒数後に表示（環境変数 NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS で制御可能、デフォルト5秒）
         timeoutId = setTimeout(() => {
           setShouldShow(true);
-        }, getPromptDelay()); // 環境変数またはデフォルト5秒
+        }, await getPromptDelay()); // 環境変数またはデフォルト5秒
       } catch (error) {
         console.error("Error initializing signup prompt:", error);
       }
