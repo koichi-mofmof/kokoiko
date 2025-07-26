@@ -20,27 +20,6 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Environment Variables
-
-### Signup Prompt Configuration
-
-You can customize the signup prompt behavior using the following environment variables:
-
-- `NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS`: Controls the delay (in milliseconds) before showing the signup prompt to non-logged-in users viewing lists. Default is `5000` (5 seconds).
-
-Example `.env.local`:
-
-```bash
-# Show signup prompt after 3 seconds instead of default 5 seconds
-NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS=3000
-
-# Disable signup prompt by setting a very large delay
-NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS=999999999
-
-# Show prompt immediately (0 seconds delay)
-NEXT_PUBLIC_SIGNUP_PROMPT_DELAY_MS=0
-```
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

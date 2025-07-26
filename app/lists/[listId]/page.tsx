@@ -171,6 +171,9 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           </Link>
         </div>
 
+        {/* サインアップ誘導バナー（非ログインユーザーのみ） */}
+        <SignupPromptWrapper listId={listId} showBanner={true} />
+
         <h1 className="flex items-start justify-between gap-4 text-lg sm:text-xl font-semibold text-neutral-900">
           <span className="flex items-center gap-2">
             {listDetails.name}
@@ -225,7 +228,6 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
             permission={listDetails.permission}
           />
         </Suspense>
-        <SignupPromptWrapper listId={listId} />
       </div>
     </>
   );

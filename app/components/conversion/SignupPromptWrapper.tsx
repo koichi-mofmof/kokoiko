@@ -1,21 +1,30 @@
 "use client";
 
 import { useSignupPrompt } from "@/hooks/use-signup-prompt";
-import { SignupPromptModal } from "./SignupPromptModal";
+import { SignupPromptBanner } from "./SignupPromptBanner";
 
 interface SignupPromptWrapperProps {
   listId: string;
+  showBanner?: boolean; // バナー表示のオプション
 }
 
-export function SignupPromptWrapper({ listId }: SignupPromptWrapperProps) {
-  const { shouldShow, hidePrompt } = useSignupPrompt();
+export function SignupPromptWrapper({
+  listId,
+  showBanner = false,
+}: SignupPromptWrapperProps) {
+  const { isLoggedIn, shouldShowBanner, hideBanner } = useSignupPrompt();
+
+  // ログインユーザーには何も表示しない
+  if (isLoggedIn) {
+    return null;
+  }
 
   return (
-    <SignupPromptModal
-      isOpen={shouldShow}
-      onClose={hidePrompt}
-      listId={listId}
-      variant="default"
-    />
+    <>
+      {/* 常時表示バナー */}
+      {showBanner && shouldShowBanner && (
+        <SignupPromptBanner listId={listId} onDismiss={hideBanner} />
+      )}
+    </>
   );
 }

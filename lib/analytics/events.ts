@@ -125,24 +125,6 @@ export const trackSearchEvents = {
   },
 };
 
-// 階層的地域フィルタ関連のイベント
-export const trackHierarchicalFilterEvents = {
-  // 都道府県選択
-  selectPrefecture: (prefecture: string) => {
-    sendGAEvent("select_prefecture", "hierarchical_filter", prefecture);
-  },
-
-  // 市区町村選択
-  selectCity: (prefecture: string, city: string) => {
-    sendGAEvent("select_city", "hierarchical_filter", `${prefecture}_${city}`);
-  },
-
-  // フィルタリセット
-  resetFilter: () => {
-    sendGAEvent("reset_hierarchical_filter", "hierarchical_filter");
-  },
-};
-
 // コンバージョン関連のイベント
 export const trackConversionEvents = {
   // ポップアップ表示
@@ -161,5 +143,25 @@ export const trackConversionEvents = {
   promptDismissed: (listId: string, variant?: string) => {
     const eventValue = variant ? `${listId}_${variant}` : listId;
     sendGAEvent("signup_prompt_dismissed", "conversion", eventValue);
+  },
+
+  // バナーCTAボタン（サインアップ）クリック
+  bannerCtaClicked: (listId: string) => {
+    sendGAEvent("banner_cta_clicked", "conversion", listId);
+  },
+
+  // バナー詳細ボタンクリック
+  bannerDetailClicked: (listId: string) => {
+    sendGAEvent("banner_detail_clicked", "conversion", listId);
+  },
+
+  // バナー表示
+  bannerShown: (listId: string) => {
+    sendGAEvent("banner_shown", "conversion", listId);
+  },
+
+  // バナー閉じる
+  bannerDismissed: (listId: string) => {
+    sendGAEvent("banner_dismissed", "conversion", listId);
   },
 };
