@@ -167,6 +167,8 @@ describe("コンポーネントパフォーマンステスト", () => {
     const smallPlaces = mockPlaces.slice(0, 10);
     const smallResult = await measureRenderTime(PlaceList, {
       places: smallPlaces,
+      displayOrders: [],
+      listId: "test-list",
       onPlaceSelect: mockOnPlaceSelect,
     });
 
@@ -183,6 +185,8 @@ describe("コンポーネントパフォーマンステスト", () => {
       const largePlaces = mockPlaces.slice(0, 30);
       const largeResult = await measureRenderTime(PlaceList, {
         places: largePlaces,
+        displayOrders: [],
+        listId: "test-list",
         onPlaceSelect: mockOnPlaceSelect,
       });
 
@@ -222,7 +226,8 @@ describe("コンポーネントパフォーマンステスト", () => {
       render(
         <PlaceList
           places={mockPlaces.slice(0, 10)}
-          onPlaceSelect={mockOnPlaceSelect}
+          displayOrders={[]}
+          listId="test-list"
         />
       );
     }

@@ -149,6 +149,7 @@ export default function SampleListDetailView({
           {viewMode === "list" && (
             <PlaceList
               places={filteredPlaces}
+              displayOrders={[]}
               listId={listId}
               selectedPlaceId={selectedPlace?.id}
               isSample={true}

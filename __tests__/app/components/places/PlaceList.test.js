@@ -49,7 +49,9 @@ describe("PlaceListコンポーネントテスト", () => {
     const testPlaces = mockPlaces.slice(0, 3);
     const listId = "test-list-id";
 
-    render(<PlaceList places={testPlaces} listId={listId} />);
+    render(
+      <PlaceList places={testPlaces} displayOrders={[]} listId={listId} />
+    );
 
     testPlaces.forEach((place) => {
       expect(screen.getByText(place.name)).toBeInTheDocument();
@@ -80,7 +82,12 @@ describe("PlaceListコンポーネントテスト", () => {
     const isSample = false;
 
     render(
-      <PlaceList places={testPlaces} listId={listId} isSample={isSample} />
+      <PlaceList
+        places={testPlaces}
+        displayOrders={[]}
+        listId={listId}
+        isSample={isSample}
+      />
     );
 
     const firstPlaceElement = screen.getByLabelText(
@@ -100,7 +107,12 @@ describe("PlaceListコンポーネントテスト", () => {
     const isSample = true;
 
     render(
-      <PlaceList places={testPlaces} listId={listId} isSample={isSample} />
+      <PlaceList
+        places={testPlaces}
+        displayOrders={[]}
+        listId={listId}
+        isSample={isSample}
+      />
     );
 
     const firstPlaceElement = screen.getByLabelText(
@@ -122,6 +134,7 @@ describe("PlaceListコンポーネントテスト", () => {
     const { container } = render(
       <PlaceList
         places={testPlaces}
+        displayOrders={[]}
         listId={listId}
         selectedPlaceId={selectedPlaceId}
       />
@@ -142,7 +155,7 @@ describe("PlaceListコンポーネントテスト", () => {
 
   it("場所が0件の場合は適切なメッセージが表示されること", () => {
     const listId = "test-list-id";
-    render(<PlaceList places={[]} listId={listId} />);
+    render(<PlaceList places={[]} displayOrders={[]} listId={listId} />);
     expect(screen.getByText("登録された場所がありません")).toBeInTheDocument();
   });
 });

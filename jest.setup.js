@@ -46,19 +46,223 @@ jest.mock("next/headers", () => ({
 
 // Supabaseサーバークライアントをモック
 jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn().mockImplementation(() => ({
-    auth: {
-      getUser: jest.fn().mockResolvedValue({
-        data: {
-          user: { id: "test-user-id", email: "test@example.com" },
-        },
-        error: null,
-      }),
-    },
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-  })),
+  createClient: jest.fn().mockImplementation(() => {
+    // チェインメソッド対応のためのヘルパー関数
+    const createChainableMock = (finalResult = { data: [], error: null }) => {
+      const chainable = {
+        from: jest.fn(() => chainable),
+        select: jest.fn(() => chainable),
+        eq: jest.fn(() => chainable),
+        neq: jest.fn(() => chainable),
+        gt: jest.fn(() => chainable),
+        gte: jest.fn(() => chainable),
+        lt: jest.fn(() => chainable),
+        lte: jest.fn(() => chainable),
+        like: jest.fn(() => chainable),
+        ilike: jest.fn(() => chainable),
+        is: jest.fn(() => chainable),
+        in: jest.fn(() => chainable),
+        contains: jest.fn(() => chainable),
+        containedBy: jest.fn(() => chainable),
+        rangeGt: jest.fn(() => chainable),
+        rangeGte: jest.fn(() => chainable),
+        rangeLt: jest.fn(() => chainable),
+        rangeLte: jest.fn(() => chainable),
+        rangeAdjacent: jest.fn(() => chainable),
+        overlaps: jest.fn(() => chainable),
+        textSearch: jest.fn(() => chainable),
+        match: jest.fn(() => chainable),
+        not: jest.fn(() => chainable),
+        or: jest.fn(() => chainable),
+        filter: jest.fn(() => chainable),
+        order: jest.fn(() => chainable),
+        limit: jest.fn(() => chainable),
+        range: jest.fn(() => chainable),
+        abortSignal: jest.fn(() => chainable),
+        single: jest.fn(() => Promise.resolve(finalResult)),
+        maybeSingle: jest.fn(() => Promise.resolve(finalResult)),
+        csv: jest.fn(() => Promise.resolve(finalResult)),
+        geojson: jest.fn(() => Promise.resolve(finalResult)),
+        explain: jest.fn(() => Promise.resolve(finalResult)),
+        rollback: jest.fn(() => Promise.resolve(finalResult)),
+        returns: jest.fn(() => chainable),
+        // INSERT/UPDATE/DELETE operations
+        insert: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        upsert: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        update: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        delete: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        // RPC operations
+        rpc: jest.fn(() => Promise.resolve(finalResult)),
+        // Promise interface
+        then: jest.fn((callback) => callback(finalResult)),
+        catch: jest.fn(() => Promise.resolve(finalResult)),
+        finally: jest.fn(() => Promise.resolve(finalResult)),
+      };
+      return chainable;
+    };
+
+    return {
+      auth: {
+        getUser: jest.fn().mockResolvedValue({
+          data: {
+            user: { id: "test-user-id", email: "test@example.com" },
+          },
+          error: null,
+        }),
+        signOut: jest.fn().mockResolvedValue({ error: null }),
+        signInWithPassword: jest.fn().mockResolvedValue({
+          data: { user: { id: "test-user-id" }, session: {} },
+          error: null,
+        }),
+        signUp: jest.fn().mockResolvedValue({
+          data: { user: { id: "test-user-id" }, session: {} },
+          error: null,
+        }),
+        resetPasswordForEmail: jest.fn().mockResolvedValue({ error: null }),
+        updateUser: jest.fn().mockResolvedValue({
+          data: { user: { id: "test-user-id" } },
+          error: null,
+        }),
+      },
+      // チェイン可能なクエリビルダー
+      from: jest.fn((table) => createChainableMock()),
+      rpc: jest.fn((fn, params) => Promise.resolve({ data: [], error: null })),
+      // ストレージ関連
+      storage: {
+        from: jest.fn(() => ({
+          upload: jest.fn().mockResolvedValue({ data: {}, error: null }),
+          download: jest.fn().mockResolvedValue({ data: {}, error: null }),
+          remove: jest.fn().mockResolvedValue({ data: {}, error: null }),
+          list: jest.fn().mockResolvedValue({ data: [], error: null }),
+          getPublicUrl: jest.fn(() => ({ data: { publicUrl: "mock-url" } })),
+        })),
+      },
+    };
+  }),
+}));
+
+// Supabaseクライアントサイドクライアントも同様にモック
+jest.mock("@/lib/supabase/client", () => ({
+  createClient: jest.fn().mockImplementation(() => {
+    // サーバーサイドと同じモック実装を使用
+    const createChainableMock = (finalResult = { data: [], error: null }) => {
+      const chainable = {
+        from: jest.fn(() => chainable),
+        select: jest.fn(() => chainable),
+        eq: jest.fn(() => chainable),
+        neq: jest.fn(() => chainable),
+        gt: jest.fn(() => chainable),
+        gte: jest.fn(() => chainable),
+        lt: jest.fn(() => chainable),
+        lte: jest.fn(() => chainable),
+        like: jest.fn(() => chainable),
+        ilike: jest.fn(() => chainable),
+        is: jest.fn(() => chainable),
+        in: jest.fn(() => chainable),
+        contains: jest.fn(() => chainable),
+        containedBy: jest.fn(() => chainable),
+        rangeGt: jest.fn(() => chainable),
+        rangeGte: jest.fn(() => chainable),
+        rangeLt: jest.fn(() => chainable),
+        rangeLte: jest.fn(() => chainable),
+        rangeAdjacent: jest.fn(() => chainable),
+        overlaps: jest.fn(() => chainable),
+        textSearch: jest.fn(() => chainable),
+        match: jest.fn(() => chainable),
+        not: jest.fn(() => chainable),
+        or: jest.fn(() => chainable),
+        filter: jest.fn(() => chainable),
+        order: jest.fn(() => chainable),
+        limit: jest.fn(() => chainable),
+        range: jest.fn(() => chainable),
+        abortSignal: jest.fn(() => chainable),
+        single: jest.fn(() => Promise.resolve(finalResult)),
+        maybeSingle: jest.fn(() => Promise.resolve(finalResult)),
+        csv: jest.fn(() => Promise.resolve(finalResult)),
+        geojson: jest.fn(() => Promise.resolve(finalResult)),
+        explain: jest.fn(() => Promise.resolve(finalResult)),
+        rollback: jest.fn(() => Promise.resolve(finalResult)),
+        returns: jest.fn(() => chainable),
+        // INSERT/UPDATE/DELETE operations
+        insert: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        upsert: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        update: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        delete: jest.fn(() => ({
+          ...chainable,
+          then: jest.fn((callback) => callback(finalResult)),
+        })),
+        // RPC operations
+        rpc: jest.fn(() => Promise.resolve(finalResult)),
+        // Promise interface
+        then: jest.fn((callback) => callback(finalResult)),
+        catch: jest.fn(() => Promise.resolve(finalResult)),
+        finally: jest.fn(() => Promise.resolve(finalResult)),
+      };
+      return chainable;
+    };
+
+    return {
+      auth: {
+        getUser: jest.fn().mockResolvedValue({
+          data: {
+            user: { id: "test-user-id", email: "test@example.com" },
+          },
+          error: null,
+        }),
+        signOut: jest.fn().mockResolvedValue({ error: null }),
+        signInWithPassword: jest.fn().mockResolvedValue({
+          data: { user: { id: "test-user-id" }, session: {} },
+          error: null,
+        }),
+        signUp: jest.fn().mockResolvedValue({
+          data: { user: { id: "test-user-id" }, session: {} },
+          error: null,
+        }),
+        resetPasswordForEmail: jest.fn().mockResolvedValue({ error: null }),
+        updateUser: jest.fn().mockResolvedValue({
+          data: { user: { id: "test-user-id" } },
+          error: null,
+        }),
+        onAuthStateChange: jest.fn(() => ({
+          data: { subscription: { unsubscribe: jest.fn() } },
+        })),
+      },
+      // チェイン可能なクエリビルダー
+      from: jest.fn((table) => createChainableMock()),
+      rpc: jest.fn((fn, params) => Promise.resolve({ data: [], error: null })),
+      // ストレージ関連
+      storage: {
+        from: jest.fn(() => ({
+          upload: jest.fn().mockResolvedValue({ data: {}, error: null }),
+          download: jest.fn().mockResolvedValue({ data: {}, error: null }),
+          remove: jest.fn().mockResolvedValue({ data: {}, error: null }),
+          list: jest.fn().mockResolvedValue({ data: [], error: null }),
+          getPublicUrl: jest.fn(() => ({ data: { publicUrl: "mock-url" } })),
+        })),
+      },
+    };
+  }),
 }));
 
 // テスト前にMSWのサーバーを起動
@@ -267,8 +471,24 @@ jest.mock("@/components/ui/dialog", () => {
         : child
     );
   }
-  function DialogContent({ open, onOpenChange, children, ...props }) {
+  function DialogContent({
+    open,
+    onOpenChange,
+    children,
+    onOpenAutoFocus,
+    ...props
+  }) {
     if (!open) return null;
+
+    // onOpenAutoFocusなどのカスタムプロパティを取り除く
+    const {
+      onCloseAutoFocus,
+      onEscapeKeyDown,
+      onPointerDownOutside,
+      onInteractOutside,
+      ...domProps
+    } = props;
+
     return (
       <div
         role="dialog"
@@ -276,7 +496,7 @@ jest.mock("@/components/ui/dialog", () => {
         aria-labelledby="dialog-title"
         aria-describedby="dialog-description"
         tabIndex={-1}
-        {...props}
+        {...domProps}
         data-testid="dialog-content"
       >
         {children}
@@ -363,22 +583,30 @@ jest.mock("@/components/ui/dialog", () => {
     ),
   };
 });
-jest.mock("@/components/ui/alert-dialog", () => ({
-  __esModule: true,
-  AlertDialog: ({ children }) => <div>{children}</div>,
-  AlertDialogTrigger: ({ children }) => <button>{children}</button>,
-  AlertDialogContent: ({ children }) => <div>{children}</div>,
-  AlertDialogHeader: ({ children }) => <div>{children}</div>,
-  AlertDialogTitle: ({ children }) => <div>{children}</div>,
-  AlertDialogDescription: ({ children }) => <div>{children}</div>,
-  AlertDialogFooter: ({ children }) => <div>{children}</div>,
-  AlertDialogAction: ({ children, ...props }) => (
-    <button {...props}>{children}</button>
-  ),
-  AlertDialogCancel: ({ children, ...props }) => (
-    <button {...props}>{children}</button>
-  ),
-}));
+jest.mock("@/components/ui/alert-dialog", () => {
+  const React = require("react");
+  return {
+    __esModule: true,
+    AlertDialog: ({ children }) => <div>{children}</div>,
+    AlertDialogTrigger: ({ children, asChild, ...props }) => {
+      if (asChild && React.isValidElement(children)) {
+        return React.cloneElement(children, props);
+      }
+      return <button {...props}>{children}</button>;
+    },
+    AlertDialogContent: ({ children }) => <div>{children}</div>,
+    AlertDialogHeader: ({ children }) => <div>{children}</div>,
+    AlertDialogTitle: ({ children }) => <div>{children}</div>,
+    AlertDialogDescription: ({ children }) => <div>{children}</div>,
+    AlertDialogFooter: ({ children }) => <div>{children}</div>,
+    AlertDialogAction: ({ children, ...props }) => (
+      <button {...props}>{children}</button>
+    ),
+    AlertDialogCancel: ({ children, ...props }) => (
+      <button {...props}>{children}</button>
+    ),
+  };
+});
 jest.mock("@/components/ui/tooltip", () => ({
   __esModule: true,
   TooltipProvider: ({ children }) => <div>{children}</div>,

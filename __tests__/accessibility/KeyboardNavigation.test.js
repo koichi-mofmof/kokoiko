@@ -210,7 +210,9 @@ describe("キーボードナビゲーションテスト", () => {
     const testPlaces = mockPlaces.slice(0, 3);
     const listId = "test-list-id";
 
-    render(<PlaceList places={testPlaces} listId={listId} />);
+    render(
+      <PlaceList places={testPlaces} displayOrders={[]} listId={listId} />
+    );
 
     // 最初の場所アイテムを取得
     const firstPlaceElement = screen.getByLabelText(

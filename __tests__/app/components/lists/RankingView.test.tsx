@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import RankingView from "@/app/components/lists/RankingView";
 import "@testing-library/jest-dom";
 
@@ -47,9 +47,17 @@ describe("RankingView", () => {
     });
   });
 
-  it("ローディング中は読み込み中...が表示される", () => {
-    render(<RankingView listId="list-1" />);
-    expect(screen.getByText("読み込み中...")).toBeInTheDocument();
+  it("ランキングがない場合は作成メッセージが表示される", async () => {
+    (fetchRankingViewData as jest.Mock).mockResolvedValue({
+      rankings: [],
+      places: [],
+    });
+    await act(async () => {
+      render(<RankingView listId="list-1" />);
+    });
+    expect(
+      screen.getByText("このリストにはまだランキングが作成されていません。")
+    ).toBeInTheDocument();
   });
 
   it("サンプルリスト時はgetPlaceListDetailsが呼ばれRankingDisplayが表示される", async () => {
@@ -61,7 +69,9 @@ describe("RankingView", () => {
       ownerId: "user-1",
       sharedUserIds: [],
     });
-    render(<RankingView listId="sample-1" />);
+    await act(async () => {
+      render(<RankingView listId="sample-1" />);
+    });
     await waitFor(() => {
       expect(screen.getByTestId("ranking-display")).toBeInTheDocument();
     });
@@ -72,7 +82,9 @@ describe("RankingView", () => {
       rankings: ranking,
       places,
     });
-    render(<RankingView listId="list-1" />);
+    await act(async () => {
+      render(<RankingView listId="list-1" />);
+    });
     await waitFor(() => {
       expect(screen.getByTestId("ranking-display")).toBeInTheDocument();
     });

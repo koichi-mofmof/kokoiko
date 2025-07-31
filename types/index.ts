@@ -110,6 +110,14 @@ export interface RankedPlace {
   comment?: string;
 }
 
+/**
+ * リスト表示順序の場所情報
+ */
+export interface DisplayOrderedPlace {
+  placeId: string;
+  displayOrder: number;
+}
+
 // list_place_commntsテーブル用の型
 export interface ListPlaceComment {
   id: string;

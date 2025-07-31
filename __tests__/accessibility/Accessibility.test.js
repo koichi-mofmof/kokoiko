@@ -177,7 +177,8 @@ describe("アクセシビリティテスト", () => {
     const { container } = render(
       <PlaceList
         places={mockPlaces.slice(0, 5)}
-        onPlaceSelect={mockOnPlaceSelect}
+        displayOrders={[]}
+        listId="test-list"
       />
     );
 

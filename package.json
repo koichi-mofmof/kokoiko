@@ -71,6 +71,7 @@
     "react-hook-form": "^7.57.0",
     "react-leaflet": "^5.0.0",
     "stripe": "^18.2.1",
+    "supabase": "^2.33.7",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",

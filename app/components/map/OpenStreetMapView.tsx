@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
-import { Place } from "@/types";
+import { Place, DisplayOrderedPlace } from "@/types";
 import PlaceCard from "@/app/components/places/PlaceCard";
 import { X } from "lucide-react";
 import ReactDOMServer from "react-dom/server";
@@ -11,6 +11,7 @@ import Image from "next/image";
 
 interface OpenStreetMapViewProps {
   places: Place[];
+  displayOrders?: DisplayOrderedPlace[];
   onPlaceSelect?: (place: Place) => void;
   initialCenter?: { lat: number; lng: number };
   initialZoom?: number;
@@ -25,7 +26,11 @@ let savedCenter: L.LatLngTuple = DEFAULT_CENTER;
 let savedZoom = DEFAULT_ZOOM;
 
 // Custom Marker Component
-const CustomLeafletMarkerIcon = (isSelected: boolean, placeName: string) => {
+const CustomLeafletMarkerIcon = (
+  isSelected: boolean,
+  placeName: string,
+  orderNumber?: number
+) => {
   const iconHtml = ReactDOMServer.renderToString(
     <div
       className={`transition-all duration-150 ease-in-out cursor-pointer ${
@@ -37,10 +42,15 @@ const CustomLeafletMarkerIcon = (isSelected: boolean, placeName: string) => {
       title={placeName}
     >
       <div
-        className={`rounded-full p-2 shadow-md flex items-center justify-center border border-primary-700 ${
+        className={`rounded-full p-2 shadow-md flex items-center justify-center border border-primary-700 relative ${
           isSelected ? "bg-primary-100" : "bg-white"
         }`}
       >
+        {orderNumber && (
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-xs font-bold border border-white">
+            {orderNumber}
+          </div>
+        )}
         <Image
           src="/icon0.webp"
           alt={placeName}
@@ -130,6 +140,7 @@ const MapEvents = ({
 
 const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   places,
+  displayOrders = [],
   onPlaceSelect,
   initialCenter,
   initialZoom,
@@ -179,11 +190,24 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
         {places.map((place) => {
           if (place.latitude && place.longitude) {
             const isSelected = selectedPlace?.id === place.id;
+
+            // 表示順序番号を取得
+            const displayOrder = displayOrders.find(
+              (order) => order.placeId === place.id
+            )?.displayOrder;
+
+            // 順序番号表示の条件：displayOrderが存在する場合
+            const orderNumber = displayOrder ? displayOrder : undefined;
+
             return (
               <Marker
                 key={place.id}
                 position={[place.latitude, place.longitude]}
-                icon={CustomLeafletMarkerIcon(isSelected, place.name)}
+                icon={CustomLeafletMarkerIcon(
+                  isSelected,
+                  place.name,
+                  orderNumber
+                )}
                 eventHandlers={{
                   click: (e: L.LeafletMouseEvent) => {
                     L.DomEvent.stopPropagation(e); // MapContainerのクリックイベントの発火を抑制

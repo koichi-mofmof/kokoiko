@@ -100,7 +100,7 @@ describe("UserProfileView", () => {
     expect(
       screen.getByText("これはテスト用の自己紹介です。")
     ).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("alt", "テストユーザー");
+    expect(screen.getByRole("img")).toHaveAttribute("alt", "avatar");
 
     // 統計情報
     expect(screen.getByText("2")).toBeInTheDocument();

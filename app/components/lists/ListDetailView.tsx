@@ -4,7 +4,8 @@ import RankingView from "@/app/components/lists/RankingView";
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/components/ui/FilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
-import { FilterOptions, Place, ViewMode } from "@/types";
+import { getDisplayOrdersForList } from "@/lib/actions/place-display-orders";
+import { DisplayOrderedPlace, FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
@@ -37,6 +38,9 @@ export default function ListDetailView({
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [hasMapBeenViewed, setHasMapBeenViewed] = useState(false);
+  const [displayOrders, setDisplayOrders] = useState<DisplayOrderedPlace[]>([]);
+  const [isLoadingDisplayOrders, setIsLoadingDisplayOrders] = useState(true);
+
   const [filters, setFilters] = useState<FilterOptions>({
     tags: [],
     tagsCondition: "OR",
@@ -45,6 +49,42 @@ export default function ListDetailView({
     dateRange: null,
     hierarchicalRegion: {},
   });
+
+  // 表示順序データの取得
+  useEffect(() => {
+    const fetchDisplayOrders = async () => {
+      if (listId.startsWith("sample-")) {
+        // サンプルリストの場合は順序なしでスキップ
+        setDisplayOrders([]);
+        setIsLoadingDisplayOrders(false);
+        return;
+      }
+
+      try {
+        const result = await getDisplayOrdersForList(listId);
+        if (result.success) {
+          setDisplayOrders(result.displayOrders);
+        } else {
+          console.error("Failed to fetch display orders:", result.error);
+          setDisplayOrders([]);
+        }
+      } catch (error) {
+        console.error("Error fetching display orders:", error);
+        setDisplayOrders([]);
+      } finally {
+        setIsLoadingDisplayOrders(false);
+      }
+    };
+
+    fetchDisplayOrders();
+  }, [listId]);
+
+  // 表示順序更新のコールバック
+  const handleDisplayOrderUpdate = (
+    newDisplayOrders: DisplayOrderedPlace[]
+  ) => {
+    setDisplayOrders(newDisplayOrders);
+  };
 
   const availableTags = useMemo(() => {
     const allTagNames = places.flatMap((place) =>
@@ -152,12 +192,21 @@ export default function ListDetailView({
           }`}
         >
           {/* PlaceListはviewModeがlistの時のみ中身をレンダリングする（負荷軽減のため） */}
-          {viewMode === "list" && (
+          {viewMode === "list" && !isLoadingDisplayOrders && (
             <PlaceList
               places={filteredPlaces}
+              displayOrders={displayOrders}
               listId={listId}
               selectedPlaceId={selectedPlace?.id}
+              isSample={listId.startsWith("sample-")}
+              permission={permission as "owner" | "edit" | "view"}
+              onDisplayOrderUpdate={handleDisplayOrderUpdate}
             />
+          )}
+          {viewMode === "list" && isLoadingDisplayOrders && (
+            <div className="p-4 text-center text-neutral-500">
+              順序情報を読み込み中...
+            </div>
           )}
         </div>
       )}
@@ -192,13 +241,22 @@ export default function ListDetailView({
             viewMode === "map" ? "block" : "hidden"
           }`}
         >
-          {(hasMapBeenViewed || viewMode === "map") && (
-            <DynamicOpenStreetMapView
-              places={filteredPlaces}
-              onPlaceSelect={handlePlaceSelect}
-              listId={listId}
-            />
-          )}
+          {(hasMapBeenViewed || viewMode === "map") &&
+            !isLoadingDisplayOrders && (
+              <DynamicOpenStreetMapView
+                places={filteredPlaces}
+                displayOrders={displayOrders}
+                onPlaceSelect={handlePlaceSelect}
+                listId={listId}
+                isSample={listId.startsWith("sample-")}
+              />
+            )}
+          {(hasMapBeenViewed || viewMode === "map") &&
+            isLoadingDisplayOrders && (
+              <div className="flex justify-center items-center h-full">
+                <p className="text-neutral-500">マップデータを読み込み中...</p>
+              </div>
+            )}
         </div>
       )}
     </div>

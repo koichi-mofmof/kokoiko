@@ -1,119 +1,178 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Place } from "@/types";
-import { Check, ChevronRight, Circle, MapPin, Tag } from "lucide-react";
-import { useRouter } from "next/navigation";
-import React from "react";
+
+import { updateDisplayOrders } from "@/lib/actions/place-display-orders";
+import { DisplayOrderedPlace, Place } from "@/types";
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import React, { useEffect, useMemo, useState } from "react";
+import { SortablePlaceItem } from "./SortablePlaceItem";
 
 interface PlaceListProps {
   places: Place[];
+  displayOrders: DisplayOrderedPlace[];
   listId: string;
   selectedPlaceId?: string;
   isSample?: boolean;
+  permission?: "owner" | "edit" | "view";
+  onDisplayOrderUpdate?: (newDisplayOrders: DisplayOrderedPlace[]) => void;
 }
 const PlaceList: React.FC<PlaceListProps> = ({
   places,
+  displayOrders,
   listId,
   selectedPlaceId,
-  isSample,
+  isSample = false,
+  permission = "view",
+  onDisplayOrderUpdate,
 }) => {
-  const router = useRouter();
+  const [localDisplayOrders, setLocalDisplayOrders] = useState<
+    DisplayOrderedPlace[]
+  >(displayOrders || []);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // 5px移動でドラッグ開始（タッチスクロールとの区別）
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // 表示順序に基づいて場所をソート
+  const sortedPlaces = useMemo(() => {
+    if (!localDisplayOrders || localDisplayOrders.length === 0) {
+      return places;
+    }
+
+    // 表示順序のマップを作成
+    const orderMap = new Map(
+      localDisplayOrders.map((order) => [order.placeId, order.displayOrder])
+    );
+
+    // 場所を表示順序でソート
+    return [...places].sort((a, b) => {
+      const orderA = orderMap.get(a.id) || 999;
+      const orderB = orderMap.get(b.id) || 999;
+      return orderA - orderB;
+    });
+  }, [places, localDisplayOrders]);
+
+  // displayOrdersが更新されたら内部状態も更新
+  useEffect(() => {
+    setLocalDisplayOrders(displayOrders || []);
+  }, [displayOrders]);
+
+  // ドラッグ終了処理
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = sortedPlaces.findIndex((place) => place.id === active.id);
+    const newIndex = sortedPlaces.findIndex((place) => place.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    // 新しい順序を計算
+    const reorderedPlaces = arrayMove(sortedPlaces, oldIndex, newIndex);
+    const newDisplayOrders = reorderedPlaces.map((place, index) => ({
+      placeId: place.id,
+      displayOrder: index + 1,
+    }));
+
+    // 楽観的更新
+    setLocalDisplayOrders(newDisplayOrders);
+
+    // サーバーに更新を送信
+    if (!isSample) {
+      setIsUpdating(true);
+      try {
+        const result = await updateDisplayOrders({
+          listId,
+          displayOrders: newDisplayOrders,
+        });
+
+        if (result.error) {
+          console.error("Failed to update display orders:", result.error);
+          // エラー時は元の状態に戻す
+          setLocalDisplayOrders(displayOrders);
+        } else {
+          // 成功時はコールバックを呼ぶ
+          onDisplayOrderUpdate?.(newDisplayOrders);
+        }
+      } catch (error) {
+        console.error("Error updating display orders:", error);
+        // エラー時は元の状態に戻す
+        setLocalDisplayOrders(displayOrders);
+      } finally {
+        setIsUpdating(false);
+      }
+    }
+  };
+
+  // 編集権限があるかチェック
+  const canEdit = permission === "owner" || permission === "edit";
+  const isDragDisabled = isSample || !canEdit || isUpdating;
+
+  if (places.length === 0) {
+    return (
+      <div className="p-4 text-center text-neutral-500">
+        登録された場所がありません
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2">
-      {places.length === 0 ? (
-        <div className="p-4 text-center text-neutral-500">
-          登録された場所がありません
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={sortedPlaces.map((place) => place.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-2" data-testid="place-list">
+          {sortedPlaces.map((place) => {
+            const displayOrder =
+              localDisplayOrders.find((order) => order.placeId === place.id)
+                ?.displayOrder || 0;
+
+            return (
+              <SortablePlaceItem
+                key={place.id}
+                place={place}
+                displayOrder={displayOrder}
+                listId={listId}
+                selectedPlaceId={selectedPlaceId}
+                isSample={isSample}
+                isDragDisabled={isDragDisabled}
+              />
+            );
+          })}
         </div>
-      ) : (
-        places.map((place) => (
-          <Card
-            key={place.id}
-            role="button"
-            tabIndex={0}
-            aria-label={`${place.name}の詳細を見る`}
-            className={`cursor-pointer flex items-center group focus:outline-none focus:ring-2 focus:ring-primary-400 active:scale-[0.98] select-none transition-all ${
-              selectedPlaceId === place.id
-                ? "border-primary-300 bg-primary-50"
-                : "hover:bg-primary-50 active:bg-primary-100"
-            }`}
-            onClick={() => {
-              if (isSample) {
-                router.push(`/sample/${listId}/place/${place.id}`);
-              } else {
-                router.push(`/lists/${listId}/place/${place.id}`);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                if (isSample) {
-                  router.push(`/sample/${listId}/place/${place.id}`);
-                } else {
-                  router.push(`/lists/${listId}/place/${place.id}`);
-                }
-              }
-            }}
-          >
-            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center flex-1 min-w-0">
-              <div className="flex flex-col flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <CardTitle className="text-base sm:text-lg font-medium text-neutral-800 line-clamp-1 flex-1">
-                    {place.name}
-                  </CardTitle>
-                  {place.createdByUser && (
-                    <div
-                      title={`${place.createdByUser.name}さんが追加`}
-                      className="flex-shrink-0"
-                    >
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage
-                          src={place.createdByUser.avatarUrl}
-                          alt={place.createdByUser.name}
-                        />
-                        <AvatarFallback className="text-xs bg-primary-100 text-primary-700">
-                          {place.createdByUser.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center text-xs sm:text-sm text-neutral-500">
-                  <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                  <span className="line-clamp-1">{place.address}</span>
-                </div>
-                {place.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-3">
-                    {place.tags.map((tag) => (
-                      <span
-                        key={tag.id}
-                        className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600"
-                      >
-                        <Tag className="h-3 w-3 mr-1" />
-                        {tag.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-3 flex items-center">
-                  {place.visited === "visited" ? (
-                    <>
-                      <Check className="h-4 w-4 mr-1 text-primary-500" />
-                      <span className="text-xs text-primary-700">訪問済み</span>
-                    </>
-                  ) : (
-                    <>
-                      <Circle className="h-4 w-4 mr-1 text-neutral-400" />
-                      <span className="text-xs text-neutral-600">未訪問</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-            <ChevronRight className="h-6 w-6 mr-3 text-neutral-400 group-hover:text-primary-500 group-active:text-primary-600 transition-colors ml-2 flex-shrink-0 self-center" />
-          </Card>
-        ))
-      )}
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 };
 
