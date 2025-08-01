@@ -11,7 +11,6 @@ interface RankingCardProps {
   rankedPlace: RankedPlace;
   place: Place;
   listId?: string;
-  isSample?: boolean;
 }
 
 // テーマ：旅への期待感を高める、洗練されたデザイン
@@ -85,7 +84,6 @@ export default function RankingCard({
   rankedPlace,
   place,
   listId,
-  isSample,
 }: RankingCardProps) {
   const router = useRouter();
   const isTopThree = rankedPlace.rank <= 3;
@@ -95,9 +93,7 @@ export default function RankingCard({
   const handleDetailClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!listId) return;
-    const url = isSample
-      ? `/sample/${listId}/place/${place.id}`
-      : `/lists/${listId}/place/${place.id}`;
+    const url = `/lists/${listId}/place/${place.id}`;
     router.push(url);
   };
 

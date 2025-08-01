@@ -38,6 +38,11 @@ describe("RankingEditModal: トースト通知・ユーザーフィードバッ�
   });
 
   it("保存失敗時にalertが表示される", async () => {
+    // エラーログを抑制
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     (saveRankingViewData as jest.Mock).mockResolvedValue({
       success: false,
       error: "保存失敗",
@@ -59,9 +64,15 @@ describe("RankingEditModal: トースト通知・ユーザーフィードバッ�
       );
     });
     alertSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 
   it("APIエラー時にalertが表示される", async () => {
+    // エラーログを抑制
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     (saveRankingViewData as jest.Mock).mockRejectedValue(
       new Error("APIエラー")
     );
@@ -82,5 +93,6 @@ describe("RankingEditModal: トースト通知・ユーザーフィードバッ�
       );
     });
     alertSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 });

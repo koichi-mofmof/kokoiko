@@ -98,6 +98,11 @@ describe("registerPlaceToListAction: 地点登録サーバーアクション", (
   });
 
   it("RPCエラー時はエラーを返すこと", async () => {
+    // エラーログを抑制
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     const mockSupabase = {
       auth: {
         getUser: async () => ({ data: { user: { id: "user1" } }, error: null }),
@@ -120,5 +125,7 @@ describe("registerPlaceToListAction: 地点登録サーバーアクション", (
     const result = await registerPlaceToListAction(prevState, validInput);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/保存処理中/);
+
+    consoleSpy.mockRestore();
   });
 });

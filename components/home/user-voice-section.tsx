@@ -13,7 +13,7 @@ import { User } from "lucide-react";
 
 export function UserVoiceSection() {
   return (
-    <section className="py-16 bg-white relative">
+    <section className="py-16 bg-neutral-50 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

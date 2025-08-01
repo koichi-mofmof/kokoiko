@@ -167,6 +167,11 @@ describe("HierarchicalRegionFilter", () => {
   });
 
   it("エラー状態が正しく表示される", async () => {
+    // エラーログを抑制
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     mockGetAvailableCountries.mockRejectedValue(new Error("Network error"));
 
     render(
@@ -181,6 +186,8 @@ describe("HierarchicalRegionFilter", () => {
         screen.getByText("国一覧の取得に失敗しました")
       ).toBeInTheDocument();
     });
+
+    consoleSpy.mockRestore();
   });
 
   it("ローディング状態が表示される", async () => {

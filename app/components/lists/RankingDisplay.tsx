@@ -8,14 +8,12 @@ interface RankingDisplayProps {
   rankedPlaces: RankedPlace[];
   places: Place[]; // リストに含まれるすべてのPlace情報
   listId: string;
-  isSample: boolean;
 }
 
 export default function RankingDisplay({
   rankedPlaces,
   places,
   listId,
-  isSample,
 }: RankingDisplayProps) {
   // rankedPlacesをrank順にソート（念のため）
   const sortedRankedPlaces = [...rankedPlaces].sort((a, b) => a.rank - b.rank);
@@ -36,7 +34,6 @@ export default function RankingDisplay({
             rankedPlace={rankedPlace}
             place={placeDetail}
             listId={listId}
-            isSample={isSample}
           />
         );
       })}

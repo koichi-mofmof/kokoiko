@@ -58,7 +58,7 @@ Button.displayName = "Button";
 
 export { Button, buttonVariants };
 
-type CtaButtonType = "login" | "sampleHero" | "sampleCta";
+type CtaButtonType = "login";
 
 interface CtaButtonProps {
   type: CtaButtonType;
@@ -77,7 +77,7 @@ export function CtaButton({ type }: CtaButtonProps) {
     | "destructive" = "default";
   let showChevron: boolean = false;
   let buttonClassName: string = "";
-  let linkClassName: string = "";
+  const linkClassName: string = "";
   let subTextClassName: string = "";
 
   switch (type) {
@@ -91,22 +91,7 @@ export function CtaButton({ type }: CtaButtonProps) {
         "shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group";
       subTextClassName = "text-white/80";
       break;
-    case "sampleHero":
-      href = "/sample";
-      mainText = "サンプルを見る";
-      variant = "outline";
-      buttonClassName =
-        "group bg-white/10 backdrop-blur-sm border-white/20 shadow-lg hover:bg-white/20 hover:text-white hover:scale-105 transition-all duration-300 hidden md:inline-flex w-full md:w-auto";
-      linkClassName = "text-white group-hover:text-white";
-      break;
-    case "sampleCta":
-      href = "/sample";
-      mainText = "サンプルを見る";
-      variant = "outline";
-      buttonClassName =
-        "group bg-white/10 backdrop-blur-sm border-white/20 shadow-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 hidden md:inline-flex w-full md:w-auto";
-      linkClassName = "text-neutral-900 group-hover:text-neutral-900";
-      break;
+
     default:
       href = "/";
       mainText = "Default Button";

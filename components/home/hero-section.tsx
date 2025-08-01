@@ -3,7 +3,7 @@
 import { CtaButton } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+
 import { useEffect, useState, useMemo, useCallback } from "react";
 // Framer Motion の必要な部分のみインポート
 import { motion, type Variants } from "framer-motion";
@@ -136,15 +136,6 @@ export function HeroSection() {
             className="mt-10 flex flex-col md:flex-row justify-center md:justify-start items-center md:items-stretch gap-4 flex-wrap"
           >
             <CtaButton type="login" />
-            {/* PC 用ボタン */}
-            <CtaButton type="sampleHero" />
-            {/* SP 用リンク */}
-            <Link
-              href="/sample"
-              className="md:hidden mt-2 text-center text-primary-400 underline"
-            >
-              サンプルを見る
-            </Link>
           </motion.div>
         </motion.div>
       </div>

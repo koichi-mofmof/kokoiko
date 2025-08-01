@@ -2,11 +2,10 @@
 
 import { CtaButton } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 export function CTASection() {
   return (
-    <section className="py-16 bg-white relative overflow-hidden">
+    <section className="py-16 bg-neutral-50 relative overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -27,12 +26,6 @@ export function CTASection() {
           className="mt-10 flex flex-col md:flex-row justify-center items-center md:items-stretch gap-4 flex-wrap"
         >
           <CtaButton type="login" />
-          {/* PC 用ボタン */}
-          <CtaButton type="sampleCta" />
-          {/* SP 用リンク */}
-          <Link href="/sample" className="md:hidden mt-2 text-center underline">
-            サンプルを見る
-          </Link>
         </motion.div>
       </motion.div>
     </section>

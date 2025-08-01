@@ -71,23 +71,6 @@ describe("RankingCard", () => {
     expect(pushMock).toHaveBeenCalledWith("/lists/list-1/place/place-1");
   });
 
-  it("isSample時はサンプル用の遷移先になる", () => {
-    const pushMock = jest.fn();
-    jest
-      .spyOn(require("next/navigation"), "useRouter")
-      .mockReturnValue({ push: pushMock });
-    render(
-      <RankingCard
-        rankedPlace={baseRankedPlace}
-        place={basePlace}
-        listId="sample-1"
-        isSample
-      />
-    );
-    fireEvent.click(screen.getByLabelText("詳細を見る"));
-    expect(pushMock).toHaveBeenCalledWith("/sample/sample-1/place/place-1");
-  });
-
   it("アクセシビリティ属性が付与されている", () => {
     render(
       <RankingCard

@@ -307,6 +307,11 @@ describe("ProfileSettingsコンポーネントテスト", () => {
   });
 
   it("エラー発生時にエラーメッセージが表示されること", async () => {
+    // エラーログを抑制
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     // SupabaseエラーをシミュレートするためにモックをオーバーライドZ
     const mockSupabaseClientWithError = {
       storage: {
@@ -340,5 +345,7 @@ describe("ProfileSettingsコンポーネントテスト", () => {
         description: "プロフィールの更新に失敗しました: プロフィール更新エラー",
       });
     });
+
+    consoleSpy.mockRestore();
   });
 });

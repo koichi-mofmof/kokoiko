@@ -27,3 +27,23 @@ export async function createClient() {
     }
   );
 }
+
+/**
+ * 匿名ユーザー用のクライアント（公開データアクセス用）
+ */
+export function createAnonymousClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll() {
+          // 匿名クライアントではクッキーの設定は不要
+        },
+      },
+    }
+  );
+}

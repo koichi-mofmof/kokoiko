@@ -56,10 +56,10 @@ export default function Footer({ currentUser }: FooterProps) {
                   </>
                 )}
                 <Link
-                  href="/sample"
+                  href="/public-lists"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  サンプル
+                  みんなのリスト
                 </Link>
               </div>
             </div>

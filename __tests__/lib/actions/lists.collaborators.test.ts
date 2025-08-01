@@ -192,6 +192,11 @@ describe("getCollaboratorsForList: 共有メンバー一覧取得", () => {
   });
 
   it("Supabaseエラー時は空配列を返すこと", async () => {
+    // エラーログを抑制
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     const customMockClient = createMockSupabaseClient();
     customMockClient.from = jest
       .fn()
@@ -223,6 +228,8 @@ describe("getCollaboratorsForList: 共有メンバー一覧取得", () => {
 
     const actualCollaborators = await getCollaboratorsForList(listId, ownerId);
     expect(actualCollaborators).toEqual([]);
+
+    consoleSpy.mockRestore();
   });
 });
 

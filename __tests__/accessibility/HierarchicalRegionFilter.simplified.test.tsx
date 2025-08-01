@@ -141,6 +141,11 @@ describe("HierarchicalRegionFilter Simplified Accessibility", () => {
     });
 
     it("ネットワークエラー時に適切なメッセージが表示される", async () => {
+      // エラーログを抑制
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
       // ネットワークエラーをシミュレート
       const {
         getAvailableCountries,
@@ -155,6 +160,8 @@ describe("HierarchicalRegionFilter Simplified Accessibility", () => {
       await waitFor(() => {
         expect(screen.getByText(/取得に失敗しました/)).toBeInTheDocument();
       });
+
+      consoleSpy.mockRestore();
     });
   });
 
