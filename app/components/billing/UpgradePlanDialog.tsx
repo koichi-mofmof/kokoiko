@@ -175,7 +175,7 @@ export function UpgradePlanDialog({
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    共有可能なリスト数：無制限
+                    共同編集用リンクを発行できるリスト数：無制限
                   </li>
                   {/* <li className="flex items-center gap-2">
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
@@ -231,7 +231,7 @@ export function UpgradePlanDialog({
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    共有可能なリスト数：無制限
+                    共同編集用リンクを発行できるリスト数：無制限
                   </li>
                   {/* <li className="flex items-center gap-2">
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">

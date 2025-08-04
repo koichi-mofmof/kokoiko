@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 
 export function PricingSection() {
   return (
-    <section className="py-16 bg-white relative">
+    <section className="py-16 bg-neutral-50 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -56,7 +56,7 @@ export function PricingSection() {
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    共有可能なリスト数：
+                    共同編集用リンクを発行できるリスト数：
                     <span className="font-semibold ml-1">
                       {SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS}件まで
                     </span>
@@ -114,7 +114,7 @@ export function PricingSection() {
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    共有可能なリスト数：
+                    共同編集用リンクを発行できるリスト数：
                     <span className="font-semibold ml-1">無制限</span>
                   </li>
                   <li className="flex items-center">

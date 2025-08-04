@@ -26,10 +26,10 @@ export interface PublicListForHome {
 
 /**
  * TOPページ用の公開リスト取得
- * 登録地点数の上位8件を取得、基本情報のみ
+ * 登録地点数の上位4件を取得、基本情報のみ
  */
 export async function getPublicListsForHome(
-  limit: number = 8
+  limit: number = 4
 ): Promise<PublicListForHome[]> {
   try {
     const supabase = createAnonymousClient();

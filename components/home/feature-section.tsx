@@ -1,16 +1,8 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { motion } from "framer-motion";
-import { Hash, MapPin, Share2 } from "lucide-react";
-import Image from "next/image";
+import { Hash, Search, Share2, Star, User, Users } from "lucide-react";
 import { forwardRef } from "react";
 
 export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
@@ -36,138 +28,240 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
             <br />
             もっと便利に、もっと楽しく
           </p>
-          <p className="mt-6 max-w-2xl sm:text-lg text-neutral-500 lg:mx-auto">
-            ClippyMapが提供する主な機能をご紹介します。
-          </p>
         </motion.div>
 
-        <div className="my-8">
-          <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Feature 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="flex flex-col"
-            >
-              <div className="text-left sm:text-center">
-                <div className="flex items-center justify-start gap-3 sm:justify-center">
-                  <div className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
-                    <MapPin className="h-6 w-6 text-white" />
+        {/* ビジュアル重視の機能紹介 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Feature 1: 検索とストック */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="relative group"
+          >
+            <Card className="bg-neutral-50 h-full border-2 border-primary-200 transition-all duration-300 hover:shadow-lg">
+              <CardContent className="p-6">
+                {/* ビジュアルヘッダー */}
+                <div className="flex items-center justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <Search className="h-8 w-8 text-white" />
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-neutral-900">
-                    行きたい場所を、地図にストック
-                  </h3>
                 </div>
-                <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                  お店やスポットの名前で検索するだけ。Google
-                  Mapsの情報をもとに、行きたい場所を簡単リストアップ。あなただけの「行きたい場所マップ」が、すぐに完成します。
-                </p>
-              </div>
-            </motion.div>
 
-            {/* Feature 2 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex flex-col"
-            >
-              <div className="text-left sm:text-center">
-                <div className="flex items-center justify-start gap-3 sm:justify-center">
-                  <div className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
-                    <Share2 className="h-6 w-6 text-white" />
+                {/* 視覚的なプロセス */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span className="text-primary-600 font-bold text-sm">
+                        1
+                      </span>
+                    </div>
+                    <div className="flex-1 h-2 bg-primary-200 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-primary-500 rounded-full"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: "100%" }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                      />
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-neutral-900">
-                    リストを、自在に共有
-                  </h3>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span className="text-primary-600 font-bold text-sm">
+                        2
+                      </span>
+                    </div>
+                    <div className="flex-1 h-2 bg-primary-200 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-primary-500 rounded-full"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: "100%" }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: 0.8 }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span className="text-primary-600 font-bold text-sm">
+                        3
+                      </span>
+                    </div>
+                    <div className="flex-1 h-2 bg-primary-200 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-primary-500 rounded-full"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: "100%" }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: 1.1 }}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                  「二人だけのデートリスト」は共同編集で。「おすすめカフェリスト」はブログで一般公開。用途に合わせて、リストの共有範囲を変更できます。
-                </p>
-              </div>
-            </motion.div>
 
-            {/* Feature 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col"
-            >
-              <div className="text-left sm:text-center">
-                <div className="flex items-center justify-start gap-3 sm:justify-center">
-                  <div className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-lg shadow-lg">
-                    <Hash className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-neutral-900">
-                    「わたしの基準」で、場所を整理
-                  </h3>
-                </div>
-                <p className="mt-4 text-base text-neutral-600 leading-relaxed">
-                  「#子連れOK」「#夜景が最高」といった自由なタグ付けや、お気に入りランキング作成。あなたのユニークな基準が、最高のガイドブックになります。
+                <h3 className="text-xl font-bold text-neutral-900 text-center mb-3">
+                  検索 → タグ付け・コメント → 完了
+                </h3>
+                <p className="text-neutral-600 text-start text-sm">
+                  お店の名前を入力するだけ。Google Mapsの情報で自動保存。
+                  <br />
+                  あなただけの「行きたい場所マップ」が、すぐに完成します。
                 </p>
-              </div>
-            </motion.div>
-          </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Feature 2: 共有機能 */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative group"
+          >
+            <Card className="bg-neutral-50 h-full border-2 border-primary-200 transition-all duration-300 hover:shadow-lg">
+              <CardContent className="p-6">
+                {/* ビジュアルヘッダー */}
+                <div className="flex items-center justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <Share2 className="h-8 w-8 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 共有オプションの視覚化 */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-6 h-6 bg-neutral-200 rounded-full flex items-center justify-center">
+                      <User className="h-3 w-3 text-neutral-600" />
+                    </div>
+                    <span className="text-xs text-neutral-600">自分専用</span>
+                    <div className="w-6 h-6 bg-neutral-300 rounded-full flex items-center justify-center">
+                      <Users className="h-3 w-3 text-neutral-700" />
+                    </div>
+                    <span className="text-xs text-neutral-600">二人だけ</span>
+                    <div className="w-6 h-6 bg-primary-200 rounded-full flex items-center justify-center">
+                      <Users className="h-3 w-3 text-primary-600" />
+                    </div>
+                    <span className="text-xs text-neutral-600">公開</span>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <div className="flex items-center space-x-2">
+                      <motion.div
+                        className="w-2 h-2 bg-primary-500 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-primary-500 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: 0.7,
+                        }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-primary-500 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: 1.4,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-bold text-neutral-900 text-center mb-3">
+                  自由に共有
+                </h3>
+                <p className="text-neutral-600 text-start text-sm">
+                  プライベートから公開まで、用途に合わせて設定可能。
+                  <br />
+                  「二人だけのデートリスト」は共同編集で。
+                  <br />
+                  「おすすめカフェリスト」はブログで一般公開。
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Feature 3: カスタマイズ機能 */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="relative group"
+          >
+            <Card className="bg-neutral-50 h-full border-2 border-primary-200 transition-all duration-300 hover:shadow-lg">
+              <CardContent className="p-6">
+                {/* ビジュアルヘッダー */}
+                <div className="flex items-center justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <Hash className="h-8 w-8 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* タグとランキングの視覚化 */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {["#予約必須", "#子連れOK", "#デート"].map((tag, index) => (
+                      <motion.div
+                        key={tag}
+                        className="px-3 py-1 bg-gradient-to-r from-primary-100 to-primary-200 rounded-full text-xs font-medium text-primary-700"
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                      >
+                        {tag}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-center space-x-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <motion.div
+                        key={star}
+                        className="w-4 h-4 text-yellow-500"
+                        initial={{ opacity: 0, scale: 0 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.2, delay: 0.8 + star * 0.1 }}
+                      >
+                        <Star className="w-full h-full fill-current" />
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-bold text-neutral-900 text-center mb-3">
+                  あなた流に整理
+                </h3>
+                <p className="text-neutral-600 text-center text-sm">
+                  タグ付けやランキングで、自分だけの基準で管理
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="w-full max-w-5xl mx-auto"
-        >
-          <div className="relative w-full max-w-5xl mx-auto">
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent>
-                {Array.from({ length: 4 }).map((_, index) => {
-                  const imagePath = `/screenshots/feature${index + 1}.webp`;
-                  const fallbackPath = `/screenshots/feature${index + 1}.png`;
-                  return (
-                    <CarouselItem key={index} className="md:basis-1/2">
-                      <div className="p-1">
-                        <Card>
-                          <CardContent className="flex h-64 sm:h-60 lg:h-96 items-center justify-center p-0 bg-neutral-50 rounded-lg border-neutral-200 overflow-hidden">
-                            <picture>
-                              <source srcSet={imagePath} type="image/webp" />
-                              <Image
-                                src={fallbackPath}
-                                alt={`機能スクリーンショット ${index + 1}`}
-                                width={800}
-                                height={600}
-                                className="w-full h-full object-contain"
-                                loading="lazy"
-                                quality={85}
-                                sizes="(max-width: 768px) 100vw, 50vw"
-                                placeholder="blur"
-                                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                              />
-                            </picture>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </CarouselItem>
-                  );
-                })}
-              </CarouselContent>
-              <div className="absolute -bottom-10 right-0 flex items-center gap-x-2">
-                <CarouselPrevious className="static translate-y-0" />
-                <CarouselNext className="static translate-y-0" />
-              </div>
-            </Carousel>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

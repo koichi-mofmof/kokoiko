@@ -83,12 +83,11 @@ export function CtaButton({ type }: CtaButtonProps) {
   switch (type) {
     case "login":
       href = "/lists";
-      mainText = "マイリストを作成する";
-      subText = "（要ログイン）";
+      mainText = "今すぐリストを作成する";
       showChevron = true;
       variant = "default";
       buttonClassName =
-        "shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group";
+        "bg-yellow-600 hover:bg-yellow-700 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group font-bold sm:text-lg sm:px-6 sm:py-3 sm:px-12 sm:py-6";
       subTextClassName = "text-white/80";
       break;
 
