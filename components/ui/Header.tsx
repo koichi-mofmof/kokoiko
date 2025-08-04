@@ -123,6 +123,8 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
               height={24}
               className="text-primary-500"
               priority
+              sizes="24px"
+              quality={75}
             />
             <span className="ml-2 sm:text-xl font-semibold font-quicksand">
               <span className="text-primary-600">ClippyMap</span>

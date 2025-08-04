@@ -65,13 +65,26 @@ const nextConfig: NextConfig = {
       process.env.CLOUDFLARE_WORKERS === "true" ||
       process.env.NODE_ENV === "development",
     formats: ["image/webp", "image/avif"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 24, 32, 48, 64, 96, 128, 200, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30日間キャッシュ
+    dangerouslyAllowSVG: false,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: "https",
         hostname: "images.pexels.com",
         pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "typroopuejyfkpkgsjsa.supabase.co",
+        pathname: "/storage/v1/object/public/**",
       },
     ],
   },
@@ -130,6 +143,15 @@ const nextConfig: NextConfig = {
       // 静的アセットのキャッシュ
       {
         source: "/screenshots/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/icon0.webp",
         headers: [
           {
             key: "Cache-Control",

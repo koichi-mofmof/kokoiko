@@ -58,6 +58,8 @@ const CustomLeafletMarkerIcon = (
           height={28}
           className={`${isSelected ? "h-7 w-7" : "h-7 w-7"} text-primary-600`}
           style={{ strokeWidth: isSelected ? 2.5 : 2 }}
+          sizes="28px"
+          quality={75}
         />
       </div>
       <div

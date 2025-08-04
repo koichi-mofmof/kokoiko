@@ -19,6 +19,7 @@ import {
   validateFileContent,
   validateFileUpload,
 } from "@/lib/utils/file-security";
+import { resizeImage } from "@/lib/utils/image-optimization";
 import { profileSchema } from "@/lib/validators/profile";
 import { Upload, User } from "lucide-react";
 import { useState } from "react";
@@ -69,12 +70,15 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
       return;
     }
 
-    setImageFile(file);
+    // 画像をリサイズして最適化
+    const optimizedFile = await resizeImage(file, 200, 200);
+    setImageFile(optimizedFile);
+
     const reader = new FileReader();
     reader.onload = (event) => {
       setImage(event.target?.result as string);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(optimizedFile);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
