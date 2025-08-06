@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ClippyMap
 
-## Getting Started
+> 「行きたい場所」を地図にストックして共有できる日本の Web アプリケーション
 
-First, run the development server:
+ClippyMap は、カップルのデートスポット共有、友達同士のおすすめ店リスト作成、家族旅行の計画など、様々なシーンで「行きたい」をもっと便利に、もっと楽しくするサービスです。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🌟 主な機能
+
+### 📍 場所の管理
+
+- **検索とストック**: お店やスポットの名前で検索するだけで、行きたい場所を簡単リストアップ
+- **地図表示**: すべての場所が地図上に表示され、エリアや位置関係がひと目で分かる
+- **詳細記録**: 各場所にコメント、評価、写真を追加して思い出を残せる
+
+### 🏷️ リスト機能
+
+- **タグ付け**: 「#子連れ OK」「#夜景が最高」といった自由なタグ付け
+- **ランキング**: お気に入りランキング作成で、あなたのユニークな基準が最高のガイドブックに
+- **共有設定**: 用途に合わせて共有範囲を選択可能（プライベート/共有/公開）
+
+### 👥 共有機能
+
+- **共同編集**: 「二人だけのデートリスト」は共同編集で
+- **一般公開**: 「おすすめカフェリスト」は一般公開
+- **リンク共有**: 簡単なリンクでリストを共有
+
+## 🛠️ 技術スタック
+
+### フロントエンド
+
+- **Next.js 15.3.1** - React フレームワーク
+- **React 19** - UI ライブラリ
+- **TypeScript** - 型安全性
+- **Tailwind CSS** - スタイリング
+- **Radix UI** - アクセシブルな UI コンポーネント
+- **Framer Motion** - アニメーション
+- **Lucide React** - アイコン
+
+### バックエンド・データベース
+
+- **Supabase** - バックエンドサービス（認証・データベース・ストレージ）
+- **PostgreSQL** - リレーショナルデータベース
+
+### 地図・外部サービス
+
+- **Leaflet** - オープンソース地図ライブラリ
+- **Google Maps API** - 場所検索・詳細情報
+- **Stripe** - 決済処理
+
+### デプロイ・インフラ
+
+- **Cloudflare Workers** - エッジコンピューティング
+- **OpenNext** - Next.js to Cloudflare Workers
+- **Wrangler** - Cloudflare Workers CLI
+
+### 開発・テスト
+
+- **Jest** - ユニットテスト
+- **Testing Library** - コンポーネントテスト
+- **Playwright** - E2E テスト
+- **ESLint** - コード品質
+
+## 📞 お問い合わせ
+
+プロジェクトに関するお問い合わせやフィードバックは、GitHub の Issues または Discussions でお気軽にどうぞ。
+
+---
+
+**ClippyMap** - あなたの「行きたい」を、もっと便利に、もっと楽しく。
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
