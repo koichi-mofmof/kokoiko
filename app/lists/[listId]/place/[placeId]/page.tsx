@@ -9,6 +9,12 @@ import { getCommentsByListPlaceId } from "@/lib/actions/place-actions";
 import { getListDetails } from "@/lib/dal/lists";
 import { fetchAuthenticatedUserWithProfile } from "@/lib/dal/users";
 import {
+  createServerT,
+  loadMessages,
+  normalizeLocale,
+  toOpenGraphLocale,
+} from "@/lib/i18n";
+import {
   generateBreadcrumbSchema,
   generatePlaceSchema,
 } from "@/lib/seo/structured-data";
@@ -23,9 +29,10 @@ import {
   Tag,
 } from "lucide-react";
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
 import PlaceMapClient from "./PlaceMapClient";
 
 interface PlaceDetailPageProps {
@@ -53,10 +60,11 @@ export async function generateMetadata({
   }
 
   if (!list?.places) {
-    return {
-      title: "ClippyMap",
-      description: "行きたい場所を共有できるサービス",
-    };
+    const cookieStore = await cookies();
+    const locale = normalizeLocale(cookieStore.get("lang")?.value);
+    const msgs = await loadMessages(locale);
+    const t = createServerT(msgs as Record<string, string>);
+    return { title: "ClippyMap", description: t("meta.root.description") };
   }
 
   const place = list.places.find((p) => p.id === placeId);
@@ -67,13 +75,23 @@ export async function generateMetadata({
     };
   }
 
-  const statusText = place.visited === "visited" ? "訪問済み" : "未訪問";
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
+  const statusText =
+    place.visited === "visited"
+      ? t("place.status.visited")
+      : t("place.status.notVisited");
   const tagsText =
     place.tags && place.tags.length > 0
       ? ` - タグ: ${place.tags.map((tag) => tag.name).join(", ")}`
       : "";
 
-  const description = `${place.address} (${statusText})${tagsText} - ${list.name}に登録された場所`;
+  const description = `${place.address} (${statusText})${tagsText} - ${t(
+    "place.meta.registeredIn",
+    { list: list.name }
+  )}`;
 
   return {
     title: `${place.name} | ${list.name} | ClippyMap`,
@@ -85,7 +103,7 @@ export async function generateMetadata({
       title: `${place.name} | ${list.name} | ClippyMap`,
       description,
       type: "article",
-      locale: "ja_JP",
+      locale: toOpenGraphLocale(locale),
       images: [
         {
           url: "/ogp-image.webp",
@@ -140,6 +158,12 @@ export default async function PlaceDetailPage({
   const place = list.places.find((p) => p.id === placeId);
   if (!place) notFound();
 
+  // i18n for page content
+  const cookieStoreForPage = await cookies();
+  const localeForPage = normalizeLocale(cookieStoreForPage.get("lang")?.value);
+  const msgsForPage = await loadMessages(localeForPage);
+  const t = createServerT(msgsForPage as Record<string, string>);
+
   // 💡 キャッシュ制御: 非公開リストの場合はキャッシュを無効化
   if (!list.is_public) {
     noStore();
@@ -174,7 +198,7 @@ export default async function PlaceDetailPage({
             className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            {list.name}に戻る
+            {t("place.backToList", { list: list.name })}
           </Link>
         </div>
         <Card>
@@ -197,14 +221,14 @@ export default async function PlaceDetailPage({
                 <>
                   <Check className="h-4 w-4 mr-1 text-primary-500" />
                   <span className="text-xs sm:text-sm text-primary-700">
-                    訪問済み
+                    {t("place.status.visited")}
                   </span>
                 </>
               ) : (
                 <>
                   <Circle className="h-4 w-4 mr-1 text-neutral-400" />
                   <span className="text-xs sm:text-sm text-neutral-600">
-                    未訪問
+                    {t("place.status.notVisited")}
                   </span>
                 </>
               )}
@@ -220,12 +244,12 @@ export default async function PlaceDetailPage({
                 href={place.googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Googleマップで開く"
+                aria-label={t("place.openInGoogleMaps")}
               >
                 <Button size="sm" variant="outline">
                   <span className="inline-flex items-center">
                     <ExternalLink className="h-4 w-4 mr-1" />
-                    Google Mapsで開く
+                    {t("place.openInGoogleMaps")}
                   </span>
                 </Button>
               </a>
@@ -235,7 +259,7 @@ export default async function PlaceDetailPage({
             {place.tags && place.tags.length > 0 && (
               <div className="mt-4">
                 <div className="text-xs sm:text-sm font-semibold text-neutral-600 mb-1">
-                  タグ
+                  {t("place.tags")}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {place.tags.map((tag) => (
@@ -254,7 +278,7 @@ export default async function PlaceDetailPage({
             {/* コメントラベル＋コメント一覧 */}
             <div className="mt-6">
               <div className="text-xs sm:text-sm font-semibold text-neutral-600 mb-1">
-                コメント
+                {t("place.comments")}
               </div>
               {comments.length > 0 && (
                 <div className="space-y-3">
@@ -293,7 +317,9 @@ export default async function PlaceDetailPage({
                     {place.createdByUser.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span>{place.createdByUser.name}さんが追加</span>
+                <span>
+                  {t("place.addedBy", { name: place.createdByUser.name })}
+                </span>
               </div>
             )}
           </CardContent>

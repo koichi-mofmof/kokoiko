@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useI18n } from "@/hooks/use-i18n";
 import type { ListForClient } from "@/lib/dal/lists";
 import type { Database } from "@/types/supabase";
 import { ArrowDown, ArrowUp, ListFilter, ListX, Search } from "lucide-react";
@@ -38,11 +39,13 @@ export function UserProfileView({
   lists,
   stats,
 }: UserProfileViewProps) {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  const displayName = profile.display_name || profile.username || "ユーザー";
+  const displayName =
+    profile.display_name || profile.username || t("user.unknown");
   const avatarUrl = profile.avatar_url;
 
   const displayLists = useMemo(
@@ -126,14 +129,14 @@ export function UserProfileView({
             className="mt-4 flex justify-center gap-6 sm:justify-start"
           >
             <h2 id="user-stats-heading" className="sr-only">
-              ユーザー統計
+              {t("user.stats.heading")}
             </h2>
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">
                 {stats.publicListCount}
               </p>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-                公開リスト
+                {t("user.stats.publicLists")}
               </p>
             </div>
             <div className="text-center">
@@ -141,7 +144,7 @@ export function UserProfileView({
                 {stats.totalPlaceCount}
               </p>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-                総地点数
+                {t("user.stats.totalPlaces")}
               </p>
             </div>
           </section>
@@ -152,7 +155,7 @@ export function UserProfileView({
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-4 md:mb-0">
-            公開中のリスト
+            {t("user.publicLists.sectionTitle")}
           </h2>
         </div>
 
@@ -164,7 +167,7 @@ export function UserProfileView({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="リストを検索..."
+                  placeholder={t("user.lists.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-full"
@@ -179,13 +182,23 @@ export function UserProfileView({
                     data-testid="sort-select"
                   >
                     <SelectTrigger className="pl-10 w-full">
-                      <SelectValue placeholder="並び替え" />
+                      <SelectValue
+                        placeholder={t("lists.my.sort.placeholder")}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="updated_at">更新日時</SelectItem>
-                      <SelectItem value="created_at">作成日時</SelectItem>
-                      <SelectItem value="name">リスト名</SelectItem>
-                      <SelectItem value="place_count">登録地点数</SelectItem>
+                      <SelectItem value="updated_at">
+                        {t("lists.my.sort.updatedAt")}
+                      </SelectItem>
+                      <SelectItem value="created_at">
+                        {t("lists.my.sort.createdAt")}
+                      </SelectItem>
+                      <SelectItem value="name">
+                        {t("lists.my.sort.name")}
+                      </SelectItem>
+                      <SelectItem value="place_count">
+                        {t("lists.my.sort.placeCount")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -195,7 +208,7 @@ export function UserProfileView({
                   onClick={toggleSortOrder}
                   className="flex-shrink-0 transition-colors hover:bg-neutral-100 focus-visible:bg-neutral-100 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                   data-testid="sort-order-button"
-                  aria-label="ソート順を切り替え"
+                  aria-label={t("publicLists.filters.toggleOrderAria")}
                 >
                   {sortOrder === "asc" ? (
                     <ArrowUp className="h-4 w-4" />
@@ -213,7 +226,7 @@ export function UserProfileView({
               />
             ) : (
               <p className="text-center text-muted-foreground py-8">
-                検索条件に一致するリストはありません。
+                {t("lists.my.noMatch")}
               </p>
             )}
           </>
@@ -221,10 +234,10 @@ export function UserProfileView({
           <div className="text-center py-16 px-4 rounded-lg border-2 border-dashed border-neutral-200 dark:border-neutral-700">
             <ListX className="mx-auto h-12 w-12 text-neutral-600" />
             <h3 className="mt-4 text-lg font-medium text-neutral-900 dark:text-neutral-100">
-              まだ公開リストがありません
+              {t("user.publicLists.noneTitle")}
             </h3>
             <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-              このユーザーはまだリストを公開していません。
+              {t("user.publicLists.noneDesc")}
             </p>
           </div>
         )}

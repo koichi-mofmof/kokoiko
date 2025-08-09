@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationProps {
@@ -14,6 +15,7 @@ export function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
+  const { t } = useI18n();
   const getVisiblePages = () => {
     const delta = 2;
     const range = [];
@@ -53,7 +55,7 @@ export function Pagination({
         size="sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        aria-label="前のページ"
+        aria-label={t("common.prevPage")}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -80,7 +82,7 @@ export function Pagination({
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        aria-label="次のページ"
+        aria-label={t("common.nextPage")}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

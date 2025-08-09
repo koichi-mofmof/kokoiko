@@ -12,7 +12,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
 import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { createClient } from "@/lib/supabase/client";
@@ -47,8 +49,11 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
     setIsClient(true);
   }, []);
 
+  const { t } = useI18n();
   const plan =
-    subscriptionPlan === "premium" ? "プレミアムプラン" : "フリープラン";
+    subscriptionPlan === "premium"
+      ? t("header.plan.premium")
+      : t("header.plan.free");
   const maxSharedLists = isPremium
     ? null
     : SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS;
@@ -132,8 +137,9 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="flex items-center space-x-6">
+        {/* Navigation */}
+        <nav className="flex items-center space-x-1 sm:space-x-6">
+          <LanguageSwitcher />
           {!isClient ? (
             <div className="flex items-center space-x-4">
               <Skeleton className="h-8 w-24 hidden md:block" />
@@ -148,13 +154,13 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                 href="/lists"
                 className="text-sm hidden md:flex items-center text-neutral-800 hover:text-neutral-900 transition"
               >
-                マイリスト一覧
+                {t("header.myLists")}
               </Link>
               {/* PC表示用のSubscriptionStatus & Upgrade Button */}
               <div className="hidden md:flex items-center space-x-4">
                 <div className="w-36">
                   <SubscriptionStatus
-                    label="累計地点登録数" // "今月の地点登録数" → "累計地点登録数"
+                    label={t("header.stat.totalPlaces")}
                     currentValue={registeredPlacesTotal} // プロパティ名変更
                     maxValue={maxPlaces}
                     loading={planLoading}
@@ -162,7 +168,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                 </div>
                 <div className="w-36">
                   <SubscriptionStatus
-                    label="共有リスト数"
+                    label={t("header.stat.sharedLists")}
                     currentValue={sharedListCount}
                     maxValue={maxSharedLists}
                     loading={planLoading}
@@ -219,7 +225,9 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                       {/* PC用プラン表示 (ドロップダウン内) */}
                       <div className="hidden md:block pt-1">
                         <p className="text-xs leading-none text-muted-foreground">
-                          {planLoading ? "取得中..." : `現在のプラン：${plan}`}
+                          {planLoading
+                            ? "..."
+                            : t("header.currentPlan", { plan })}
                         </p>
                         {subscriptionPlan === "free" && !planLoading && (
                           <div className="pt-2">
@@ -231,17 +239,19 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                       {/* スマートフォン用プラン・ステータス表示 */}
                       <div className="md:hidden space-y-3">
                         <p className="text-xs leading-none text-muted-foreground">
-                          {planLoading ? "取得中..." : `現在のプラン：${plan}`}
+                          {planLoading
+                            ? "..."
+                            : t("header.currentPlan", { plan })}
                         </p>
                         <div className="space-y-2">
                           <SubscriptionStatus
-                            label="累計地点登録数" // "今月の地点登録数" → "累計地点登録数"
+                            label={t("header.stat.totalPlaces")}
                             currentValue={registeredPlacesTotal} // プロパティ名変更
                             maxValue={maxPlaces}
                             loading={planLoading}
                           />
                           <SubscriptionStatus
-                            label="共有リスト数"
+                            label={t("header.stat.sharedLists")}
                             currentValue={sharedListCount}
                             maxValue={maxSharedLists}
                             loading={planLoading}
@@ -258,13 +268,13 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                   <DropdownMenuItem asChild className="md:hidden">
                     <Link href="/lists">
                       <List className="mr-2 h-4 w-4" />
-                      マイリスト一覧
+                      {t("header.myLists")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/settings" className="text-gray-600">
                       <Settings className="mr-2 h-4 w-4" />
-                      設定
+                      {t("header.settings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -277,7 +287,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                         className="w-full flex items-center"
                       >
                         <LogOut className="mr-4 h-4 w-4" />
-                        ログアウト
+                        {t("header.logout")}
                       </button>
                     </form>
                   </DropdownMenuItem>
@@ -288,7 +298,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
             <Button asChild variant="outline">
               <Link href="/login">
                 <LogIn className="h-4 w-4" />
-                ログイン
+                {t("header.login")}
               </Link>
             </Button>
           )}

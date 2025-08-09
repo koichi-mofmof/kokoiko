@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import {
   createShareLink,
@@ -37,6 +38,7 @@ export function ListCardActions({
   onSuccess,
   variant = "default",
 }: ListCardActionsProps) {
+  const { t } = useI18n();
   const [list, setList] = useState(initialList);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -75,7 +77,7 @@ export function ListCardActions({
     if (res.success && res.links) {
       setShareLinks(res.links);
     } else {
-      setShareLinksError(res.error || "取得に失敗しました");
+      setShareLinksError(res.error || t("lists.share.fetchFailed"));
     }
     setShareLinksLoading(false);
   };
@@ -104,28 +106,28 @@ export function ListCardActions({
         await loadShareLinks();
         setIssuedShareUrl(result.shareUrl || "");
         toast({
-          title: "共有リンクを発行しました",
-          description: "新しい共有リンクが作成されました。",
+          title: t("lists.share.createdTitle"),
+          description: t("lists.share.createdDesc"),
         });
       } else if (result && result.upgradeRecommended) {
         // フリープラン上限時は返却のみ（トーストは出さない）
         return result;
       } else {
         toast({
-          title: "共有リンクの発行に失敗しました",
-          description: result?.error || "予期せぬエラーが発生しました。",
+          title: t("lists.share.createFailedTitle"),
+          description: result?.error || t("common.unexpectedError"),
           variant: "destructive",
         });
       }
       return result;
     } catch (e) {
       toast({
-        title: "共有リンクの発行に失敗しました",
+        title: t("lists.share.createFailedTitle"),
         description:
-          e instanceof Error ? e.message : "予期せぬエラーが発生しました。",
+          e instanceof Error ? e.message : t("common.unexpectedError"),
         variant: "destructive",
       });
-      return { success: false, error: "予期せぬエラーが発生しました。" };
+      return { success: false, error: t("common.unexpectedError") };
     } finally {
       setIsCreatingLink(false);
     }
@@ -188,10 +190,10 @@ export function ListCardActions({
                 } ${!hasPermission ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleClick}
                 disabled={!hasPermission}
-                aria-label="リストアクション"
+                aria-label={t("lists.actions.aria")}
               >
                 <MoreHorizontal className="h-4 w-4 text-neutral-600" />
-                <span className="sr-only">アクション</span>
+                <span className="sr-only">{t("lists.actions.label")}</span>
               </Button>
             </DropdownMenuTrigger>
             {hasPermission && (
@@ -207,17 +209,17 @@ export function ListCardActions({
                   }}
                 >
                   <Edit className="h-4 w-4 mr-2" />
-                  リストを編集
+                  {t("lists.actions.edit")}
                 </DropdownMenuItem>
                 {list.is_public && (
                   <DropdownMenuItem onClick={handleShare}>
                     <Share className="h-4 w-4 mr-2" />
-                    リストを共有
+                    {t("lists.actions.share")}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={handleOpenShareDialog}>
                   <UserPlus className="h-4 w-4 mr-2" />
-                  共同編集者を招待
+                  {t("lists.actions.inviteEditors")}
                 </DropdownMenuItem>
                 {isOwner && (
                   <>
@@ -230,7 +232,7 @@ export function ListCardActions({
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      リストを削除
+                      {t("lists.actions.delete")}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -265,18 +267,18 @@ export function ListCardActions({
             const result = await deleteList(list.id);
             if (result.success) {
               toast({
-                title: "削除完了",
-                description: `リスト「${list.name}」を削除しました。`,
+                title: t("lists.delete.successTitle"),
+                description: t("lists.delete.successDesc", { name: list.name }),
               });
               setIsDeleteDialogOpen(false);
               onSuccess?.();
               router.push("/lists");
             } else {
               toast({
-                title: "削除失敗",
+                title: t("lists.delete.failedTitle"),
                 description:
                   result.error ||
-                  `リスト「${list.name}」の削除に失敗しました。`,
+                  t("lists.delete.failedDesc", { name: list.name }),
                 variant: "destructive",
               });
               setIsDeleteDialogOpen(false);

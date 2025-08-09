@@ -2,6 +2,7 @@
 
 import { PublicListCard } from "@/components/home/public-list-card";
 import { Pagination } from "@/components/ui/pagination";
+import { useI18n } from "@/hooks/use-i18n";
 import { PublicListForHome } from "@/lib/dal/public-lists";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -30,6 +31,7 @@ export function PublicListsPageClient({
 }: PublicListsPageClientProps) {
   const router = useRouter();
   const searchParamsHook = useSearchParams();
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState(searchParams.search || "");
 
   // フィルタリングされたリスト
@@ -85,7 +87,7 @@ export function PublicListsPageClient({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
             <input
               type="text"
-              placeholder="リストを検索..."
+              placeholder={t("publicLists.search.placeholder")}
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -104,10 +106,15 @@ export function PublicListsPageClient({
 
       {/* 結果表示 */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-neutral-600">{totalCount}件の公開リスト</p>
+        <p className="text-sm text-neutral-600">
+          {t("publicLists.result.total", { n: totalCount })}
+        </p>
         {searchQuery && (
           <p className="text-sm text-neutral-600">
-            「{searchQuery}」の検索結果: {filteredLists.length}件
+            {t("publicLists.result.search", {
+              query: searchQuery,
+              n: filteredLists.length,
+            })}
           </p>
         )}
       </div>
@@ -139,13 +146,13 @@ export function PublicListsPageClient({
           </div>
           <h3 className="text-lg font-medium text-neutral-900 mb-2">
             {searchQuery
-              ? "検索結果が見つかりません"
-              : "まだ公開リストがありません"}
+              ? t("publicLists.empty.searchTitle")
+              : t("publicLists.empty.noneTitle")}
           </h3>
           <p className="text-neutral-600">
             {searchQuery
-              ? "別のキーワードで検索してみてください"
-              : "最初の公開リストを作成してみませんか？"}
+              ? t("publicLists.empty.searchDesc")
+              : t("publicLists.empty.noneDesc")}
           </p>
         </div>
       )}

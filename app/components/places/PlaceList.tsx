@@ -1,5 +1,7 @@
 "use client";
 
+import { useI18n } from "@/hooks/use-i18n";
+import { useToast } from "@/hooks/use-toast";
 import { updateDisplayOrders } from "@/lib/actions/place-display-orders";
 import { DisplayOrderedPlace, Place } from "@/types";
 import {
@@ -38,6 +40,8 @@ const PlaceList: React.FC<PlaceListProps> = ({
   permission = "view",
   onDisplayOrderUpdate,
 }) => {
+  const { t } = useI18n();
+  const { toast } = useToast();
   const [localDisplayOrders, setLocalDisplayOrders] = useState<
     DisplayOrderedPlace[]
   >(displayOrders || []);
@@ -114,6 +118,11 @@ const PlaceList: React.FC<PlaceListProps> = ({
 
         if (result.error) {
           console.error("Failed to update display orders:", result.error);
+          toast({
+            title: t("common.updateError"),
+            description: result.errorKey ? t(result.errorKey) : result.error,
+            variant: "destructive",
+          });
           // エラー時は元の状態に戻す
           setLocalDisplayOrders(displayOrders);
         } else {
@@ -137,7 +146,7 @@ const PlaceList: React.FC<PlaceListProps> = ({
   if (places.length === 0) {
     return (
       <div className="p-4 text-center text-neutral-500">
-        登録された場所がありません
+        {t("place.list.empty")}
       </div>
     );
   }

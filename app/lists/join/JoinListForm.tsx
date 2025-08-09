@@ -1,9 +1,10 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { useI18n } from "@/hooks/use-i18n";
+import { useToast } from "@/hooks/use-toast";
+import { CheckCircle2 } from "lucide-react";
+import { useState } from "react";
 import { handleJoin } from "./actions";
 
 interface VerifyResult {
@@ -21,10 +22,13 @@ export default function JoinListForm({
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
 
   // 権限を日本語に変換
   const permissionLabel =
-    verifyResult.permission === "edit" ? "閲覧＋編集" : "閲覧のみ";
+    verifyResult.permission === "edit"
+      ? t("join.permission.editAndView")
+      : t("join.permission.viewOnly");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,9 +37,12 @@ export default function JoinListForm({
     const result = await handleJoin(formData);
     setLoading(false);
     if (!result.success) {
+      const err = result as { errorKey?: string; error?: string };
       toast({
-        title: "リスト参加エラー",
-        description: result.error || "リストへの参加に失敗しました。",
+        title: t("join.errorTitle"),
+        description: err.errorKey
+          ? t(err.errorKey)
+          : err.error || t("join.errorDesc"),
         variant: "destructive",
       });
     }
@@ -49,15 +56,16 @@ export default function JoinListForm({
         className="flex flex-col items-center justify-center py-16 gap-4"
       >
         <CheckCircle2 className="w-12 h-12 text-primary-500 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">リストへの参加</h2>
+        <h2 className="text-xl font-semibold mb-2">{t("join.title")}</h2>
         <p className="text-neutral-500 mb-4">
-          <span className="font-semibold">リスト名:</span>{" "}
-          {verifyResult.listName || "取得不可"}
+          <span className="font-semibold">{t("join.listName")}:</span>{" "}
+          {verifyResult.listName || t("join.notAvailable")}
           <br />
-          <span className="font-semibold">作成者:</span>{" "}
-          {verifyResult.ownerName || "取得不可"}
+          <span className="font-semibold">{t("join.owner")}:</span>{" "}
+          {verifyResult.ownerName || t("join.notAvailable")}
           <br />
-          <span className="font-semibold">権限:</span> {permissionLabel}
+          <span className="font-semibold">{t("join.permission")}:</span>{" "}
+          {permissionLabel}
         </p>
         <input type="hidden" name="token" value={token} />
         <button
@@ -65,7 +73,7 @@ export default function JoinListForm({
           className="px-6 py-2 rounded bg-primary-600 text-white font-semibold hover:bg-primary-700 transition"
           disabled={loading}
         >
-          {loading ? "参加中..." : "このリストに参加する"}
+          {loading ? t("join.submitting") : t("join.submit")}
         </button>
       </form>
       <Toaster />

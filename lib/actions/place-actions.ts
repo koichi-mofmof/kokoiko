@@ -25,8 +25,10 @@ export type PlaceToRegisterType = z.infer<typeof PlaceToRegisterSchema>;
 export type RegisterPlaceResult = {
   success: boolean;
   message?: string;
+  successKey?: string;
   listPlaceId?: string; // 作成されたlist_placesレコードのIDなど、必要に応じて
   error?: string; // エラーメッセージ用
+  errorKey?: string; // i18n用エラーキー
   fieldErrors?: {
     // フィールドごとのエラーメッセージ
     [key in keyof PlaceToRegisterType]?: string[];
@@ -46,7 +48,11 @@ export async function registerPlaceToListAction(
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { success: false, error: "認証が必要です。" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証が必要です。",
+    };
   }
 
   // ★追加: サブスクリプション情報取得＆累計の登録数チェック
@@ -62,10 +68,9 @@ export async function registerPlaceToListAction(
     if (maxPlaces !== null && count >= maxPlaces) {
       return {
         success: false,
+        errorKey: "places.limitReached.freePlan",
         error:
-          "フリープランの地点登録上限（" +
-          maxPlaces +
-          "件）に達しています。\nプレミアムプランにアップグレードすると無制限に登録できます。\n\n→ プランのアップグレードはこちらからご検討ください。",
+          "フリープランの地点登録上限に達しています。プレミアムプランをご検討ください。",
       };
     }
   }
@@ -75,6 +80,7 @@ export async function registerPlaceToListAction(
   if (!validationResult.success) {
     return {
       success: false,
+      errorKey: "errors.validation.invalidInput",
       error: "入力データに誤りがあります。",
       fieldErrors: validationResult.error.flatten().fieldErrors,
     };
@@ -113,6 +119,7 @@ export async function registerPlaceToListAction(
       console.error("Error fetching existing list_place:", listPlaceError);
       return {
         success: false,
+        errorKey: "place.errors.checkExistingFailed",
         error: "リスト内の場所の確認中にエラーが発生しました。",
       };
     }
@@ -120,6 +127,7 @@ export async function registerPlaceToListAction(
     if (existingListPlace) {
       return {
         success: false,
+        errorKey: "place.errors.alreadyInList",
         error: "この場所は既にこのリストに登録されています。",
       };
     }
@@ -150,19 +158,23 @@ export async function registerPlaceToListAction(
       console.error("Error calling register_place_to_list RPC:", rpcError);
       // RPCからのエラーメッセージをより具体的にフロントに返すことも検討
       let errorMessage = "場所の登録に失敗しました。";
+      let errorKey: string = "place.errors.registerFailed";
       if (rpcError.message.includes("Failed to upsert place")) {
         errorMessage = "場所情報の保存処理中にエラーが発生しました。";
+        errorKey = "place.errors.placeSaveFailed";
       } else if (
         rpcError.message.includes("Failed to insert into list_places")
       ) {
         errorMessage = "リストへの場所の追加処理中にエラーが発生しました。";
+        errorKey = "place.errors.addToListFailed";
       } else if (rpcError.message.includes("Failed to upsert tag")) {
         errorMessage =
           "タグの処理中にエラーが発生しました。一部のタグが登録されていない可能性があります。";
+        errorKey = "place.errors.tagUpsertFailed";
       }
       // 詳細なエラーをログには残しつつ、ユーザーには汎用的なメッセージを見せる場合
       // Sentryなどのエラー監視ツールにrpcErrorを送信することを推奨
-      return { success: false, error: errorMessage };
+      return { success: false, error: errorMessage, errorKey };
     }
 
     if (!rpcData) {
@@ -170,6 +182,7 @@ export async function registerPlaceToListAction(
       console.error("RPC register_place_to_list did not return expected data.");
       return {
         success: false,
+        errorKey: "place.errors.noResult",
         error: "場所の登録結果を取得できませんでした。",
       };
     }
@@ -186,12 +199,14 @@ export async function registerPlaceToListAction(
     return {
       success: true,
       message: `${name} をリストに追加しました。`,
+      successKey: "place.add.success",
       listPlaceId: newListPlaceId,
     };
   } catch (error) {
     console.error("Unexpected error in registerPlaceToListAction:", error);
     return {
       success: false,
+      errorKey: "errors.unexpected.registerPlace",
       error: "予期せぬエラーが発生しました。場所を登録できませんでした。",
     };
   }
@@ -222,7 +237,7 @@ export async function getCommentsByListPlaceId(
  */
 export async function addCommentToListPlace(
   input: AddCommentInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; errorKey?: string }> {
   const supabase = await createClient();
   // 認証チェック
   const {
@@ -230,13 +245,18 @@ export async function addCommentToListPlace(
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証が必要です。" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証が必要です。",
+    };
   }
   // バリデーション
   const result = AddCommentSchema.safeParse(input);
   if (!result.success) {
     return {
       success: false,
+      errorKey: "errors.validation.invalidInput",
       error: result.error.errors[0]?.message || "入力内容に誤りがあります。",
     };
   }
@@ -250,13 +270,21 @@ export async function addCommentToListPlace(
         comment,
       });
     if (insertError) {
-      return { success: false, error: "コメントの保存に失敗しました。" };
+      return {
+        success: false,
+        errorKey: "lists.comments.saveFailed",
+        error: "コメントの保存に失敗しました。",
+      };
     }
     revalidatePath(`/lists/${listPlaceId}`);
     return { success: true };
   } catch (e) {
     console.error("Unexpected error in addCommentToListPlace:", e);
-    return { success: false, error: "予期せぬエラーが発生しました。" };
+    return {
+      success: false,
+      errorKey: "errors.unexpected.generic",
+      error: "予期せぬエラーが発生しました。",
+    };
   }
 }
 
@@ -266,6 +294,7 @@ export async function updateComment({
 }: UpdateCommentInput & { commentId: string; comment: string }): Promise<{
   success: boolean;
   error?: string;
+  errorKey?: string;
 }> {
   const supabase = await createClient();
   const {
@@ -273,7 +302,11 @@ export async function updateComment({
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証が必要です。" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証が必要です。",
+    };
   }
   // 権限チェック: 自分のコメントのみ
   const { data: commentData, error: fetchError } = await supabase
@@ -282,22 +315,38 @@ export async function updateComment({
     .eq("id", commentId)
     .single();
   if (fetchError || !commentData) {
-    return { success: false, error: "コメントが見つかりません。" };
+    return {
+      success: false,
+      errorKey: "lists.comments.notFound",
+      error: "コメントが見つかりません。",
+    };
   }
   if (commentData.user_id !== user.id) {
-    return { success: false, error: "編集権限がありません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.noPermission",
+      error: "編集権限がありません。",
+    };
   }
   // バリデーション
   const result = UpdateCommentSchema.safeParse({ commentId, comment });
   if (!result.success) {
-    return { success: false, error: result.error.errors[0]?.message };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: result.error.errors[0]?.message,
+    };
   }
   const { error: updateError } = await supabase
     .from("list_place_commnts")
     .update({ comment })
     .eq("id", commentId);
   if (updateError) {
-    return { success: false, error: "コメントの更新に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "lists.comments.updateFailed",
+      error: "コメントの更新に失敗しました。",
+    };
   }
   revalidatePath(`/lists/${commentData.list_place_id}`);
   return { success: true };
@@ -305,14 +354,18 @@ export async function updateComment({
 
 export async function deleteComment(
   commentId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; errorKey?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証が必要です。" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証が必要です。",
+    };
   }
   // 権限チェック: 自分のコメントのみ
   const { data: commentData, error: fetchError } = await supabase
@@ -321,17 +374,29 @@ export async function deleteComment(
     .eq("id", commentId)
     .single();
   if (fetchError || !commentData) {
-    return { success: false, error: "コメントが見つかりません。" };
+    return {
+      success: false,
+      errorKey: "lists.comments.notFound",
+      error: "コメントが見つかりません。",
+    };
   }
   if (commentData.user_id !== user.id) {
-    return { success: false, error: "削除権限がありません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.noPermission",
+      error: "削除権限がありません。",
+    };
   }
   const { error: deleteError } = await supabase
     .from("list_place_commnts")
     .delete()
     .eq("id", commentId);
   if (deleteError) {
-    return { success: false, error: "コメントの削除に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "lists.comments.deleteFailed",
+      error: "コメントの削除に失敗しました。",
+    };
   }
   revalidatePath(`/lists/${commentData.list_place_id}`);
   return { success: true };
@@ -346,7 +411,9 @@ interface ClientPlaceTag {
 // updatePlaceDetailsAction用の戻り値型を定義
 export type UpdatePlaceDetailsResult = {
   success?: string;
+  successKey?: string;
   error?: string;
+  errorKey?: string;
   fieldErrors?: {
     [key: string]: string[];
   };
@@ -384,6 +451,7 @@ export async function updatePlaceDetailsAction(
       validatedFields.error.flatten().fieldErrors
     );
     return {
+      errorKey: "errors.validation.invalidInput",
       error: "入力データが無効です。",
       fieldErrors: validatedFields.error.flatten().fieldErrors,
     };
@@ -412,12 +480,18 @@ export async function updatePlaceDetailsAction(
     revalidatePath(`/lists/${listPlaceId}`);
     revalidatePath("/settings/account");
 
-    return { success: "場所の情報を更新しました。" };
+    return {
+      success: "場所の情報を更新しました。",
+      successKey: "place.update.success",
+    };
   } catch (error) {
     console.error("Error in updatePlaceDetailsAction:", error);
     const errorMessage =
       error instanceof Error ? error.message : "不明なエラーが発生しました。";
-    return { error: `場所情報の更新に失敗しました: ${errorMessage}` };
+    return {
+      errorKey: "place.errors.updateFailed",
+      error: `場所情報の更新に失敗しました: ${errorMessage}`,
+    };
   }
 }
 
@@ -440,6 +514,7 @@ export async function deleteListPlaceAction(formData: FormData) {
       validatedFields.error.flatten().fieldErrors
     );
     return {
+      errorKey: "errors.validation.invalidInput",
       error: "入力データが無効です。",
       fieldErrors: validatedFields.error.flatten().fieldErrors,
     };
@@ -472,11 +547,17 @@ export async function deleteListPlaceAction(formData: FormData) {
     }
     revalidatePath("/settings/account");
 
-    return { success: "場所を削除しました。" };
+    return {
+      success: "場所を削除しました。",
+      successKey: "place.delete.success",
+    };
   } catch (error) {
     console.error("Error in deleteListPlaceAction:", error);
     const errorMessage =
       error instanceof Error ? error.message : "不明なエラーが発生しました。";
-    return { error: `場所の削除に失敗しました: ${errorMessage}` };
+    return {
+      errorKey: "place.errors.deleteFailed",
+      error: `場所の削除に失敗しました: ${errorMessage}`,
+    };
   }
 }

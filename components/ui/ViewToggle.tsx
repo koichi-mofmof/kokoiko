@@ -2,6 +2,7 @@
 
 import { ViewMode } from "@/types";
 import { ChartNoAxesColumn, List, Map } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
 
 interface ViewToggleProps {
   currentView: ViewMode;
@@ -12,6 +13,7 @@ export default function ViewToggle({
   currentView,
   onViewChange,
 }: ViewToggleProps) {
+  const { t } = useI18n();
   const buttonBaseClass =
     "relative inline-flex items-center justify-center h-9 w-9 sm:w-auto sm:px-3 py-2 text-sm transition-colors";
   const activeClass = "bg-primary-50 text-primary-700";
@@ -42,7 +44,7 @@ export default function ViewToggle({
             currentView === "list" ? "inline" : "hidden"
           }`}
         >
-          リスト
+          {t("viewToggle.list")}
         </span>
       </button>
       <button
@@ -66,7 +68,7 @@ export default function ViewToggle({
             currentView === "map" ? "inline" : "hidden"
           }`}
         >
-          マップ
+          {t("viewToggle.map")}
         </span>
       </button>
       <button
@@ -88,7 +90,7 @@ export default function ViewToggle({
             currentView === "ranking" ? "inline" : "hidden"
           }`}
         >
-          ランキング
+          {t("viewToggle.ranking")}
         </span>
       </button>
     </div>

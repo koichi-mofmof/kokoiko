@@ -1,6 +1,8 @@
 import { verifyShareToken } from "@/lib/actions/lists";
+import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import JoinListForm from "./JoinListForm";
@@ -11,6 +13,11 @@ export default async function JoinListPage({
   searchParams: Promise<{ token?: string }>;
 }) {
   const { token } = await searchParams;
+  const cookieStore = await cookies();
+  const lang = cookieStore.get("lang")?.value || "ja";
+  const locale = normalizeLocale(lang);
+  const messages = await loadMessages(locale);
+  const t = createServerT(messages);
   const supabase = await createClient();
   const {
     data: { user },
@@ -20,10 +27,10 @@ export default async function JoinListPage({
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">無効なリンク</h2>
-        <p className="text-neutral-500 mb-4">
-          共有リンクのトークンが見つかりません。URLをご確認ください。
-        </p>
+        <h2 className="text-xl font-semibold mb-2">
+          {t("join.invalidLinkTitle")}
+        </h2>
+        <p className="text-neutral-500 mb-4">{t("join.tokenMissingDesc")}</p>
       </div>
     );
   }
@@ -43,10 +50,14 @@ export default async function JoinListPage({
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">リンクが無効です</h2>
-        <p className="text-neutral-500 mb-4">{verifyResult.reason}</p>
+        <h2 className="text-xl font-semibold mb-2">
+          {t("join.invalidLinkTitle")}
+        </h2>
+        <p className="text-neutral-500 mb-4">
+          {verifyResult.reason || t("join.invalidLinkDesc")}
+        </p>
         <Link href="/lists" className="text-primary-600 hover:underline mt-4">
-          マイリスト一覧に戻る
+          {t("join.backToLists")}
         </Link>
       </div>
     );

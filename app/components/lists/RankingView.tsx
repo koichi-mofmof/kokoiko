@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { fetchRankingViewData } from "@/lib/actions/rankings";
-
 import { Place, RankedPlace } from "@/types";
 import { useEffect, useState } from "react";
 import RankingDisplay from "./RankingDisplay";
@@ -19,6 +19,7 @@ export default function RankingView({
   places: parentPlaces,
   permission,
 }: RankingViewProps) {
+  const { t } = useI18n();
   const [ranking, setRanking] = useState<RankedPlace[]>([]);
   const [places, setPlaces] = useState<Place[]>(parentPlaces || []);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -64,7 +65,7 @@ export default function RankingView({
   };
 
   if (isLoading) {
-    return <div>読み込み中...</div>;
+    return <div>{t("common.loading")}</div>;
   }
 
   if (error) {
@@ -91,7 +92,7 @@ export default function RankingView({
                 onClick={() => setIsEditModalOpen(true)}
                 variant="secondary"
               >
-                ランキングを編集
+                {t("lists.ranking.edit")}
               </Button>
             </div>
           )}
@@ -99,14 +100,14 @@ export default function RankingView({
       ) : (
         <div className="text-center py-10">
           <p className="text-sm text-muted-foreground mb-4">
-            このリストにはまだランキングが作成されていません。
+            {t("lists.ranking.notCreated")}
           </p>
           {(permission === "edit" || permission === "owner") && (
             <Button
               onClick={() => setIsEditModalOpen(true)}
               variant="secondary"
             >
-              ランキングを作成
+              {t("lists.ranking.create")}
             </Button>
           )}
         </div>

@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -37,7 +38,7 @@ import {
   deleteShareLinkAction,
   updateShareLinkAction,
 } from "@/lib/actions/share-actions";
-import { ListForClient, Collaborator } from "@/lib/dal/lists";
+import { Collaborator, ListForClient } from "@/lib/dal/lists";
 import type { Database } from "@/types/supabase";
 import { CheckCircle2, Copy, Info, Share2, XCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -79,6 +80,7 @@ export function ShareSettingsDialog({
   isCreatingLink: boolean;
 }) {
   const { refreshSubscription } = useSubscription();
+  const { t } = useI18n();
   // フォームリセット用ref
   const formRef = React.useRef<HTMLFormElement>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
@@ -166,12 +168,12 @@ export function ShareSettingsDialog({
     if (res.success) {
       setEditTarget(null);
       await onReloadLinks();
-      toast({ title: "共有リンクを更新しました" });
+      toast({ title: t("lists.share.updated") });
       await refreshSubscription();
     } else {
       toast({
-        title: "更新に失敗しました",
-        description: res.error || "エラーが発生しました",
+        title: t("lists.share.updateFailed"),
+        description: res.error || t("common.unexpectedError"),
         variant: "destructive",
       });
     }
@@ -190,12 +192,12 @@ export function ShareSettingsDialog({
     if (res.success) {
       setDeleteTarget(null);
       await onReloadLinks();
-      toast({ title: "共有リンクを削除しました" });
+      toast({ title: t("lists.share.deleted") });
       await refreshSubscription();
     } else {
       toast({
-        title: "削除に失敗しました",
-        description: res.error || "エラーが発生しました",
+        title: t("lists.share.deleteFailed"),
+        description: res.error || t("common.unexpectedError"),
         variant: "destructive",
       });
     }
@@ -221,13 +223,13 @@ export function ShareSettingsDialog({
       },
     }));
     if (res.success) {
-      toast({ title: "権限を変更しました" });
+      toast({ title: t("lists.share.permissionChanged") });
       await onReloadCollaborators();
       await refreshSubscription();
     } else {
       toast({
-        title: "権限変更に失敗しました",
-        description: res.error || "エラーが発生しました",
+        title: t("lists.share.permissionChangeFailed"),
+        description: res.error || t("common.unexpectedError"),
         variant: "destructive",
       });
     }
@@ -273,7 +275,7 @@ export function ShareSettingsDialog({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>共同編集者を招待</DialogTitle>
+          <DialogTitle>{t("lists.share.inviteTitle")}</DialogTitle>
         </DialogHeader>
         {/* 新規共有リンク発行フォーム */}
         <form
@@ -283,7 +285,9 @@ export function ShareSettingsDialog({
         >
           <input type="hidden" name="listId" value={list.id} />
           <div className="flex flex-row items-center gap-x-4">
-            <label className="block text-sm font-medium">権限 ：</label>
+            <label className="block text-sm font-medium">
+              {t("lists.share.permissionLabel")}
+            </label>
             <RadioGroup
               defaultValue="view"
               name="permission"
@@ -292,13 +296,13 @@ export function ShareSettingsDialog({
               <div className="flex items-center gap-1">
                 <RadioGroupItem value="view" id="permission-view" />
                 <label htmlFor="permission-view" className="text-sm">
-                  閲覧のみ
+                  {t("lists.share.permission.viewOnly")}
                 </label>
               </div>
               <div className="flex items-center gap-1">
                 <RadioGroupItem value="edit" id="permission-edit" />
                 <label htmlFor="permission-edit" className="text-sm">
-                  編集＋閲覧
+                  {t("lists.share.permission.editAndView")}
                 </label>
               </div>
             </RadioGroup>
@@ -308,7 +312,7 @@ export function ShareSettingsDialog({
             className="mt-4 w-full"
             disabled={isCreatingLink}
           >
-            共有リンクを発行
+            {t("lists.share.issueLink")}
           </Button>
         </form>
         {showUpgradeDialog && (
@@ -317,21 +321,16 @@ export function ShareSettingsDialog({
               <div className="flex items-center justify-center mb-2">
                 <Info className="w-6 h-6 text-primary-500 mr-2" />
                 <span className="font-semibold text-yellow-900 text-base">
-                  共有リスト数の上限に達しました！
+                  {t("lists.share.limitReached.title")}
                 </span>
               </div>
               <div className="text-sm text-yellow-900 mb-3 text-left">
                 <span>
-                  フリープランで共有できるリストは{" "}
-                  <span className="font-bold">1件まで</span> です。
+                  {t("lists.share.limitReached.freePlanLimit", { n: 1 })}
                 </span>
                 <div className="mt-2">
-                  <span className="font-semibold text-primary-700">
-                    プレミアムプラン
-                  </span>
-                  にアップグレードすると、
-                  <span className="font-bold">無制限</span>
-                  にリストを共有できます。
+                  <span className="font-semibold text-primary-700"></span>
+                  {t("lists.share.limitReached.upgradeHint")}
                 </div>
               </div>
               <UpgradePlanDialog
@@ -341,7 +340,7 @@ export function ShareSettingsDialog({
                     className="w-full max-w-xs mt-1"
                     onClick={() => setUpgradeDialogOpen(true)}
                   >
-                    今すぐアップグレード
+                    {t("upgrade.open")}
                   </Button>
                 }
                 open={upgradeDialogOpen}
@@ -352,9 +351,13 @@ export function ShareSettingsDialog({
         )}
         {/* 共有リンク一覧表示 */}
         <div className="mt-4">
-          <h3 className="text-sm font-semibold mb-2">発行済み共有リンク</h3>
+          <h3 className="text-sm font-semibold mb-2">
+            {t("lists.share.issuedLinks")}
+          </h3>
           {loading ? (
-            <div className="text-xs text-neutral-400">読み込み中...</div>
+            <div className="text-xs text-neutral-400">
+              {t("common.loading")}
+            </div>
           ) : error ? (
             <div className="text-xs text-red-500">{error}</div>
           ) : links.length > 0 ? (
@@ -375,8 +378,8 @@ export function ShareSettingsDialog({
                   if (navigator.share) {
                     try {
                       await navigator.share({
-                        title: "共有リンク",
-                        text: "このリストをシェアします",
+                        title: t("lists.share.linkTitle"),
+                        text: t("lists.share.linkText"),
                         url: fullUrl,
                       });
                     } catch (e) {
@@ -424,7 +427,9 @@ export function ShareSettingsDialog({
                         className="shrink-0"
                       >
                         <Share2 className="w-4 h-4" />
-                        <span className="sr-only">共有</span>
+                        <span className="sr-only">
+                          {t("lists.actions.share")}
+                        </span>
                       </Button>
                     </div>
                     {/* 下部：バッジ類＋編集・削除ボタン */}
@@ -438,8 +443,8 @@ export function ShareSettingsDialog({
                           }`}
                         >
                           {link.default_permission === "edit"
-                            ? "編集＋閲覧"
-                            : "閲覧のみ"}
+                            ? t("lists.share.permission.editAndView")
+                            : t("lists.share.permission.viewOnly")}
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded-full font-semibold ${
@@ -453,7 +458,9 @@ export function ShareSettingsDialog({
                           ) : (
                             <XCircle className="inline w-3 h-3 mr-1" />
                           )}
-                          {link.is_active ? "有効" : "無効"}
+                          {link.is_active
+                            ? t("common.active")
+                            : t("common.inactive")}
                         </span>
                       </div>
                       <div className="flex gap-2 ml-auto">
@@ -463,7 +470,7 @@ export function ShareSettingsDialog({
                           variant="outline"
                           onClick={() => handleEdit(link)}
                         >
-                          編集
+                          {t("lists.actions.edit")}
                         </Button>
                         <Button
                           type="button"
@@ -471,7 +478,7 @@ export function ShareSettingsDialog({
                           variant="destructive"
                           onClick={() => handleDelete(link)}
                         >
-                          削除
+                          {t("lists.actions.delete")}
                         </Button>
                       </div>
                     </div>
@@ -481,13 +488,15 @@ export function ShareSettingsDialog({
             </div>
           ) : (
             <div className="text-xs text-neutral-400">
-              発行済みの共有リンクはありません
+              {t("lists.share.noIssuedLinks")}
             </div>
           )}
         </div>
         {/* 共有メンバー管理セクション */}
         <div className="mt-4">
-          <h3 className="font-semibold mb-2 text-sm">共有メンバー管理</h3>
+          <h3 className="font-semibold mb-2 text-sm">
+            {t("lists.share.members.title")}
+          </h3>
           <div className="flex flex-col gap-2">
             {list.collaborators && list.collaborators.length > 0 ? (
               list.collaborators.map((member: Collaborator) => {
@@ -526,7 +535,7 @@ export function ShareSettingsDialog({
                       <Avatar className="w-8 h-8">
                         <AvatarImage
                           src={member.avatarUrl || undefined}
-                          alt={member.name || "User"}
+                          alt={member.name || t("user.unknown")}
                         />
                         <AvatarFallback>
                           {member.name
@@ -538,7 +547,7 @@ export function ShareSettingsDialog({
                         {member.name}
                         {member.isOwner && (
                           <span className="ml-2 text-xs text-primary-600">
-                            （オーナー）
+                            （{t("lists.owner")}）
                           </span>
                         )}
                       </div>
@@ -555,8 +564,12 @@ export function ShareSettingsDialog({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="view">閲覧のみ</SelectItem>
-                            <SelectItem value="edit">編集＋閲覧</SelectItem>
+                            <SelectItem value="view">
+                              {t("lists.share.permission.viewOnly")}
+                            </SelectItem>
+                            <SelectItem value="edit">
+                              {t("lists.share.permission.editAndView")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         {state.permissionChanged && (
@@ -566,7 +579,9 @@ export function ShareSettingsDialog({
                             disabled={state.loading}
                             onClick={handleSavePermissionClick}
                           >
-                            {state.loading ? "保存中..." : "保存"}
+                            {state.loading
+                              ? t("common.processing")
+                              : t("common.save")}
                           </Button>
                         )}
                         <AlertDialog
@@ -597,29 +612,30 @@ export function ShareSettingsDialog({
                                 }))
                               }
                             >
-                              共有解除
+                              {t("lists.share.revoke")}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>
-                                本当に解除しますか？
+                                {t("lists.share.removeConfirmTitle")}
                               </AlertDialogTitle>
                             </AlertDialogHeader>
                             <div className="text-sm">
-                              {member.name}{" "}
-                              さんの共有を解除します。よろしいですか？
+                              {t("lists.share.removeConfirmBody", {
+                                name: member.name,
+                              })}
                             </div>
                             <AlertDialogFooter>
                               <AlertDialogCancel disabled={state.loading}>
-                                キャンセル
+                                {t("common.cancel")}
                               </AlertDialogCancel>
                               <AlertDialogAction
                                 disabled={state.loading}
                                 onClick={handleRemoveClick}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
-                                解除する
+                                {t("lists.share.removeConfirmAction")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -631,7 +647,7 @@ export function ShareSettingsDialog({
               })
             ) : (
               <div className="text-xs text-neutral-400">
-                共有メンバーはいません
+                {t("lists.share.members.empty")}
               </div>
             )}
           </div>

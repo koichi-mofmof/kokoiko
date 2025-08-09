@@ -14,27 +14,28 @@ import {
 import { FilterOptions } from "@/types";
 import { ArrowLeftRight, Filter } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/hooks/use-i18n";
 
 // 地域ラベルの多言語対応
 function getStateLabel(countryCode: string): string {
   const labels: Record<string, string> = {
-    JP: "都道府県",
-    US: "州",
-    CA: "州・準州",
-    AU: "州・特別地域",
-    CN: "省・直轄市",
-    DE: "州",
-    FR: "地域圏",
-    IT: "州",
-    ES: "自治州",
-    GB: "地域",
-    IN: "州・連邦直轄領",
-    BR: "州",
-    MX: "州",
-    RU: "連邦構成主体",
-    KR: "道・特別市・広域市",
+    JP: "filter.states.JP",
+    US: "filter.states.US",
+    CA: "filter.states.CA",
+    AU: "filter.states.AU",
+    CN: "filter.states.CN",
+    DE: "filter.states.DE",
+    FR: "filter.states.FR",
+    IT: "filter.states.IT",
+    ES: "filter.states.ES",
+    GB: "filter.states.GB",
+    IN: "filter.states.IN",
+    BR: "filter.states.BR",
+    MX: "filter.states.MX",
+    RU: "filter.states.RU",
+    KR: "filter.states.KR",
   };
-  return labels[countryCode] || "地域";
+  return labels[countryCode] || "filter.states.default";
 }
 
 // 国選択ボタンコンポーネント
@@ -47,6 +48,7 @@ function CountryFilterButtons({
   selectedCountry?: string;
   onCountryChange: (country: string | undefined) => void;
 }) {
+  const { t } = useI18n();
   const [countries, setCountries] = useState<FilterOption[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -68,7 +70,9 @@ function CountryFilterButtons({
   }, [listId]);
 
   if (loading) {
-    return <div className="text-xs text-neutral-500">読み込み中...</div>;
+    return (
+      <div className="text-xs text-neutral-500">{t("common.loading")}</div>
+    );
   }
 
   return (
@@ -106,6 +110,7 @@ function StateFilterButtons({
   selectedStates: string[];
   onStatesChange: (states: string[]) => void;
 }) {
+  const { t } = useI18n();
   const [states, setStates] = useState<FilterOption[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -134,7 +139,9 @@ function StateFilterButtons({
   };
 
   if (loading) {
-    return <div className="text-xs text-neutral-500">読み込み中...</div>;
+    return (
+      <div className="text-xs text-neutral-500">{t("common.loading")}</div>
+    );
   }
 
   return (
@@ -169,6 +176,7 @@ export default function FilterBar({
   availableTags,
   listId,
 }: FilterBarProps) {
+  const { t } = useI18n();
   const [filters, setFilters] = useState<FilterOptions>(() => ({
     ...initialFilters,
     tagsCondition: initialFilters.tagsCondition || "OR",
@@ -228,7 +236,7 @@ export default function FilterBar({
           } rounded-soft shadow-soft text-sm hover:bg-neutral-50 transition-colors`}
         >
           <Filter className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">フィルター</span>
+          <span className="hidden sm:inline">{t("filter.title")}</span>
           {(filters.tags.length > 0 ||
             filters.visited !== null ||
             filters.hierarchicalRegion?.country ||
@@ -252,7 +260,9 @@ export default function FilterBar({
       >
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-neutral-800">タグ</h4>
+            <h4 className="text-sm font-medium text-neutral-800">
+              {t("filter.tags")}
+            </h4>
             {filters.tags.length > 1 && (
               <button
                 onClick={handleTagsConditionToggle}
@@ -263,12 +273,14 @@ export default function FilterBar({
                 } hover:shadow-sm`}
                 title={
                   filters.tagsCondition === "OR"
-                    ? "現在：いずれかのタグを含む（クリックで「全てのタグを含む」に変更）"
-                    : "現在：全てのタグを含む（クリックで「いずれかのタグを含む」に変更）"
+                    ? t("filter.tooltip.or")
+                    : t("filter.tooltip.and")
                 }
               >
                 <span className="flex items-center gap-1">
-                  {filters.tagsCondition === "OR" ? "いずれか" : "全て"}
+                  {filters.tagsCondition === "OR"
+                    ? t("filter.any")
+                    : t("filter.all")}
                   <ArrowLeftRight className="h-3 w-3 transition-transform duration-200 group-hover:rotate-180" />
                 </span>
               </button>
@@ -294,12 +306,14 @@ export default function FilterBar({
         </div>
 
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-neutral-800 mb-2">地域</h4>
+          <h4 className="text-sm font-medium text-neutral-800 mb-2">
+            {t("filter.region")}
+          </h4>
           <div className="space-y-3">
             {/* 国選択 */}
             <div>
               <h5 className="text-xs font-medium text-neutral-600 mb-1.5">
-                国・地域
+                {t("filter.country")}
               </h5>
               <div className="flex flex-wrap gap-2">
                 <CountryFilterButtons
@@ -316,7 +330,7 @@ export default function FilterBar({
             {filters.hierarchicalRegion?.country && (
               <div>
                 <h5 className="text-xs font-medium text-neutral-600 mb-1.5">
-                  {getStateLabel(filters.hierarchicalRegion.country)}
+                  {t(getStateLabel(filters.hierarchicalRegion.country))}
                 </h5>
                 <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                   <StateFilterButtons
@@ -338,7 +352,7 @@ export default function FilterBar({
 
         <div>
           <h4 className="text-sm font-medium text-neutral-800 mb-2">
-            訪問ステータス
+            {t("filter.visitedStatus")}
           </h4>
           <div className="flex gap-2">
             <button
@@ -349,7 +363,7 @@ export default function FilterBar({
                   : "bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200"
               } transition-colors`}
             >
-              訪問済み
+              {t("place.status.visited")}
             </button>
             <button
               onClick={() => handleVisitedChange("not_visited")}
@@ -359,7 +373,7 @@ export default function FilterBar({
                   : "bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200"
               } transition-colors`}
             >
-              未訪問
+              {t("place.status.notVisited")}
             </button>
             <button
               onClick={() => handleVisitedChange(null)}
@@ -369,7 +383,7 @@ export default function FilterBar({
                   : "bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200"
               } transition-colors`}
             >
-              すべて
+              {t("common.all")}
             </button>
           </div>
         </div>

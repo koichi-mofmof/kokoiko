@@ -58,27 +58,24 @@ interface ClientAutocompletePrediction {
 export async function searchPlaces(
   prevState: unknown,
   formData: FormData
-): Promise<{ predictions?: ClientAutocompletePrediction[]; error?: string }> {
+): Promise<{
+  predictions?: ClientAutocompletePrediction[];
+  error?: string;
+  errorKey?: string;
+}> {
   if (!GOOGLE_MAPS_API_KEY) {
     console.error("Google Maps APIキーが設定されていません。");
-    return {
-      error: "サーバー設定エラーが発生しました。管理者に連絡してください。",
-    };
+    return { errorKey: "errors.maps.apiKeyMissing" };
   }
 
   const validatedFields = autocompleteSchema.safeParse({
     query: formData.get("query"),
     sessionToken: formData.get("sessionToken"),
-    languageCode: formData.get("languageCode") || "ja",
+    languageCode: (formData.get("languageCode") as string) || "ja",
   });
 
   if (!validatedFields.success) {
-    return {
-      error:
-        validatedFields.error.flatten().fieldErrors.query?.[0] ||
-        validatedFields.error.flatten().fieldErrors.sessionToken?.[0] ||
-        "入力内容に誤りがあります。",
-    };
+    return { errorKey: "errors.validation.invalidInput" };
   }
 
   const { query, sessionToken, languageCode } = validatedFields.data;
@@ -114,10 +111,7 @@ export async function searchPlaces(
 
     if (!response.ok) {
       console.error("Google Maps Autocomplete API (New) error:", data);
-      const detail = data.error?.details?.[0];
-      let errorMessage = "場所の検索中にエラーが発生しました。";
-      if (detail?.reason) errorMessage += ` (${detail.reason})`;
-      return { error: data.error?.message || errorMessage };
+      return { errorKey: "errors.maps.autocompleteFailed" };
     }
 
     const clientPredictions: ClientAutocompletePrediction[] = (
@@ -143,37 +137,32 @@ export async function searchPlaces(
       "Network error calling Google Maps Autocomplete API (New):",
       error
     );
-    return {
-      error: "ネットワークエラーが発生しました。場所を検索できませんでした。",
-    };
+    return { errorKey: "errors.network.autocompleteFailed" };
   }
 }
 
 export async function getPlaceDetails(
   prevState: unknown,
   formData: FormData
-): Promise<{ placeDetails?: PlaceDetailsResult; error?: string }> {
+): Promise<{
+  placeDetails?: PlaceDetailsResult;
+  error?: string;
+  errorKey?: string;
+}> {
   if (!GOOGLE_MAPS_API_KEY) {
     console.error("Google Maps APIキーが設定されていません。");
-    return {
-      error: "サーバー設定エラーが発生しました。管理者に連絡してください。",
-    };
+    return { errorKey: "errors.maps.apiKeyMissing" };
   }
 
   const validatedFields = placeDetailsSchema.safeParse({
     placeId: formData.get("placeId"),
     sessionToken: formData.get("sessionToken"),
-    languageCode: formData.get("languageCode") || "ja",
-    regionCode: formData.get("regionCode") || "JP",
+    languageCode: (formData.get("languageCode") as string) || "ja",
+    regionCode: (formData.get("regionCode") as string) || "JP",
   });
 
   if (!validatedFields.success) {
-    return {
-      error:
-        validatedFields.error.flatten().fieldErrors.placeId?.[0] ||
-        validatedFields.error.flatten().fieldErrors.sessionToken?.[0] ||
-        "入力内容に誤りがあります。",
-    };
+    return { errorKey: "errors.validation.invalidInput" };
   }
 
   const { placeId, sessionToken, languageCode, regionCode } =
@@ -209,10 +198,7 @@ export async function getPlaceDetails(
 
     if (!response.ok) {
       console.error("Google Maps Place Details API (New) error:", data);
-      const detail = data.error?.details?.[0];
-      let errorMessage = "場所の詳細取得中にエラーが発生しました。";
-      if (detail?.reason) errorMessage += ` (${detail.reason})`;
-      return { error: data.error?.message || errorMessage };
+      return { errorKey: "errors.maps.placeDetailsFailed" };
     }
 
     // 階層地域情報の抽出
@@ -239,9 +225,6 @@ export async function getPlaceDetails(
       "Network error calling Google Maps Place Details API (New):",
       error
     );
-    return {
-      error:
-        "ネットワークエラーが発生しました。場所の詳細を取得できませんでした。",
-    };
+    return { errorKey: "errors.network.placeDetailsFailed" };
   }
 }

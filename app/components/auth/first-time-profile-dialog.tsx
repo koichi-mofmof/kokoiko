@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
@@ -32,6 +33,7 @@ export function FirstTimeProfileDialog({
 }: FirstTimeProfileDialogProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useI18n();
   const [image, setImage] = useState<string | null>(profileData.avatarUrl);
   const [nickname, setNickname] = useState(profileData.displayName);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,8 +48,8 @@ export function FirstTimeProfileDialog({
       if (file.size > 2 * 1024 * 1024) {
         toast({
           variant: "destructive",
-          title: "エラー",
-          description: "画像サイズは2MB以下にしてください",
+          title: t("common.error"),
+          description: t("settings.profile.image.help"),
         });
         return;
       }
@@ -87,7 +89,7 @@ export function FirstTimeProfileDialog({
             .remove([profileData.avatarPath]);
           if (removeError) {
             console.warn(
-              `古いアバター画像の削除に失敗しました: ${removeError.message}`,
+              `Failed to remove old avatar: ${removeError.message}`,
               removeError
             );
           }
@@ -102,7 +104,9 @@ export function FirstTimeProfileDialog({
 
         if (uploadError) {
           throw new Error(
-            `画像のアップロードに失敗しました: ${uploadError.message}`
+            t("settings.profile.image.uploadFailed", {
+              message: uploadError.message,
+            })
           );
         }
 
@@ -118,25 +122,24 @@ export function FirstTimeProfileDialog({
       });
 
       if (error) {
-        throw new Error(`プロフィールの更新に失敗しました: ${error.message}`);
+        throw new Error(
+          t("settings.profile.updateFailed", { message: error.message })
+        );
       }
 
-      toast({
-        title: "ようこそ！",
-        description: "プロフィールが設定されました。",
-      });
+      toast({ title: t("settings.profile.update.success"), description: "" });
 
       onOpenChange(false);
       router.refresh();
     } catch (error) {
-      console.error("プロフィール更新エラー:", error);
+      console.error("profile update error:", error);
       toast({
         variant: "destructive",
-        title: "エラー",
+        title: t("common.error"),
         description:
           error instanceof Error
             ? error.message
-            : "プロフィールの更新中にエラーが発生しました",
+            : t("settings.profile.update.unexpected"),
       });
     } finally {
       setIsLoading(false);
@@ -151,15 +154,17 @@ export function FirstTimeProfileDialog({
       >
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
-            ようこそ！
+            {t("auth.profileSetup.welcome")}
           </DialogTitle>
           <DialogDescription className="text-center">
-            快適にご利用いただくために、表示名とアイコンを設定してください。
+            {t("auth.profileSetup.desc")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <section>
-            <h3 className="mb-4 text-left font-semibold">プロフィール画像</h3>
+            <h3 className="mb-4 text-left font-semibold">
+              {t("settings.profile.image.title")}
+            </h3>
             <div className="flex flex-row items-center gap-4">
               <Avatar className="h-20 w-20 border bg-muted">
                 {image ? (
@@ -176,7 +181,7 @@ export function FirstTimeProfileDialog({
                   className="flex cursor-pointer items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  画像をアップロード
+                  {t("settings.profile.image.upload")}
                 </label>
                 <input
                   id="profile-image-upload"
@@ -186,26 +191,29 @@ export function FirstTimeProfileDialog({
                   className="sr-only"
                 />
                 <p className="text-xs text-muted-foreground">
-                  JPG, PNG, GIF形式で最大2MBまで
+                  {t("settings.profile.image.help")}
                 </p>
               </div>
             </div>
           </section>
 
           <section>
-            <h3 className="mb-2 text-left font-semibold">基本情報</h3>
+            <h3 className="mb-2 text-left font-semibold">
+              {t("settings.profile.basic.title")}
+            </h3>
             <div>
               <label
                 htmlFor="nickname"
                 className="mb-1 block text-left text-sm"
               >
-                表示名 <span className="text-red-500">*</span>
+                {t("settings.profile.basic.displayName")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <Input
                 id="nickname"
                 value={nickname || ""}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="あなたの名前"
+                placeholder={t("settings.profile.basic.namePlaceholder")}
                 maxLength={50}
                 className={
                   validationErrors.display_name ? "border-red-500" : ""
@@ -218,14 +226,14 @@ export function FirstTimeProfileDialog({
                 </p>
               ))}
               <p className="mt-1 text-left text-xs text-muted-foreground">
-                他のユーザーに表示される名前です。
+                {t("settings.profile.basic.bio")}
               </p>
             </div>
           </section>
 
           <DialogFooter>
             <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? "保存中..." : "保存してはじめる"}
+              {isLoading ? t("common.saving") : t("settings.profile.save")}
             </Button>
           </DialogFooter>
         </form>

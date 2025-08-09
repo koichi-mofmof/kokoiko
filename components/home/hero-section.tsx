@@ -4,6 +4,7 @@ import { CtaButton } from "@/components/ui/button";
 import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
+import { useI18n } from "@/hooks/use-i18n";
 
 // アニメーション定義を外部に移動してメモ化
 const fadeInUp: Variants = {
@@ -22,30 +23,31 @@ const tabVariants: Variants = {
   exit: { opacity: 0, scale: 0.95 },
 };
 
-// タブデータ
+// タブデータ（キーのみを持ち、表示時に翻訳）
 const tabs = [
   {
     id: "map",
-    title: "マップ機能",
-    description: "直感的な地図で、あなたの「行きたい」を視覚的に発見",
+    titleKey: "home.hero.tab.map",
+    descKey: "home.hero.tab.mapDesc",
     image: "/screenshots/feature1.webp",
   },
   {
     id: "list",
-    title: "リスト機能",
-    description: "気になる場所を一覧で管理",
+    titleKey: "home.hero.tab.list",
+    descKey: "home.hero.tab.listDesc",
     image: "/screenshots/feature2.webp",
   },
   {
     id: "detail",
-    title: "スポット詳細",
-    description: "タグやコメントであなた流に整理",
+    titleKey: "home.hero.tab.detail",
+    descKey: "home.hero.tab.detailDesc",
     image: "/screenshots/feature3.webp",
   },
-];
+] as const;
 
 export function HeroSection() {
   const [activeTab, setActiveTab] = useState("map");
+  const { t } = useI18n();
 
   return (
     <section className="relative px-4 pb-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col border-2 sm:border-4 border-yellow-600 rounded-3xl">
@@ -76,10 +78,14 @@ export function HeroSection() {
         >
           <h1 className="text-3xl font-extrabold text-white sm:text-5xl md:text-6xl lg:text-7xl">
             <span className="block mb-2 text-white drop-shadow-md">
-              <span className="text-yellow-600">&quot;行きたい&quot;</span>が、
+              {t("home.hero.line1_part1")}
+              <span className="text-yellow-600">
+                {t("home.hero.line1_highlight")}
+              </span>
+              {t("home.hero.line1_part2")}
             </span>
             <span className="block text-white drop-shadow-md">
-              地図でまとまる。
+              {t("home.hero.line2")}
             </span>
           </h1>
         </motion.div>
@@ -104,7 +110,7 @@ export function HeroSection() {
                   : "bg-white/30 text-white hover:bg-white/40 border border-white/40 shadow-sm"
               }`}
             >
-              {tab.title}
+              {t(tab.titleKey)}
             </button>
           ))}
         </div>
@@ -125,7 +131,9 @@ export function HeroSection() {
                 <div className="relative mx-auto w-[350px] h-[300px] sm:w-[730px] sm:h-[730px] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 backdrop-blur-sm">
                   <Image
                     src={tab.image}
-                    alt={`${tab.title}のスクリーンショット`}
+                    alt={t("home.hero.screenshotAlt", {
+                      title: t(tab.titleKey),
+                    })}
                     width={600}
                     height={600}
                     className="w-full h-full object-cover"
@@ -138,7 +146,7 @@ export function HeroSection() {
                 {/* 説明文 */}
                 <div className="mt-4 text-center">
                   <p className="text-white/80 text-sm sm:text-base">
-                    {tab.description}
+                    {t(tab.descKey)}
                   </p>
                 </div>
               </div>

@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { deleteComment, updateComment } from "@/lib/actions/place-actions";
 import type { ListPlaceComment } from "@/types";
@@ -32,6 +33,7 @@ export default function CommentItem({
   const [editValue, setEditValue] = useState(comment.comment);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleEdit = async () => {
     const res = await updateComment({
@@ -39,12 +41,15 @@ export default function CommentItem({
       comment: editValue,
     });
     if (res.success) {
-      toast({ title: "コメントを更新しました" });
+      toast({ title: t("lists.comments.updated") });
       setIsEditing(false);
       window.location.reload();
     } else {
+      const err = res as { errorKey?: string; error?: string };
       toast({
-        title: res.error || "コメントの更新に失敗しました。",
+        title: err.errorKey
+          ? t(err.errorKey)
+          : err.error || t("lists.comments.updateFailed"),
         variant: "destructive",
       });
     }
@@ -53,12 +58,15 @@ export default function CommentItem({
   const handleDelete = async () => {
     const res = await deleteComment(comment.id);
     if (res.success) {
-      toast({ title: "コメントを削除しました" });
+      toast({ title: t("lists.comments.deleted") });
       setIsDeleting(false);
       window.location.reload();
     } else {
+      const err = res as { errorKey?: string; error?: string };
       toast({
-        title: res.error || "コメントの削除に失敗しました。",
+        title: err.errorKey
+          ? t(err.errorKey)
+          : err.error || t("lists.comments.deleteFailed"),
         variant: "destructive",
       });
     }
@@ -75,7 +83,7 @@ export default function CommentItem({
           )}
         </Avatar>
         <div className="flex-1 flex justify-between items-center text-xs text-neutral-700 font-semibold">
-          <span>{commentUser?.name || "ユーザー"}</span>
+          <span>{commentUser?.name || t("user.unknown")}</span>
           <span className="text-[10px] sm:text-xs text-neutral-700">
             {format(new Date(comment.updated_at), "yyyy/MM/dd HH:mm", {
               locale: ja,
@@ -99,14 +107,14 @@ export default function CommentItem({
                   onClick={() => setIsEditing(true)}
                 >
                   <Edit className="h-4 w-4 mr-2" />
-                  コメントを編集
+                  {t("lists.comments.edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => setIsDeleting(true)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  コメントを削除
+                  {t("lists.comments.delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -129,10 +137,10 @@ export default function CommentItem({
               variant="outline"
               onClick={() => setIsEditing(false)}
             >
-              キャンセル
+              {t("common.cancel")}
             </Button>
             <Button size="sm" onClick={handleEdit} disabled={!editValue.trim()}>
-              保存
+              {t("common.save")}
             </Button>
           </div>
         </div>
@@ -145,7 +153,7 @@ export default function CommentItem({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-lg p-6 shadow-lg">
             <div className="mb-4 text-sm">
-              本当にこのコメントを削除しますか？
+              {t("lists.comments.deleteConfirm")}
             </div>
             <div className="flex justify-end gap-2">
               <Button
@@ -153,10 +161,10 @@ export default function CommentItem({
                 variant="outline"
                 onClick={() => setIsDeleting(false)}
               >
-                キャンセル
+                {t("common.cancel")}
               </Button>
               <Button size="sm" variant="destructive" onClick={handleDelete}>
-                削除
+                {t("common.delete")}
               </Button>
             </div>
           </div>

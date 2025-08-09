@@ -20,7 +20,7 @@ export async function SettingsPageDataLoader(): Promise<SettingsPageData> {
   if (error || !userWithProfile) {
     return {
       initialData: userWithProfile,
-      error: error || "設定情報の読み込みに失敗しました。",
+      error: error || "settings.loadError",
     };
   }
 

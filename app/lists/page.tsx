@@ -2,40 +2,48 @@ import { ErrorMessageToast } from "@/app/components/lists/ErrorMessageToast";
 import { MyLists } from "@/app/components/lists/MyLists";
 import { MyPageDataLoader } from "@/app/components/lists/MyPageDataLoader";
 import type { Metadata } from "next";
+import {
+  createServerT,
+  loadMessages,
+  normalizeLocale,
+  toOpenGraphLocale,
+} from "@/lib/i18n";
+import { cookies } from "next/headers";
 
-export const metadata: Metadata = {
-  title: "マイリスト一覧 | ClippyMap",
-  description: "あなたが作成・共有されたリストの一覧ページ",
-  alternates: {
-    canonical: "/lists",
-  },
-  openGraph: {
-    title: "マイリスト一覧 | ClippyMap",
-    description: "あなたが作成・共有されたリストの一覧ページ",
-    type: "website",
-    locale: "ja_JP",
-    images: [
-      {
-        url: "/ogp-image.webp",
-        width: 1200,
-        height: 630,
-        alt: "マイリスト一覧 - ClippyMap",
-        type: "image/webp",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "マイリスト一覧 | ClippyMap",
-    description: "あなたが作成・共有されたリストの一覧ページ",
-    images: [
-      {
-        url: "/ogp-image.webp",
-        alt: "マイリスト一覧 - ClippyMap",
-      },
-    ],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
+  return {
+    title: `${t("listsPage.title")} | ClippyMap`,
+    description: t("listsPage.description"),
+    alternates: { canonical: "/lists" },
+    openGraph: {
+      title: `${t("listsPage.title")} | ClippyMap`,
+      description: t("listsPage.description"),
+      type: "website",
+      locale: toOpenGraphLocale(locale),
+      images: [
+        {
+          url: "/ogp-image.webp",
+          width: 1200,
+          height: 630,
+          alt: `${t("listsPage.title")} - ClippyMap`,
+          type: "image/webp",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${t("listsPage.title")} | ClippyMap`,
+      description: t("listsPage.description"),
+      images: [
+        { url: "/ogp-image.webp", alt: `${t("listsPage.title")} - ClippyMap` },
+      ],
+    },
+  };
+}
 
 export default async function MyPage() {
   const { lists, error } = await MyPageDataLoader();
@@ -46,7 +54,13 @@ export default async function MyPage() {
 
       <header className="mb-4 flex flex-row flex-wrap items-center justify-between">
         <h1 className="text-xl font-bold text-neutral-900 flex items-center">
-          マイリスト一覧
+          {await (async () => {
+            const c = await cookies();
+            const l = normalizeLocale(c.get("lang")?.value);
+            const m = await loadMessages(l);
+            const t = createServerT(m as Record<string, string>);
+            return t("listsPage.title");
+          })()}
         </h1>
       </header>
       <MyLists initialLists={lists} />

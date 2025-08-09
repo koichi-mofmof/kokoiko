@@ -14,7 +14,8 @@ export async function handleJoin(formData: FormData) {
   if (!user) {
     return {
       success: false,
-      error: "ログイン情報が取得できません。再度ログインしてください。",
+      errorKey: "errors.auth.loginRequired",
+      error: "errors.auth.loginRequired",
     };
   }
   // トークン検証
@@ -22,7 +23,8 @@ export async function handleJoin(formData: FormData) {
   if (!verifyResult.success) {
     return {
       success: false,
-      error: verifyResult.reason || "無効なトークンです。",
+      errorKey: verifyResult.reasonKey || "errors.validation.invalidToken",
+      error: verifyResult.reason || "join.invalidToken",
     };
   }
   const result = await joinListViaShareLink(
@@ -36,6 +38,7 @@ export async function handleJoin(formData: FormData) {
   }
   return {
     success: false,
-    error: result.error || "リストへの参加に失敗しました。",
+    errorKey: result.errorKey || undefined,
+    error: result.error || "join.errorDesc",
   };
 }

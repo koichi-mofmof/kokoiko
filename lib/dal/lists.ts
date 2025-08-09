@@ -44,6 +44,7 @@ export interface ListsPageData {
   lists: ListForClient[];
   userId: string;
   error?: string;
+  errorKey?: string;
   permission?: string;
 }
 
@@ -414,7 +415,7 @@ async function getPlacesForList(
 
           place.createdByUser = {
             id: userProfile.id,
-            name: userProfile.display_name || "匿名ユーザー",
+            name: userProfile.display_name || "",
             avatarUrl,
           };
         }
@@ -537,7 +538,7 @@ export async function getMyPageData(userId: string): Promise<ListsPageData> {
     return {
       lists: [],
       userId,
-      error: "ページの読み込み中にエラーが発生しました。",
+      errorKey: "errors.common.fetchFailed",
     };
   }
 }

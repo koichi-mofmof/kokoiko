@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { toast } from "@/hooks/use-toast";
 import { Share } from "lucide-react";
 
@@ -11,6 +12,7 @@ interface ShareButtonProps {
 }
 
 export function ShareButton({ title, text, url }: ShareButtonProps) {
+  const { t } = useI18n();
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -28,11 +30,11 @@ export function ShareButton({ title, text, url }: ShareButtonProps) {
       // Web Share APIがサポートされていないブラウザ向けのフォールバック処理
       try {
         await navigator.clipboard.writeText(url);
-        toast({ title: "リンクをコピーしました" });
+        toast({ title: t("lists.share.linkCopied") });
       } catch (err) {
         toast({
-          title: "リンクのコピーに失敗しました",
-          description: "もう一度お試しください。",
+          title: t("lists.share.copyFailedTitle"),
+          description: t("lists.share.copyFailedDesc"),
           variant: "destructive",
         });
         console.error("Failed to copy link: ", err);
@@ -45,11 +47,11 @@ export function ShareButton({ title, text, url }: ShareButtonProps) {
       variant="secondary"
       size="sm"
       onClick={handleShare}
-      aria-label="共有"
+      aria-label={t("lists.actions.share")}
       className="flex items-center gap-2"
     >
       <Share className="h-5 w-5" />
-      <span>共有</span>
+      <span>{t("lists.actions.share")}</span>
     </Button>
   );
 }

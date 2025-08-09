@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Share2 } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function ShareLinkIssuedDialog({
   url,
@@ -15,6 +16,7 @@ export function ShareLinkIssuedDialog({
   url: string;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(getFullUrl());
@@ -25,8 +27,8 @@ export function ShareLinkIssuedDialog({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "共有リンク",
-          text: "このリストをシェアします",
+          title: t("lists.share.linkTitle"),
+          text: t("lists.share.linkText"),
           url: getFullUrl(),
         });
       } catch (e) {
@@ -55,11 +57,11 @@ export function ShareLinkIssuedDialog({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>共有リンクをシェア</DialogTitle>
+          <DialogTitle>{t("lists.share.dialogTitle")}</DialogTitle>
         </DialogHeader>
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
-            発行された共有リンク
+            {t("lists.share.issuedLink")}
           </label>
           <div className="flex gap-2 items-center">
             <input
@@ -70,7 +72,7 @@ export function ShareLinkIssuedDialog({
               onFocus={(e) => e.target.select()}
             />
             <Button type="button" variant="secondary" onClick={handleCopy}>
-              {copied ? "コピー済み" : "コピー"}
+              {copied ? t("lists.share.copied") : t("lists.share.copy")}
             </Button>
           </div>
         </div>
@@ -81,7 +83,7 @@ export function ShareLinkIssuedDialog({
             className="w-full"
             onClick={onClose}
           >
-            キャンセル
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -89,7 +91,7 @@ export function ShareLinkIssuedDialog({
             onClick={handleShare}
           >
             <Share2 className="w-4 h-4" />
-            共有
+            {t("lists.actions.share")}
           </Button>
         </div>
       </DialogContent>

@@ -1,11 +1,18 @@
-import { notFound } from "next/navigation";
+import { UserProfileView } from "@/app/components/users/UserProfileView";
 import {
   getUserProfile,
   getUserPublicLists,
   getUserStats,
 } from "@/lib/dal/user-public-lists";
-import { UserProfileView } from "@/app/components/users/UserProfileView";
+import {
+  createServerT,
+  loadMessages,
+  normalizeLocale,
+  toOpenGraphLocale,
+} from "@/lib/i18n";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
 
 type PageProps = {
   params: Promise<{ userId: string }>;
@@ -19,18 +26,26 @@ export async function generateMetadata({
   const displayName = userProfile?.display_name || userProfile?.username;
 
   if (!displayName) {
+    const cookieStore = await cookies();
+    const locale = normalizeLocale(cookieStore.get("lang")?.value);
+    const msgs = await loadMessages(locale);
+    const t = createServerT(msgs as Record<string, string>);
     return {
-      title: "ユーザーが見つかりません",
-      description: "指定されたユーザーは存在しません。",
+      title: t("user.notFound.title"),
+      description: t("user.notFound.desc"),
     };
   }
 
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
   return {
-    title: `${displayName}さんの公開リスト一覧`,
-    description: `${displayName}さんが作成した公開リストを閲覧できます。`,
+    title: t("user.publicLists.title", { name: displayName }),
+    description: t("user.publicLists.desc", { name: displayName }),
     openGraph: {
-      title: `${displayName}さんの公開リスト一覧`,
-      description: `${displayName}さんが作成した公開リストを閲覧できます。`,
+      title: t("user.publicLists.title", { name: displayName }),
+      description: t("user.publicLists.desc", { name: displayName }),
       images: userProfile?.avatar_url
         ? [
             {
@@ -41,6 +56,7 @@ export async function generateMetadata({
             },
           ]
         : [],
+      locale: toOpenGraphLocale(locale),
     },
   };
 }

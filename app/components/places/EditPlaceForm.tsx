@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { updatePlaceDetailsAction } from "@/lib/actions/place-actions";
 import { getListTags } from "@/lib/dal/lists";
@@ -40,9 +41,10 @@ interface EditPlaceFormProps {
 // SubmitButton (フォームの pending 状態を監視)
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { t } = useI18n();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "保存中..." : "保存"}
+      {pending ? t("common.saving") : t("common.save")}
     </Button>
   );
 }
@@ -53,6 +55,7 @@ export default function EditPlaceForm({
   listId,
   onCancel,
 }: EditPlaceFormProps) {
+  const { t } = useI18n();
   const [selectedTags, setSelectedTags] = useState<string[]>(
     place.tags?.map((tag) => tag.name) || []
   );
@@ -89,18 +92,18 @@ export default function EditPlaceForm({
     if (toastShownRef.current) return;
     if (updateState?.success) {
       toastShownRef.current = true;
-      toast({ title: "成功", description: updateState.success });
+      toast({ title: t("common.success"), description: updateState.success });
       if (onCancel) onCancel();
     } else if (updateState?.error) {
       toastShownRef.current = true;
       toast({
-        title: "エラー",
-        description: `更新エラー: ${updateState.error}`,
+        title: t("common.error"),
+        description: `${t("common.updateError")}: ${updateState.error}`,
         variant: "destructive",
       });
       // console.error(updateState.fieldErrors);
     }
-  }, [updateState, onCancel, toast]);
+  }, [updateState, onCancel, toast, t]);
 
   return (
     <Card className="w-full max-w-lg mx-auto">
@@ -146,13 +149,13 @@ export default function EditPlaceForm({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="not_visited" id="not_visited" />
                 <Label htmlFor="not_visited" className="font-normal">
-                  未訪問
+                  {t("place.status.notVisited")}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="visited" id="visited" />
                 <Label htmlFor="visited" className="font-normal">
-                  訪問済み
+                  {t("place.status.visited")}
                 </Label>
               </div>
             </RadioGroup>
@@ -167,7 +170,7 @@ export default function EditPlaceForm({
                 className="px-4 py-2 rounded transition"
                 onClick={onCancel}
               >
-                キャンセル
+                {t("common.cancel")}
               </Button>
             )}
             <SubmitButton />

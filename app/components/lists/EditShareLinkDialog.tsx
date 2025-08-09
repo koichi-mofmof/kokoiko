@@ -1,10 +1,10 @@
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
-import React from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { useI18n } from "@/hooks/use-i18n";
 import type { Database } from "@/types/supabase";
+import { Loader2 } from "lucide-react";
 
 interface EditShareLinkDialogProps {
   open: boolean;
@@ -29,11 +29,12 @@ export function EditShareLinkDialog({
   onClose,
   onSave,
 }: EditShareLinkDialogProps) {
+  const { t } = useI18n();
   if (!link) return null;
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xs p-6">
-        <DialogTitle>共有リンク編集</DialogTitle>
+        <DialogTitle>{t("lists.share.editTitle")}</DialogTitle>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -42,7 +43,9 @@ export function EditShareLinkDialog({
           className="flex flex-col gap-4"
         >
           <div className="flex flex-row items-center gap-x-4">
-            <label className="block text-sm font-medium">権限 ：</label>
+            <label className="block text-sm font-medium">
+              {t("lists.share.permissionLabel")}
+            </label>
             <RadioGroup
               value={permission}
               onValueChange={setPermission}
@@ -55,7 +58,7 @@ export function EditShareLinkDialog({
                   htmlFor={`edit-perm-view-${link.id}`}
                   className="text-sm"
                 >
-                  閲覧のみ
+                  {t("lists.share.permission.viewOnly")}
                 </label>
               </div>
               <div className="flex items-center gap-1">
@@ -64,14 +67,14 @@ export function EditShareLinkDialog({
                   htmlFor={`edit-perm-edit-${link.id}`}
                   className="text-sm"
                 >
-                  編集＋閲覧
+                  {t("lists.share.permission.editAndView")}
                 </label>
               </div>
             </RadioGroup>
           </div>
           <div className="flex items-center gap-2">
             <label htmlFor={`edit-active-${link.id}`} className="text-sm">
-              有効化 ：
+              {t("lists.share.activate")}
             </label>
             <Switch
               id={`edit-active-${link.id}`}
@@ -87,11 +90,11 @@ export function EditShareLinkDialog({
               className="flex-1"
               disabled={loading}
             >
-              キャンセル
+              {t("common.cancel")}
             </Button>
             <Button type="submit" className="flex-1" disabled={loading}>
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              保存
+              {t("common.save")}
             </Button>
           </div>
         </form>

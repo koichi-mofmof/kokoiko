@@ -1,8 +1,15 @@
-import { Suspense } from "react";
-import { getPublicListsPaginated } from "@/lib/dal/public-lists";
-import { PublicListsPageClient } from "./PublicListsPageClient";
-import type { Metadata } from "next";
 import JsonLd from "@/components/seo/JsonLd";
+import { getPublicListsPaginated } from "@/lib/dal/public-lists";
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { Suspense } from "react";
+import { PublicListsPageClient } from "./PublicListsPageClient";
+import {
+  createServerT,
+  loadMessages,
+  normalizeLocale,
+  toOpenGraphLocale,
+} from "@/lib/i18n";
 
 interface PublicListsPageProps {
   searchParams: Promise<{
@@ -13,46 +20,48 @@ interface PublicListsPageProps {
   }>;
 }
 
-export const metadata: Metadata = {
-  title: "みんなが作ったおすすめスポット | ClippyMap",
-  description:
-    "実際のユーザーが作成した行きたい場所リストを探索しよう。新しい発見やお気に入りの場所が見つかるかもしれません。",
-  alternates: {
-    canonical: "/public-lists",
-  },
-  openGraph: {
-    title: "みんなが作ったおすすめスポット | ClippyMap",
-    description:
-      "実際のユーザーが作成した行きたい場所リストを探索しよう。新しい発見やお気に入りの場所が見つかるかもしれません。",
-    type: "website",
-    locale: "ja_JP",
-    images: [
-      {
-        url: "/ogp-image.webp",
-        width: 1200,
-        height: 630,
-        alt: "みんなが作ったおすすめスポット - ClippyMap",
-        type: "image/webp",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "みんなが作ったおすすめスポット | ClippyMap",
-    description:
-      "実際のユーザーが作成した行きたい場所リストを探索しよう。新しい発見やお気に入りの場所が見つかるかもしれません。",
-    images: [
-      {
-        url: "/ogp-image.webp",
-        alt: "みんなが作ったおすすめスポット - ClippyMap",
-      },
-    ],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
+  const title = `${t("publicLists.meta.title")} | ${t("app.name")}`;
+  const description = t("publicLists.meta.description");
+  return {
+    title,
+    description,
+    alternates: { canonical: "/public-lists" },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      locale: toOpenGraphLocale(locale),
+      images: [
+        {
+          url: "/ogp-image.webp",
+          width: 1200,
+          height: 630,
+          alt: t("publicLists.ogAlt"),
+          type: "image/webp",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [{ url: "/ogp-image.webp", alt: t("publicLists.ogAlt") }],
+    },
+  };
+}
 
 export default async function PublicListsPage({
   searchParams,
 }: PublicListsPageProps) {
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
   const params = await searchParams;
   const page = parseInt(params.page || "1");
 
@@ -79,9 +88,8 @@ export default async function PublicListsPage({
         data={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: "みんなが作ったおすすめスポット",
-          description:
-            "実際のユーザーが作成した行きたい場所リストを探索しよう。新しい発見やお気に入りの場所が見つかるかもしれません。",
+          name: t("publicLists.title"),
+          description: t("publicLists.meta.description"),
           url: "https://clippymap.com/public-lists",
           numberOfItems: totalCount,
           mainEntity: {
@@ -108,13 +116,15 @@ export default async function PublicListsPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 md:text-4xl mb-4">
-            みんなが作った
-            <span className="text-primary-600">おすすめスポット</span>
+            {t("publicLists.h1.part1")}
+            <span className="text-primary-600">
+              {t("publicLists.h1.highlight")}
+            </span>
           </h1>
           <p className="text-sm sm:text-lg text-neutral-600 max-w-2xl mx-auto">
-            実際のユーザーが作成したリストを探索しましょう。
+            {t("publicLists.description.line1")}
             <br />
-            新しい発見やお気に入りの場所が見つかるかもしれません。
+            {t("publicLists.description.line2")}
           </p>
         </div>
 

@@ -17,7 +17,7 @@ export async function updateDisplayOrders({
 }: {
   listId: string;
   displayOrders: Array<{ placeId: string; displayOrder: number }>;
-}) {
+}): Promise<{ success?: true; error?: string; errorKey?: string }> {
   const supabase = await createClient();
 
   const {
@@ -26,14 +26,20 @@ export async function updateDisplayOrders({
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "認証エラー: ログインが必要です" };
+    return {
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
 
   // 権限チェック
   const hasEditPermission = await hasListPermission(listId, user.id, "edit");
 
   if (!hasEditPermission) {
-    return { error: "リストが見つからないか、編集権限がありません" };
+    return {
+      errorKey: "errors.common.listNotFoundOrNoPermission",
+      error: "リストが見つからないか、編集権限がありません",
+    };
   }
 
   // 競合を避けるための安全な更新処理
@@ -62,7 +68,10 @@ export async function updateDisplayOrders({
       .insert(inserts);
 
     if (insertError) {
-      return { error: insertError.message };
+      return {
+        errorKey: "errors.common.insertFailed",
+        error: insertError.message,
+      };
     }
 
     return { success: true };
@@ -72,7 +81,7 @@ export async function updateDisplayOrders({
       error instanceof Error
         ? error.message
         : "Failed to update display orders";
-    return { error: errorMessage };
+    return { errorKey: "errors.common.updateFailed", error: errorMessage };
   }
 }
 
@@ -117,7 +126,7 @@ export async function getDisplayOrdersForList(listId: string) {
     .order("display_order", { ascending: true });
 
   if (error) {
-    return { error: error.message };
+    return { errorKey: "errors.common.fetchFailed", error: error.message };
   }
 
   return {
@@ -140,14 +149,20 @@ export async function normalizeDisplayOrders(listId: string) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "認証エラー: ログインが必要です" };
+    return {
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
 
   // 権限チェック
   const hasEditPermission = await hasListPermission(listId, user.id, "edit");
 
   if (!hasEditPermission) {
-    return { error: "リストが見つからないか、編集権限がありません" };
+    return {
+      errorKey: "errors.common.listNotFoundOrNoPermission",
+      error: "リストが見つからないか、編集権限がありません",
+    };
   }
 
   // 現在の表示順序を取得
@@ -158,7 +173,7 @@ export async function normalizeDisplayOrders(listId: string) {
     .order("display_order", { ascending: true });
 
   if (fetchError) {
-    return { error: fetchError.message };
+    return { errorKey: "errors.common.fetchFailed", error: fetchError.message };
   }
 
   if (!currentOrders || currentOrders.length === 0) {
@@ -177,7 +192,10 @@ export async function normalizeDisplayOrders(listId: string) {
     .upsert(normalizedUpdates);
 
   if (updateError) {
-    return { error: updateError.message };
+    return {
+      errorKey: "errors.common.updateFailed",
+      error: updateError.message,
+    };
   }
 
   return { success: true };

@@ -1,11 +1,13 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/hooks/use-i18n";
 import { motion } from "framer-motion";
 import { Hash, Search, Share2, Star, User, Users } from "lucide-react";
 import { forwardRef } from "react";
 
 export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
+  const { t } = useI18n();
   return (
     <section
       ref={ref}
@@ -21,12 +23,12 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
           className="lg:text-center mb-16"
         >
           <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
-            特徴
+            {t("home.features.title")}
           </h2>
           <p className="mt-2 text-2xl sm:text-4xl leading-8 font-bold text-neutral-900">
-            あなたの「行きたい」を、
+            {t("home.features.subtitle1")}
             <br />
-            もっと便利に、もっと楽しく
+            {t("home.features.subtitle2")}
           </p>
         </motion.div>
 
@@ -104,12 +106,12 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
                 </div>
 
                 <h3 className="text-xl font-bold text-neutral-900 text-center mb-3">
-                  検索 → タグ付け・コメント → 完了
+                  {t("home.features.f1.title")}
                 </h3>
                 <p className="text-neutral-600 text-start text-sm">
-                  お店の名前を入力するだけ。Google Mapsの情報で自動保存。
+                  {t("home.features.f1.desc1")}
                   <br />
-                  あなただけの「行きたい場所マップ」が、すぐに完成します。
+                  {t("home.features.f1.desc2")}
                 </p>
               </CardContent>
             </Card>
@@ -140,15 +142,21 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
                     <div className="w-6 h-6 bg-neutral-200 rounded-full flex items-center justify-center">
                       <User className="h-3 w-3 text-neutral-600" />
                     </div>
-                    <span className="text-xs text-neutral-600">自分専用</span>
+                    <span className="text-xs text-neutral-600">
+                      {t("home.feature.share.private")}
+                    </span>
                     <div className="w-6 h-6 bg-neutral-300 rounded-full flex items-center justify-center">
                       <Users className="h-3 w-3 text-neutral-700" />
                     </div>
-                    <span className="text-xs text-neutral-600">二人だけ</span>
+                    <span className="text-xs text-neutral-600">
+                      {t("home.feature.share.twoPeople")}
+                    </span>
                     <div className="w-6 h-6 bg-primary-200 rounded-full flex items-center justify-center">
                       <Users className="h-3 w-3 text-primary-600" />
                     </div>
-                    <span className="text-xs text-neutral-600">公開</span>
+                    <span className="text-xs text-neutral-600">
+                      {t("home.feature.share.public")}
+                    </span>
                   </div>
 
                   <div className="flex justify-center">
@@ -187,14 +195,14 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
                 </div>
 
                 <h3 className="text-xl font-bold text-neutral-900 text-center mb-3">
-                  自由に共有
+                  {t("home.features.f2.title")}
                 </h3>
                 <p className="text-neutral-600 text-start text-sm">
-                  プライベートから公開まで、用途に合わせて設定可能。
+                  {t("home.features.f2.desc1")}
                   <br />
-                  「二人だけのデートリスト」は共同編集で。
+                  {t("home.features.f2.desc2")}
                   <br />
-                  「おすすめカフェリスト」はブログで一般公開。
+                  {t("home.features.f2.desc3")}
                 </p>
               </CardContent>
             </Card>
@@ -222,7 +230,11 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
                 {/* タグとランキングの視覚化 */}
                 <div className="space-y-4 mb-6">
                   <div className="flex flex-wrap justify-center gap-2">
-                    {["#予約必須", "#子連れOK", "#デート"].map((tag, index) => (
+                    {[
+                      t("home.feature.customize.tag1"),
+                      t("home.feature.customize.tag2"),
+                      t("home.feature.customize.tag3"),
+                    ].map((tag, index) => (
                       <motion.div
                         key={tag}
                         className="px-3 py-1 bg-gradient-to-r from-primary-100 to-primary-200 rounded-full text-xs font-medium text-primary-700"
@@ -253,10 +265,10 @@ export const FeatureSection = forwardRef<HTMLElement>((props, ref) => {
                 </div>
 
                 <h3 className="text-xl font-bold text-neutral-900 text-center mb-3">
-                  あなた流に整理
+                  {t("home.features.f3.title")}
                 </h3>
                 <p className="text-neutral-600 text-center text-sm">
-                  タグ付けやランキングで、自分だけの基準で管理
+                  {t("home.features.f3.desc")}
                 </p>
               </CardContent>
             </Card>

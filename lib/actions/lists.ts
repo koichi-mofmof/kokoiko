@@ -21,6 +21,7 @@ export async function createList(formData: FormData) {
   if (authError || !user) {
     return {
       success: false,
+      errorKey: "errors.common.unauthorized",
       error: "認証エラー: ログインが必要です",
     };
   }
@@ -37,6 +38,7 @@ export async function createList(formData: FormData) {
   if (!validation.success) {
     return {
       success: false,
+      errorKey: "errors.validation.invalidInput",
       error: validation.error.errors.map((e) => e.message).join(", "),
     };
   }
@@ -59,6 +61,7 @@ export async function createList(formData: FormData) {
       console.error("リスト作成エラー(RPC):", rpcError);
       return {
         success: false,
+        errorKey: "errors.common.insertFailed",
         error: "リストの作成中にエラーが発生しました",
       };
     }
@@ -78,6 +81,7 @@ export async function createList(formData: FormData) {
     console.error("予期せぬエラー:", error);
     return {
       success: false,
+      errorKey: "errors.unexpected.common",
       error: "リスト作成中に予期せぬエラーが発生しました",
     };
   }
@@ -101,6 +105,7 @@ export async function updateList(formData: {
   if (authError || !user) {
     return {
       success: false,
+      errorKey: "errors.common.unauthorized",
       error: "認証エラー: ログインが必要です",
     };
   }
@@ -111,6 +116,7 @@ export async function updateList(formData: {
   if (!validation.success) {
     return {
       success: false,
+      errorKey: "errors.validation.invalidInput",
       error: validation.error.errors.map((e) => e.message).join(", "),
     };
   }
@@ -134,6 +140,7 @@ export async function updateList(formData: {
       console.error("リスト更新エラー(RPC):", rpcError);
       return {
         success: false,
+        errorKey: "errors.common.updateFailed",
         error: `リストの更新中にエラーが発生しました: ${
           rpcError.message || "不明なエラー"
         }`,
@@ -158,6 +165,7 @@ export async function updateList(formData: {
     console.error("予期せぬエラー:", error);
     return {
       success: false,
+      errorKey: "errors.unexpected.common",
       error: "リスト更新中に予期せぬエラーが発生しました",
     };
   }
@@ -166,7 +174,11 @@ export async function updateList(formData: {
 // ブックマーク追加アクション
 export async function bookmarkList(listId: string) {
   if (!listId) {
-    return { success: false, error: "リストIDが無効です。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "リストIDが無効です。",
+    };
   }
 
   const supabase = await createClient();
@@ -176,7 +188,11 @@ export async function bookmarkList(listId: string) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { success: false, error: "ログインが必要です。" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "ログインが必要です。",
+    };
   }
 
   try {
@@ -188,11 +204,19 @@ export async function bookmarkList(listId: string) {
       .single();
 
     if (listError || !listData) {
-      return { success: false, error: "リストが見つかりません。" };
+      return {
+        success: false,
+        errorKey: "errors.common.notFound",
+        error: "リストが見つかりません。",
+      };
     }
 
     if (!listData.is_public) {
-      return { success: false, error: "このリストはブックマークできません。" };
+      return {
+        success: false,
+        errorKey: "errors.common.forbidden",
+        error: "このリストはブックマークできません。",
+      };
     }
 
     // ブックマークを挿入
@@ -206,7 +230,11 @@ export async function bookmarkList(listId: string) {
         return { success: true, alreadyExists: true };
       }
       console.error("ブックマーク追加エラー:", insertError);
-      return { success: false, error: "ブックマークの追加に失敗しました。" };
+      return {
+        success: false,
+        errorKey: "errors.common.insertFailed",
+        error: "ブックマークの追加に失敗しました。",
+      };
     }
 
     revalidatePath("/lists"); // 自分のリスト一覧を再検証
@@ -215,14 +243,22 @@ export async function bookmarkList(listId: string) {
     return { success: true };
   } catch (error) {
     console.error("予期せぬエラー:", error);
-    return { success: false, error: "予期せぬエラーが発生しました。" };
+    return {
+      success: false,
+      errorKey: "errors.unexpected.common",
+      error: "予期せぬエラーが発生しました。",
+    };
   }
 }
 
 // ブックマーク削除アクション
 export async function unbookmarkList(listId: string) {
   if (!listId) {
-    return { success: false, error: "リストIDが無効です。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "リストIDが無効です。",
+    };
   }
 
   const supabase = await createClient();
@@ -232,7 +268,11 @@ export async function unbookmarkList(listId: string) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { success: false, error: "ログインが必要です。" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "ログインが必要です。",
+    };
   }
 
   try {
@@ -244,7 +284,11 @@ export async function unbookmarkList(listId: string) {
 
     if (deleteError) {
       console.error("ブックマーク削除エラー:", deleteError);
-      return { success: false, error: "ブックマークの削除に失敗しました。" };
+      return {
+        success: false,
+        errorKey: "errors.common.deleteFailed",
+        error: "ブックマークの削除に失敗しました。",
+      };
     }
 
     revalidatePath("/lists");
@@ -253,7 +297,11 @@ export async function unbookmarkList(listId: string) {
     return { success: true };
   } catch (error) {
     console.error("予期せぬエラー:", error);
-    return { success: false, error: "予期せぬエラーが発生しました。" };
+    return {
+      success: false,
+      errorKey: "errors.unexpected.common",
+      error: "予期せぬエラーが発生しました。",
+    };
   }
 }
 
@@ -262,6 +310,7 @@ export async function deleteList(listId: string) {
   if (!listId || typeof listId !== "string" || listId.trim() === "") {
     return {
       success: false,
+      errorKey: "errors.validation.invalidInput",
       error: "有効なリストIDが必要です。",
     };
   }
@@ -277,6 +326,7 @@ export async function deleteList(listId: string) {
   if (authError || !user) {
     return {
       success: false,
+      errorKey: "errors.common.unauthorized",
       error: "認証エラー: ログインが必要です",
     };
   }
@@ -292,6 +342,7 @@ export async function deleteList(listId: string) {
       console.error("リスト削除エラー(RPC):", rpcError);
       return {
         success: false,
+        errorKey: "errors.common.deleteFailed",
         error: "リストの削除中にエラーが発生しました",
       };
     }
@@ -310,6 +361,7 @@ export async function deleteList(listId: string) {
     console.error("予期せぬエラー:", error);
     return {
       success: false,
+      errorKey: "errors.unexpected.common",
       error: "リスト削除中に予期せぬエラーが発生しました",
     };
   }
@@ -320,6 +372,7 @@ export async function verifyShareToken(token: string) {
   if (!token || typeof token !== "string" || token.trim() === "") {
     return {
       success: false,
+      reasonKey: "errors.validation.invalidInput",
       reason: "トークンが指定されていません。",
     };
   }
@@ -338,6 +391,7 @@ export async function verifyShareToken(token: string) {
   if (tokenError || !tokenData) {
     return {
       success: false,
+      reasonKey: "errors.common.notFound",
       reason:
         "共有リンクが削除された可能性がありますので、リストの所有者にご確認ください。",
     };
@@ -346,6 +400,7 @@ export async function verifyShareToken(token: string) {
   if (!tokenData.is_active) {
     return {
       success: false,
+      reasonKey: "errors.common.forbidden",
       reason:
         "この共有リンクは無効化されています。リストの所有者にご確認ください。",
     };
@@ -354,6 +409,7 @@ export async function verifyShareToken(token: string) {
   if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
     return {
       success: false,
+      reasonKey: "errors.common.linkExpired",
       reason: "この共有リンクの有効期限が切れています。",
     };
   }
@@ -366,6 +422,7 @@ export async function verifyShareToken(token: string) {
   ) {
     return {
       success: false,
+      reasonKey: "errors.common.limitReached",
       reason: "この共有リンクは利用上限に達しています。",
     };
   }
@@ -394,6 +451,7 @@ export async function joinListViaShareLink(
   if (!token || !userId || !ownerId) {
     return {
       success: false,
+      errorKey: "errors.validation.invalidInput",
       error: "必要な情報が不足しています。",
     };
   }
@@ -410,6 +468,7 @@ export async function joinListViaShareLink(
     if (verifyError || !tokenVerification?.[0]?.is_valid) {
       return {
         success: false,
+        errorKey: "errors.validation.invalidToken",
         error: "無効なトークンです",
         details: verifyError?.message,
       };
@@ -438,6 +497,7 @@ export async function joinListViaShareLink(
       console.error("参加処理エラー:", upsertError);
       return {
         success: false,
+        errorKey: "errors.common.insertFailed",
         error: "参加処理中にエラーが発生しました。",
         details: upsertError.message,
       };
@@ -472,6 +532,7 @@ export async function joinListViaShareLink(
     console.error("予期しないエラー:", error);
     return {
       success: false,
+      errorKey: "errors.unexpected.common",
       error: "参加処理中に予期しないエラーが発生しました。",
     };
   }
@@ -480,7 +541,11 @@ export async function joinListViaShareLink(
 // 指定リストの共有リンク一覧を取得
 export async function fetchShareLinksForList(listId: string) {
   if (!listId) {
-    return { success: false, error: "リストIDが指定されていません。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "リストIDが指定されていません。",
+    };
   }
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -491,7 +556,11 @@ export async function fetchShareLinksForList(listId: string) {
     .eq("list_id", listId)
     .order("created_at", { ascending: false });
   if (error) {
-    return { success: false, error: "共有リンク一覧の取得に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.fetchFailed",
+      error: "共有リンク一覧の取得に失敗しました。",
+    };
   }
   return { success: true, links: data };
 }
@@ -509,7 +578,11 @@ export async function createShareLink({
   maxUses?: number | null;
 }) {
   if (!listId || !permission) {
-    return { success: false, error: "リストIDと権限は必須です。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "リストIDと権限は必須です。",
+    };
   }
   const supabase = await createClient();
   // ユーザー認証
@@ -518,13 +591,21 @@ export async function createShareLink({
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証エラー: ログインが必要です" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
   // フェーズ1: 新しい権限チェック関数を使用
   const { canManageShareLinks } = await import("@/lib/utils/permission-check");
 
   if (!(await canManageShareLinks(listId, user.id))) {
-    return { success: false, error: "この操作を行う権限がありません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.forbidden",
+      error: "この操作を行う権限がありません。",
+    };
   }
 
   // リスト情報取得
@@ -534,7 +615,11 @@ export async function createShareLink({
     .eq("id", listId)
     .single();
   if (listError || !listData) {
-    return { success: false, error: "リスト情報の取得に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.notFound",
+      error: "リスト情報の取得に失敗しました。",
+    };
   }
   // 作成者名を取得
   let ownerName = "";
@@ -571,6 +656,7 @@ export async function createShareLink({
     if (sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS) {
       return {
         success: false,
+        errorKey: "errors.common.limitReached",
         error: `フリープランで共有できるリストは${
           SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS
         }件までです。\n\n現在共有中のリスト: ${sharedListNames.join(
@@ -600,7 +686,11 @@ export async function createShareLink({
     .single();
   if (error || !data) {
     console.error(error);
-    return { success: false, error: "共有リンクの発行に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.insertFailed",
+      error: "共有リンクの発行に失敗しました。",
+    };
   }
   // 発行したリンクURLも返す
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
@@ -611,7 +701,11 @@ export async function createShareLink({
 // 共有リンク削除アクション
 export async function deleteShareLink(id: string) {
   if (!id) {
-    return { success: false, error: "共有リンクIDが指定されていません。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "共有リンクIDが指定されていません。",
+    };
   }
   const supabase = await createClient();
   // ユーザー認証
@@ -620,7 +714,11 @@ export async function deleteShareLink(id: string) {
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証エラー: ログインが必要です" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
   // リンク情報取得
   const { data: link, error: linkError } = await supabase
@@ -629,13 +727,21 @@ export async function deleteShareLink(id: string) {
     .eq("id", id)
     .single();
   if (linkError || !link) {
-    return { success: false, error: "リンク情報の取得に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.notFound",
+      error: "リンク情報の取得に失敗しました。",
+    };
   }
   // フェーズ1: 新しい権限チェック関数を使用
   const { canManageShareLinks } = await import("@/lib/utils/permission-check");
 
   if (!(await canManageShareLinks(link.list_id, user.id))) {
-    return { success: false, error: "この操作を行う権限がありません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.forbidden",
+      error: "この操作を行う権限がありません。",
+    };
   }
   // 削除
   const { error: delError } = await supabase
@@ -643,7 +749,11 @@ export async function deleteShareLink(id: string) {
     .delete()
     .eq("id", id);
   if (delError) {
-    return { success: false, error: "共有リンクの削除に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.deleteFailed",
+      error: "共有リンクの削除に失敗しました。",
+    };
   }
   return { success: true };
 }
@@ -659,7 +769,11 @@ export async function updateShareLink({
   is_active: boolean;
 }) {
   if (!id) {
-    return { success: false, error: "共有リンクIDが指定されていません。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "共有リンクIDが指定されていません。",
+    };
   }
   const supabase = await createClient();
   // ユーザー認証
@@ -668,7 +782,11 @@ export async function updateShareLink({
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証エラー: ログインが必要です" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
   // リンク情報取得
   const { data: link, error: linkError } = await supabase
@@ -677,13 +795,21 @@ export async function updateShareLink({
     .eq("id", id)
     .single();
   if (linkError || !link) {
-    return { success: false, error: "リンク情報の取得に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.notFound",
+      error: "リンク情報の取得に失敗しました。",
+    };
   }
   // フェーズ1: 新しい権限チェック関数を使用（deleteShareLinkと統一）
   const { canManageShareLinks } = await import("@/lib/utils/permission-check");
 
   if (!(await canManageShareLinks(link.list_id, user.id))) {
-    return { success: false, error: "この操作を行う権限がありません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.forbidden",
+      error: "この操作を行う権限がありません。",
+    };
   }
   // 更新
   const { error: updError } = await supabase
@@ -691,7 +817,11 @@ export async function updateShareLink({
     .update({ default_permission, is_active })
     .eq("id", id);
   if (updError) {
-    return { success: false, error: "共有リンクの更新に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.updateFailed",
+      error: "共有リンクの更新に失敗しました。",
+    };
   }
   return { success: true };
 }
@@ -707,7 +837,11 @@ export async function updateCollaboratorPermissionOnSharedList({
   newPermission: "view" | "edit";
 }) {
   if (!listId || !targetUserId || !newPermission) {
-    return { success: false, error: "必要なパラメータが不足しています。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "必要なパラメータが不足しています。",
+    };
   }
   const supabase = await createClient();
   // ユーザー認証
@@ -716,13 +850,21 @@ export async function updateCollaboratorPermissionOnSharedList({
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証エラー: ログインが必要です" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
   // フェーズ1: 新しい権限チェック関数を使用
   const { canManageShareLinks } = await import("@/lib/utils/permission-check");
 
   if (!(await canManageShareLinks(listId, user.id))) {
-    return { success: false, error: "この操作を行う権限がありません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.forbidden",
+      error: "この操作を行う権限がありません。",
+    };
   }
 
   // オーナー確認のため、リスト情報取得
@@ -732,12 +874,20 @@ export async function updateCollaboratorPermissionOnSharedList({
     .eq("id", listId)
     .single();
   if (listError || !listData) {
-    return { success: false, error: "リスト情報の取得に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.notFound",
+      error: "リスト情報の取得に失敗しました。",
+    };
   }
 
   // オーナー自身の権限は変更不可
   if (listData.created_by === targetUserId) {
-    return { success: false, error: "オーナーの権限は変更できません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.forbidden",
+      error: "オーナーの権限は変更できません。",
+    };
   }
   // 更新
   const { error: updError } = await supabase
@@ -746,7 +896,11 @@ export async function updateCollaboratorPermissionOnSharedList({
     .eq("list_id", listId)
     .eq("shared_with_user_id", targetUserId);
   if (updError) {
-    return { success: false, error: "権限変更に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.updateFailed",
+      error: "権限変更に失敗しました。",
+    };
   }
   return { success: true };
 }
@@ -760,7 +914,11 @@ export async function removeCollaboratorFromSharedList({
   targetUserId: string;
 }) {
   if (!listId || !targetUserId) {
-    return { success: false, error: "必要なパラメータが不足しています。" };
+    return {
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "必要なパラメータが不足しています。",
+    };
   }
   const supabase = await createClient();
   // ユーザー認証
@@ -769,13 +927,21 @@ export async function removeCollaboratorFromSharedList({
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { success: false, error: "認証エラー: ログインが必要です" };
+    return {
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
   // フェーズ1: 新しい権限チェック関数を使用
   const { canManageShareLinks } = await import("@/lib/utils/permission-check");
 
   if (!(await canManageShareLinks(listId, user.id))) {
-    return { success: false, error: "この操作を行う権限がありません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.forbidden",
+      error: "この操作を行う権限がありません。",
+    };
   }
 
   // オーナー確認のため、リスト情報取得
@@ -785,12 +951,20 @@ export async function removeCollaboratorFromSharedList({
     .eq("id", listId)
     .single();
   if (listError || !listData) {
-    return { success: false, error: "リスト情報の取得に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.notFound",
+      error: "リスト情報の取得に失敗しました。",
+    };
   }
 
   // オーナー自身は解除不可
   if (listData.created_by === targetUserId) {
-    return { success: false, error: "オーナーは共有解除できません。" };
+    return {
+      success: false,
+      errorKey: "errors.common.forbidden",
+      error: "オーナーは共有解除できません。",
+    };
   }
   // 削除
   const { error: delError } = await supabase
@@ -799,7 +973,11 @@ export async function removeCollaboratorFromSharedList({
     .eq("list_id", listId)
     .eq("shared_with_user_id", targetUserId);
   if (delError) {
-    return { success: false, error: "共有解除に失敗しました。" };
+    return {
+      success: false,
+      errorKey: "errors.common.deleteFailed",
+      error: "共有解除に失敗しました。",
+    };
   }
   return { success: true };
 }

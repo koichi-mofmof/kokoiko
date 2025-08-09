@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -28,6 +29,7 @@ export function DeleteListDialog({
 }: DeleteListDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleConfirmClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,8 +41,8 @@ export function DeleteListDialog({
       } catch (error) {
         console.error("Error in onConfirm:", error);
         toast({
-          title: "エラー",
-          description: "予期せぬエラーが発生しました。",
+          title: t("common.error"),
+          description: t("common.unexpectedError"),
           variant: "destructive",
         });
       } finally {
@@ -72,21 +74,21 @@ export function DeleteListDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader>
-          <DialogTitle>リストを削除</DialogTitle>
+          <DialogTitle>{t("lists.delete.confirmTitle")}</DialogTitle>
           <DialogDescription>
-            このリスト「{listName}」を削除しますか？この操作は元に戻せません。
+            {t("lists.delete.confirmDesc", { name: listName })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4 flex gap-2">
           <Button variant="outline" onClick={handleCancel}>
-            キャンセル
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
             onClick={handleConfirmClick}
             disabled={isLoading}
           >
-            {isLoading ? "処理中..." : "削除する"}
+            {isLoading ? t("common.processing") : t("common.delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

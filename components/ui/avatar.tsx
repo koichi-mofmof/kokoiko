@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useI18n } from "@/hooks/use-i18n";
 import type { Collaborator } from "@/lib/dal/lists";
 import { cn } from "@/lib/utils";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
@@ -80,6 +81,7 @@ export function ParticipantAvatars({
   viewers = [],
   maxDisplay = 10,
 }: ParticipantAvatarsProps) {
+  const { t } = useI18n();
   const otherParticipants = owner
     ? participants.filter((p) => p.id !== owner.id)
     : participants;
@@ -99,7 +101,9 @@ export function ParticipantAvatars({
           <Tooltip key={owner.id}>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">
-                <span className="text-primary-700 font-medium">作成者</span>
+                <span className="text-primary-700 font-medium">
+                  {t("lists.owner")}
+                </span>
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={owner.avatarUrl} alt={owner.name} />
                   <AvatarFallback className="text-[10px]">
@@ -120,7 +124,7 @@ export function ParticipantAvatars({
 
         {(displayMembers.length > 0 || remainingCount > 0) && (
           <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">
-            <span className="text-neutral-700 mr-1">共同編集者</span>
+            <span className="text-neutral-700 mr-1">{t("lists.editors")}</span>
             <div className="flex -space-x-1">
               {displayMembers.map((member) => (
                 <Tooltip key={member.id}>
@@ -155,7 +159,7 @@ export function ParticipantAvatars({
                     align="center"
                     className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
                   >
-                    <p>他{remainingCount}人</p>
+                    <p>{t("lists.others", { n: remainingCount })}</p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -165,7 +169,7 @@ export function ParticipantAvatars({
 
         {displayViewers.length > 0 && (
           <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm cursor-default">
-            <span className="text-neutral-700 mr-1">閲覧者</span>
+            <span className="text-neutral-700 mr-1">{t("lists.viewers")}</span>
             <div className="flex -space-x-1">
               {displayViewers.map((viewer) => (
                 <Tooltip key={viewer.id}>
@@ -200,7 +204,7 @@ export function ParticipantAvatars({
                     align="center"
                     className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
                   >
-                    <p>他{remainingViewersCount}人</p>
+                    <p>{t("lists.others", { n: remainingViewersCount })}</p>
                   </TooltipContent>
                 </Tooltip>
               )}

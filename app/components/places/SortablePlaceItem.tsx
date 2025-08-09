@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/hooks/use-i18n";
 import { Place } from "@/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -34,6 +35,7 @@ export function SortablePlaceItem({
   isDragDisabled = false,
 }: SortablePlaceItemProps) {
   const router = useRouter();
+  const { t } = useI18n();
 
   const {
     attributes,
@@ -91,7 +93,7 @@ export function SortablePlaceItem({
       <Card
         role="button"
         tabIndex={0}
-        aria-label={`${place.name}の詳細を見る`}
+        aria-label={t("place.viewDetails", { name: place.name })}
         className={`cursor-pointer flex items-center group focus:outline-none focus:ring-2 focus:ring-primary-400 active:scale-[0.98] select-none transition-all flex-1 ${
           selectedPlaceId === place.id
             ? "border-primary-300 bg-primary-50"
@@ -117,7 +119,7 @@ export function SortablePlaceItem({
               </CardTitle>
               {place.createdByUser && (
                 <div
-                  title={`${place.createdByUser.name}さんが追加`}
+                  title={t("place.addedBy", { name: place.createdByUser.name })}
                   className="flex-shrink-0"
                 >
                   <Avatar className="h-6 w-6">
@@ -153,12 +155,16 @@ export function SortablePlaceItem({
               {place.visited === "visited" ? (
                 <>
                   <Check className="h-4 w-4 mr-1 text-primary-500" />
-                  <span className="text-xs text-primary-700">訪問済み</span>
+                  <span className="text-xs text-primary-700">
+                    {t("place.status.visited")}
+                  </span>
                 </>
               ) : (
                 <>
                   <Circle className="h-4 w-4 mr-1 text-neutral-400" />
-                  <span className="text-xs text-neutral-600">未訪問</span>
+                  <span className="text-xs text-neutral-600">
+                    {t("place.status.notVisited")}
+                  </span>
                 </>
               )}
             </div>

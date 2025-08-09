@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import {
   checkUserSubscriptionStatus,
@@ -35,18 +36,22 @@ import { useFormStatus } from "react-dom";
 // SubmitButtonコンポーネントを定義してpending状態をハンドリング
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { t } = useI18n();
   return (
     <Button
       type="submit"
       disabled={pending}
       className="bg-primary-600 text-white hover:bg-primary-600/90 w-full sm:w-auto px-8"
     >
-      {pending ? "処理中..." : "パスワードを変更"}
+      {pending
+        ? t("settings.account.processing")
+        : t("settings.account.changePassword")}
     </Button>
   );
 }
 
 export default function AccountSettingsPage() {
+  const { t } = useI18n();
   const { toast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -86,17 +91,14 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     if (state.message) {
       if (state.success) {
-        toast({
-          title: "成功",
-          description: state.message,
-        });
+        toast({ title: t("common.success"), description: state.message });
         setCurrentPassword("");
         setNewPassword("");
         setClientValidationErrors({});
       } else {
         toast({
           variant: "destructive",
-          title: "エラー",
+          title: t("common.error"),
           description: state.message,
         });
         if (state.errors) {
@@ -117,7 +119,7 @@ export default function AccountSettingsPage() {
         }
       }
     }
-  }, [state, toast]);
+  }, [state, toast, t]);
 
   // アカウント削除処理のuseEffect
   useEffect(() => {
@@ -125,7 +127,7 @@ export default function AccountSettingsPage() {
       // エラーの場合のみ処理（成功時はServer Actionでリダイレクト）
       toast({
         variant: "destructive",
-        title: "エラー",
+        title: t("common.error"),
         description: deleteState.message,
       });
       if (deleteState.errors) {
@@ -149,7 +151,7 @@ export default function AccountSettingsPage() {
         setDeleteValidationErrors(newDeleteErrors);
       }
     }
-  }, [deleteState, toast]);
+  }, [deleteState, toast, t]);
 
   const handleClientValidation = () => {
     setClientValidationErrors({});
@@ -208,13 +210,17 @@ export default function AccountSettingsPage() {
     // アクティブなサブスクリプションがある場合は警告
     if (subscriptionStatus?.hasActiveSubscription) {
       const statusMessage = subscriptionStatus.subscriptionStatus
-        ? `${subscriptionStatus.subscriptionStatus}状態のサブスクリプション`
-        : "サブスクリプション";
+        ? t("settings.account.subscription.statusWithState", {
+            state: subscriptionStatus.subscriptionStatus,
+          })
+        : t("settings.account.subscription.label");
 
       toast({
         variant: "destructive",
-        title: "サブスクリプションのキャンセルが必要です",
-        description: `アカウントを削除する前に、${statusMessage}をキャンセルしてください。`,
+        title: t("settings.account.subscription.cancelRequiredTitle"),
+        description: t("settings.account.subscription.cancelRequiredDesc", {
+          statusMessage,
+        }),
       });
       return;
     }
@@ -231,10 +237,8 @@ export default function AccountSettingsPage() {
     <div className="space-y-6 px-0 sm:px-4">
       <Card>
         <CardHeader>
-          <CardTitle>アカウント設定</CardTitle>
-          <CardDescription>
-            アカウントのセキュリティ設定を管理します
-          </CardDescription>
+          <CardTitle>{t("settings.account.title")}</CardTitle>
+          <CardDescription>{t("settings.account.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <form
@@ -259,7 +263,7 @@ export default function AccountSettingsPage() {
                   htmlFor="current-password"
                   className="block text-sm font-medium mb-1"
                 >
-                  現在のパスワード
+                  {t("settings.account.currentPassword")}
                 </label>
                 <Input
                   id="current-password"
@@ -298,7 +302,7 @@ export default function AccountSettingsPage() {
                   htmlFor="new-password"
                   className="block text-sm font-medium mb-1"
                 >
-                  新しいパスワード
+                  {t("settings.account.newPassword")}
                 </label>
                 <Input
                   id="new-password"
@@ -317,7 +321,7 @@ export default function AccountSettingsPage() {
                   </p>
                 ))}
                 <p className="mt-1 text-xs text-muted-foreground">
-                  パスワードは8文字以上で、英大文字、小文字、数字、記号をそれぞれ1文字以上含める必要があります。
+                  {t("settings.account.passwordRule")}
                 </p>
               </div>
             </div>
@@ -331,7 +335,7 @@ export default function AccountSettingsPage() {
           <div className="border-t pt-6">
             <div className="mb-4">
               <p className="text-sm text-muted-foreground">
-                アカウントを削除すると、すべてのデータが完全に削除され、復元できません。
+                {t("settings.account.delete.warning")}
               </p>
             </div>
 
@@ -345,13 +349,13 @@ export default function AccountSettingsPage() {
                     variant="destructive"
                     className="w-full sm:w-auto px-8"
                   >
-                    アカウントを削除
+                    {t("settings.account.delete.button")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>
-                      アカウントを削除しますか？
+                      {t("settings.account.delete.confirmTitle")}
                     </AlertDialogTitle>
                   </AlertDialogHeader>
 
@@ -361,7 +365,7 @@ export default function AccountSettingsPage() {
                     {isCheckingSubscription && (
                       <div className="p-3 bg-gray-50 rounded-md">
                         <p className="text-sm text-gray-600">
-                          サブスクリプション状態を確認中...
+                          {t("settings.account.subscription.checking")}
                         </p>
                       </div>
                     )}
@@ -382,9 +386,10 @@ export default function AccountSettingsPage() {
                         >
                           {subscriptionStatus.isWarningLevel ? "⚠️" : "🚫"}{" "}
                           {subscriptionStatus.subscriptionStatus
-                            ? `${subscriptionStatus.subscriptionStatus}状態のサブスクリプション`
-                            : "アクティブなプレミアムプラン"}
-                          があります
+                            ? t("settings.account.subscription.hasWithState", {
+                                state: subscriptionStatus.subscriptionStatus,
+                              })
+                            : t("settings.account.subscription.activePlan")}
                         </p>
                         <p
                           className={`text-xs sm:text-sm mt-1 ${
@@ -393,11 +398,10 @@ export default function AccountSettingsPage() {
                               : "text-red-700"
                           }`}
                         >
-                          アカウントを削除する前に、設定画面からサブスクリプションをキャンセルしてください。
+                          {t("settings.account.subscription.cancelInstruction")}
                           {subscriptionStatus.isWarningLevel && (
                             <span className="block mt-1 text-xs">
-                              ※
-                              この状態のサブスクリプションは再開可能ですが、削除前にキャンセルが必要です。
+                              ※{t("settings.account.subscription.warningNote")}
                             </span>
                           )}
                         </p>
@@ -407,18 +411,18 @@ export default function AccountSettingsPage() {
                       !subscriptionStatus.hasActiveSubscription && (
                         <div className="p-3 bg-green-50 border border-green-200 rounded-md">
                           <p className="text-sm text-green-800">
-                            ✓ アクティブなサブスクリプションはありません
+                            {t("settings.account.subscription.none")}
                           </p>
                         </div>
                       )}
                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                       <p className="text-sm text-yellow-800 font-medium">
-                        削除前の確認事項：
+                        {t("settings.account.delete.checklistTitle")}
                       </p>
                       <ul className="text-xs sm:text-sm text-yellow-700 mt-1 list-disc list-inside space-y-1">
-                        <li>作成したリストや場所の情報はすべて削除されます</li>
-                        <li>他のユーザーと共有中のリストも削除されます</li>
-                        <li>この操作は取り消すことができません</li>
+                        <li>{t("settings.account.delete.item1")}</li>
+                        <li>{t("settings.account.delete.item2")}</li>
+                        <li>{t("settings.account.delete.item3")}</li>
                       </ul>
                     </div>
                   </div>
@@ -429,7 +433,7 @@ export default function AccountSettingsPage() {
                         htmlFor="delete-password"
                         className="block text-sm font-medium mb-1"
                       >
-                        パスワードを入力してください
+                        {t("settings.account.delete.inputPassword")}
                       </label>
                       <Input
                         id="delete-password"
@@ -441,7 +445,7 @@ export default function AccountSettingsPage() {
                             ? "border-red-500"
                             : ""
                         }`}
-                        placeholder="現在のパスワード"
+                        placeholder={t("settings.account.currentPassword")}
                       />
                       {deleteValidationErrors.password?.map((error, index) => (
                         <p key={index} className="mt-1 text-sm text-red-500">
@@ -455,7 +459,7 @@ export default function AccountSettingsPage() {
                         htmlFor="confirm-text"
                         className="block text-sm font-medium mb-1"
                       >
-                        確認のため「削除」と入力してください
+                        {t("settings.account.delete.inputConfirm")}
                       </label>
                       <Input
                         id="confirm-text"
@@ -467,7 +471,7 @@ export default function AccountSettingsPage() {
                             ? "border-red-500"
                             : ""
                         }`}
-                        placeholder="削除"
+                        placeholder={t("settings.account.delete.confirmWord")}
                       />
                       {deleteValidationErrors.confirmText?.map(
                         (error, index) => (
@@ -488,7 +492,7 @@ export default function AccountSettingsPage() {
                         setSubscriptionStatus(null);
                       }}
                     >
-                      キャンセル
+                      {t("common.cancel")}
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteAccount}
@@ -500,12 +504,12 @@ export default function AccountSettingsPage() {
                       className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
                     >
                       {isPending
-                        ? "削除中..."
+                        ? t("common.deleting")
                         : subscriptionStatus?.hasActiveSubscription
-                        ? "サブスクリプションをキャンセルしてください"
+                        ? t("settings.account.subscription.cancelFirst")
                         : isCheckingSubscription
-                        ? "確認中..."
-                        : "削除"}
+                        ? t("common.checking")
+                        : t("common.delete")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

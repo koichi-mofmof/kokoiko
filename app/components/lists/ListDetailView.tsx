@@ -4,6 +4,7 @@ import RankingView from "@/app/components/lists/RankingView";
 import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/components/ui/FilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
+import { useI18n } from "@/hooks/use-i18n";
 import { getDisplayOrdersForList } from "@/lib/actions/place-display-orders";
 import { DisplayOrderedPlace, FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
@@ -34,6 +35,7 @@ export default function ListDetailView({
   listId,
   permission,
 }: ListDetailViewProps) {
+  const { t } = useI18n();
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>(places);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -205,7 +207,7 @@ export default function ListDetailView({
           )}
           {viewMode === "list" && isLoadingDisplayOrders && (
             <div className="p-4 text-center text-neutral-500">
-              順序情報を読み込み中...
+              {t("lists.detail.loadingOrders")}
             </div>
           )}
         </div>
@@ -220,7 +222,7 @@ export default function ListDetailView({
       {viewMode !== "ranking" && places.length === 0 && (
         <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
           <p className="text-sm text-neutral-600 mb-4">
-            このリストにはまだ場所が登録されていません。
+            {t("lists.detail.noPlaces")}
           </p>
         </div>
       )}
@@ -229,7 +231,7 @@ export default function ListDetailView({
         filteredPlaces.length === 0 && (
           <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
             <p className="text-sm text-neutral-600 mb-4">
-              フィルター条件に一致する場所がありません。
+              {t("lists.detail.noFilteredPlaces")}
             </p>
           </div>
         )}
@@ -254,7 +256,9 @@ export default function ListDetailView({
           {(hasMapBeenViewed || viewMode === "map") &&
             isLoadingDisplayOrders && (
               <div className="flex justify-center items-center h-full">
-                <p className="text-neutral-500">マップデータを読み込み中...</p>
+                <p className="text-neutral-500">
+                  {t("lists.detail.mapLoading")}
+                </p>
               </div>
             )}
         </div>

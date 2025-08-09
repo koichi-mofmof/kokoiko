@@ -185,6 +185,38 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
+    // 初回アクセスでlangクッキーが無い場合、Accept-Languageから自動判定（q値考慮）
+    const hasLangCookie = request.cookies.get("lang");
+    if (!hasLangCookie) {
+      const al = request.headers.get("accept-language") || "";
+      const parsed = al
+        .split(",")
+        .map((p, idx) => {
+          const [tagRaw, qPart] = p.trim().split(";");
+          const tag = tagRaw.toLowerCase();
+          const qm = /q=([0-9.]+)/i.exec(qPart || "");
+          const q = qm ? parseFloat(qm[1]) : 1;
+          return { tag, q: isNaN(q) ? 0 : q, idx };
+        })
+        .filter((t) => t.tag);
+      parsed.sort((a, b) => (b.q !== a.q ? b.q - a.q : a.idx - b.idx));
+      const top = parsed[0]?.tag || "";
+      const detected = top.startsWith("ja")
+        ? "ja"
+        : top.startsWith("en")
+        ? "en"
+        : "ja";
+      const response = NextResponse.next();
+      response.cookies.set("lang", detected, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 365,
+        path: "/",
+      });
+      return response;
+    }
+
     // DoS攻撃対策
     const dosCheck = WorkersRateLimit.checkDoSProtection(request, clientIp);
     if (dosCheck.blocked) {

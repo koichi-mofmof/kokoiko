@@ -1,26 +1,28 @@
 "use client";
 
-import { CreditCard, User, Shield } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
+import { CreditCard, Shield, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function Tabs() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   const tabs = [
     {
       href: "/settings",
-      label: "プロフィール",
+      label: t("settings.tabs.profile"),
       icon: <User className="w-5 h-5" />,
     },
     {
       href: "/settings/account",
-      label: "アカウント",
+      label: t("settings.tabs.account"),
       icon: <Shield className="w-5 h-5" />,
     },
     {
       href: "/settings/billing",
-      label: "サブスクリプション設定",
+      label: t("settings.tabs.billing"),
       icon: <CreditCard className="w-5 h-5" />,
     },
   ];

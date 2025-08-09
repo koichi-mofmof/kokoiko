@@ -3,15 +3,17 @@
 import { CtaButton } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function CTASection() {
+  const { t } = useI18n();
   return (
     <section className="py-12 relative overflow-hidden border-2 sm:border-4 border-yellow-600 rounded-3xl mx-8 mb-8">
       {/* 背景画像とオーバーレイ */}
       <div className="absolute inset-0 -z-10">
         <Image
           src="https://images.pexels.com/photos/592753/pexels-photo-592753.jpeg"
-          alt="背景画像"
+          alt={t("home.hero.backgroundAlt")}
           fill
           className="object-cover"
           priority
@@ -34,10 +36,10 @@ export function CTASection() {
             className="text-center lg:text-left"
           >
             <h2 className="text-2xl font-bold text-white sm:text-3xl md:text-4xl mb-6">
-              さあ、あなたの
-              <span className="text-yellow-600">&quot;行きたい&quot;</span>
-              を<br />
-              地図にまとめましょう
+              {t("home.cta.line1")}
+              <span className="text-yellow-600">{t("home.cta.highlight")}</span>
+              <br />
+              {t("home.cta.line2")}
             </h2>
             <motion.div
               initial={{ opacity: 0, y: 20 }}

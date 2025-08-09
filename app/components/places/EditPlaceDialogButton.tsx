@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useToast } from "@/hooks/use-toast";
 import { deleteListPlaceAction } from "@/lib/actions/place-actions";
@@ -44,13 +45,13 @@ export default function EditPlaceDialogButton({
   const router = useRouter();
   const { refreshSubscription } = useSubscription();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const { t } = useI18n();
 
   const handleDeleteClick = () => {
     if (!place.listPlaceId) {
       toast({
-        title: "エラー",
-        description:
-          "この場所のリスト内IDが見つかりません。削除できませんでした。",
+        title: t("common.error"),
+        description: t("place.errors.listPlaceIdMissingDelete"),
         variant: "destructive",
       });
       return;
@@ -68,22 +69,25 @@ export default function EditPlaceDialogButton({
       const result = await deleteListPlaceAction(formData);
 
       if (result?.success) {
-        toast({ title: "成功", description: result.success });
+        toast({ title: t("common.success"), description: result.success });
         await refreshSubscription();
         setOpen(false);
         router.push(`/lists/${listId}`);
-      } else if (result?.error) {
+      } else if (result) {
+        const err = result as { errorKey?: string; error?: string };
         toast({
-          title: "エラー",
-          description: `削除エラー: ${result.error}`,
+          title: t("common.error"),
+          description: err.errorKey
+            ? t(err.errorKey)
+            : `${t("common.deleteError")}: ${err.error}`,
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "エラー",
-        description: `削除中に問題が発生しました: ${
-          error instanceof Error ? error.message : "不明なエラー"
+        title: t("common.error"),
+        description: `${t("common.deleting")}: ${
+          error instanceof Error ? error.message : t("common.unknownError")
         }`,
         variant: "destructive",
       });
@@ -97,8 +101,8 @@ export default function EditPlaceDialogButton({
   const handleEditClick = () => {
     if (!place.listPlaceId) {
       toast({
-        title: "エラー",
-        description: "この場所のリスト内IDが見つかりません。編集できません。",
+        title: t("common.error"),
+        description: t("place.errors.listPlaceIdMissingEdit"),
         variant: "destructive",
       });
       return;
@@ -124,7 +128,7 @@ export default function EditPlaceDialogButton({
           <button
             ref={triggerRef}
             className="p-2 rounded-full hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-400"
-            aria-label="操作メニュー"
+            aria-label={t("common.actionsMenu")}
           >
             <MoreVertical className="h-5 w-5 text-neutral-500" />
           </button>
@@ -136,7 +140,7 @@ export default function EditPlaceDialogButton({
             disabled={!place.listPlaceId}
           >
             <Edit className="h-4 w-4 mr-2" />
-            場所を編集
+            {t("place.menu.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive cursor-pointer"
@@ -145,7 +149,7 @@ export default function EditPlaceDialogButton({
             data-testid="delete-menu-item"
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            場所を削除
+            {t("place.menu.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -153,22 +157,23 @@ export default function EditPlaceDialogButton({
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>削除の確認</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("place.delete.confirmTitle")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              本当に「{place.name}
-              」をリストから削除しますか？この操作は元に戻せません。
+              {t("place.delete.confirmDesc", { name: place.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>
-              キャンセル
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "削除中..." : "削除する"}
+              {isDeleting ? t("common.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -177,7 +182,7 @@ export default function EditPlaceDialogButton({
       <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>場所を編集</DialogTitle>
+            <DialogTitle>{t("place.menu.edit")}</DialogTitle>
           </DialogHeader>
           {place.listPlaceId ? (
             <EditPlaceForm
@@ -188,7 +193,7 @@ export default function EditPlaceDialogButton({
             />
           ) : (
             <p className="text-sm text-destructive p-4">
-              場所のリスト情報が正しくないため、編集フォームを表示できません。
+              {t("place.errors.invalidListInfo")}
             </p>
           )}
         </DialogContent>

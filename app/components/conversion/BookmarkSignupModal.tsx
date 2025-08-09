@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useI18n } from "@/hooks/use-i18n";
 import { trackConversionEvents } from "@/lib/analytics/events";
 import { Bookmark, Share2, X } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +21,7 @@ export function BookmarkSignupModal({
   listId,
   listName,
 }: BookmarkSignupModalProps) {
+  const { t } = useI18n();
   // ポップアップ表示時のGAイベント送信
   useEffect(() => {
     if (isOpen && listId) {
@@ -53,10 +55,10 @@ export function BookmarkSignupModal({
         <button
           onClick={handleClose}
           className="absolute right-4 top-4 opacity-60 hover:opacity-100 transition-opacity z-10"
-          aria-label="閉じる"
+          aria-label={t("common.close")}
         >
           <X className="h-4 w-4 text-gray-500" />
-          <span className="sr-only">閉じる</span>
+          <span className="sr-only">{t("common.close")}</span>
         </button>
 
         {/* メインコンテンツ */}
@@ -72,21 +74,23 @@ export function BookmarkSignupModal({
           <DialogTitle className="text-base font-bold text-neutral-800 leading-tight">
             {listName ? (
               <>
-                「{listName}」を
+                {t("conversion.bookmark.title.prefixWithName", {
+                  name: listName,
+                })}
                 <br />
                 <span className="font-extrabold text-yellow-600">
-                  ブックマーク
+                  {t("conversion.bookmark.title.highlight")}
                 </span>
-                しませんか？
+                {t("conversion.bookmark.title.suffix")}
               </>
             ) : (
               <>
-                このリストを
+                {t("conversion.bookmark.title.prefixGeneric")}
                 <br />
                 <span className="font-extrabold text-yellow-600">
-                  ブックマーク
+                  {t("conversion.bookmark.title.highlight")}
                 </span>
-                しませんか？
+                {t("conversion.bookmark.title.suffix")}
               </>
             )}
           </DialogTitle>
@@ -95,14 +99,8 @@ export function BookmarkSignupModal({
           <div className="space-y-3 pt-2">
             <div className="space-y-2 text-sm text-neutral-800 font-medium rounded-lg bg-yellow-50 p-4">
               {[
-                {
-                  icon: Bookmark,
-                  text: "気になるリストをいつでも見返せる",
-                },
-                {
-                  icon: Share2,
-                  text: "保存したリストを友達とも簡単シェア",
-                },
+                { icon: Bookmark, text: t("conversion.bookmark.value.pro1") },
+                { icon: Share2, text: t("conversion.bookmark.value.pro2") },
               ].map((item, index) => (
                 <div
                   key={index}
@@ -123,7 +121,7 @@ export function BookmarkSignupModal({
 
           {/* 簡単さアピール */}
           <p className="text-xs text-gray-500">
-            登録は30秒で完了 • 無料で使える • いつでも退会OK
+            {t("conversion.bookmark.note")}
           </p>
         </div>
 
@@ -138,7 +136,7 @@ export function BookmarkSignupModal({
               onClick={handleCtaClick}
               className="w-full h-12 text-base font-bold bg-yellow-600 hover:bg-yellow-700 shadow-lg hover:shadow-xl transition-all duration-200 transform"
             >
-              無料で始めてブックマーク保存
+              {t("conversion.bookmark.cta")}
             </Button>
           </Link>
 
@@ -154,7 +152,7 @@ export function BookmarkSignupModal({
                 onClose();
               }}
             >
-              すでにアカウントをお持ちの方はこちら
+              {t("conversion.bookmark.alreadyHaveAccount")}
             </Link>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
 import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { Info, Plus } from "lucide-react";
@@ -31,6 +32,7 @@ interface AddPlaceButtonClientProps {
 export default function AddPlaceButtonClient({
   listId,
 }: AddPlaceButtonClientProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(Date.now());
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
@@ -76,7 +78,7 @@ export default function AddPlaceButtonClient({
       {/* スマートフォン表示用のフローティングボタン */}
       <Button
         className="h-10 w-10 rounded-full shadow-lg md:hidden"
-        aria-label="場所を追加 (スマートフォン)"
+        aria-label={t("place.add.mobileAria")}
         onClick={handleAddPlaceClick}
         data-testid="add-place-button-mobile"
       >
@@ -85,12 +87,12 @@ export default function AddPlaceButtonClient({
       {/* PC表示用のボタン */}
       <Button
         className="hidden md:inline-flex items-center shadow-md"
-        aria-label="場所を追加 (PC)"
+        aria-label={t("place.add.pcAria")}
         onClick={handleAddPlaceClick}
         data-testid="add-place-button-pc"
       >
         <Plus className="h-5 w-5 mr-2" />
-        場所を追加
+        {t("place.add.open")}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -99,7 +101,7 @@ export default function AddPlaceButtonClient({
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <DialogHeader className="mb-4">
-            <DialogTitle>新しい場所をリストに追加</DialogTitle>
+            <DialogTitle>{t("place.add.dialogTitle")}</DialogTitle>
           </DialogHeader>
           <AddPlaceForm
             key={formKey}
@@ -115,18 +117,15 @@ export default function AddPlaceButtonClient({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center text-yellow-900">
               <Info className="w-6 h-6 text-primary-500 mr-2" />
-              登録地点数の上限に達しました！
+              {t("places.limitReached.title")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-yellow-900 text-left">
-              フリープランで登録できる地点は{" "}
-              <span className="font-bold">
-                {SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL}件
-              </span>{" "}
-              までです。
+              {t("places.limitReached.freePlanLimit", {
+                n: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL,
+              })}
               <br />
               <span className="block mt-2">
-                プレミアムプランにアップグレードすると、
-                <span className="font-bold">無制限</span>に地点を登録できます。
+                {t("places.limitReached.upgradeHint")}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -135,10 +134,10 @@ export default function AddPlaceButtonClient({
               className="w-full sm:w-auto bg-primary-700 hover:bg-primary-800"
               onClick={handleUpgradeClick}
             >
-              今すぐアップグレード
+              {t("upgrade.open")}
             </AlertDialogAction>
             <AlertDialogCancel className="w-full sm:w-auto">
-              閉じる
+              {t("common.close")}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>

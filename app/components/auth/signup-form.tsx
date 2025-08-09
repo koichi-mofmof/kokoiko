@@ -17,6 +17,7 @@ import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { WebViewWarning } from "./webview-warning";
+import { useI18n } from "@/hooks/use-i18n";
 
 // Google Logo SVG
 export const GoogleLogoIcon = () => (
@@ -53,6 +54,7 @@ export const GoogleLogoIcon = () => (
 // Google ログイン/登録ボタン
 function GoogleButton() {
   const { pending } = useFormStatus();
+  const { t } = useI18n();
   return (
     <Button
       type="submit"
@@ -61,7 +63,7 @@ function GoogleButton() {
       disabled={pending}
     >
       <GoogleLogoIcon />
-      {pending ? "処理中..." : "Google で登録"}
+      {pending ? t("common.processing") : t("auth.signup.google")}
     </Button>
   );
 }
@@ -69,9 +71,10 @@ function GoogleButton() {
 // サインアップ用 Submit ボタン
 function SignupSubmitButton() {
   const { pending } = useFormStatus();
+  const { t } = useI18n();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "作成中..." : "アカウントを作成"}
+      {pending ? t("auth.signup.submit.pending") : t("auth.signup.submit.cta")}
     </Button>
   );
 }
@@ -79,6 +82,7 @@ function SignupSubmitButton() {
 export function SignupForm() {
   const initialState: AuthState = { message: null, errors: {}, success: false };
   const [state, dispatch] = useActionState(signupWithCredentials, initialState);
+  const { t } = useI18n();
 
   const searchParams = useSearchParams();
   const [googleError, setGoogleError] = useState<string | null>(
@@ -89,9 +93,9 @@ export function SignupForm() {
   useEffect(() => {
     const error = searchParams.get("google_error");
     if (error) {
-      setGoogleError("Googleでの登録に失敗しました。");
+      setGoogleError(t("auth.signup.error.googleFailed"));
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   useEffect(() => {
     // WebViewからのアクセスかチェック
@@ -121,20 +125,24 @@ export function SignupForm() {
       window.location.href = result.googleUrl;
     } else {
       // エラー処理
-      setGoogleError(result.message || "Google登録の開始に失敗しました。");
+      setGoogleError(
+        (result as { messageKey?: string; message?: string }).messageKey
+          ? t((result as { messageKey?: string }).messageKey!)
+          : result.message || t("auth.signup.error.googleStartFailed")
+      );
     }
   };
 
   if (state.success && state.message?.includes("確認メール")) {
     return (
       <div className="space-y-4 text-center">
-        <h2 className="text-xl font-semibold">登録ありがとうございます</h2>
+        <h2 className="text-xl font-semibold">
+          {t("auth.signup.success.title")}
+        </h2>
         <p>{state.message}</p>
-        <p>
-          メールをご確認の上、記載されたリンクをクリックして登録を完了してください。
-        </p>
+        <p>{t("auth.signup.success.checkEmail")}</p>
         <Button asChild>
-          <Link href="/login">ログインページへ</Link>
+          <Link href="/login">{t("auth.signup.success.loginLink")}</Link>
         </Button>
       </div>
     );
@@ -167,17 +175,17 @@ export function SignupForm() {
         )}
         {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email">メールアドレス</Label>
+          <Label htmlFor="email">{t("auth.common.email")}</Label>
           <Input
             id="email"
             name="email"
             type="email"
             required
-            placeholder="you@example.com"
+            placeholder={t("auth.common.email.placeholder")}
             aria-describedby="email-error"
           />
           <p className="text-xs text-muted-foreground">
-            メールアドレスの@より前の部分がユーザーIDとして使用されます
+            {t("auth.signup.emailIdNote")}
           </p>
           <div id="email-error" aria-live="polite" aria-atomic="true">
             {state.errors?.email &&
@@ -190,7 +198,7 @@ export function SignupForm() {
         </div>
         {/* Password */}
         <div className="space-y-2">
-          <Label htmlFor="password">パスワード</Label>
+          <Label htmlFor="password">{t("auth.common.password")}</Label>
           <div className="relative">
             <Input
               id="password"
@@ -201,7 +209,7 @@ export function SignupForm() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            8文字以上で、大文字・小文字・数字・記号をそれぞれ1文字以上含める必要があります。
+            {t("settings.account.passwordRule")}
           </p>
           <div id="password-error" aria-live="polite" aria-atomic="true">
             {state.errors?.password &&
@@ -214,7 +222,9 @@ export function SignupForm() {
         </div>
         {/* Confirm Password */}
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">パスワード（確認用）</Label>
+          <Label htmlFor="confirmPassword">
+            {t("auth.signup.confirmPassword")}
+          </Label>
           <div className="relative">
             <Input
               id="confirmPassword"
@@ -242,23 +252,25 @@ export function SignupForm() {
               htmlFor="termsAccepted"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
+              {/** 同意文言（前置き + 各リンク + 後置き） */}
+              <span>{t("auth.signup.consentPrefix")}</span>
               <Link
                 href="/terms"
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
-                利用規約
+                {t("terms.title")}
               </Link>
-              と
+              <span>{t("common.and")}</span>
               <Link
                 href="/privacy"
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
-                プライバシーポリシー
+                {t("privacy.title")}
               </Link>
-              に同意する
+              <span>{t("auth.signup.consentSuffix")}</span>
             </label>
             <p className="text-xs text-muted-foreground">
-              登録を続けるには同意が必要です。
+              {t("auth.signup.consentNote")}
             </p>
             <div id="terms-error" aria-live="polite" aria-atomic="true">
               {state.errors?.termsAccepted &&
@@ -272,13 +284,24 @@ export function SignupForm() {
         </div>
 
         {/* General Error */}
-        {state.errors?.general && (
+        {(state.messageKey ||
+          state.errors?.generalKey ||
+          state.errors?.general) && (
           <div aria-live="polite" aria-atomic="true">
-            {state.errors.general.map((error: string) => (
-              <p className="text-sm text-red-500" key={error}>
-                {error}
+            {state.messageKey && (
+              <p className="text-sm text-red-500">{t(state.messageKey)}</p>
+            )}
+            {state.errors?.generalKey && (
+              <p className="text-sm text-red-500">
+                {t(state.errors.generalKey)}
               </p>
-            ))}
+            )}
+            {state.errors?.general &&
+              state.errors.general.map((error: string) => (
+                <p className="text-sm text-red-500" key={error}>
+                  {error}
+                </p>
+              ))}
           </div>
         )}
         <SignupSubmitButton />
@@ -294,7 +317,7 @@ export function SignupForm() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                または
+                {t("home.pricing.or")}
               </span>
             </div>
           </div>
@@ -315,12 +338,12 @@ export function SignupForm() {
 
       {/* Login Link */}
       <div className="mt-4 text-center text-sm">
-        すでにアカウントをお持ちの場合は{" "}
+        {t("auth.common.alreadyHaveAccount")}{" "}
         <Link
           href="/login"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          ログイン
+          {t("auth.common.login")}
         </Link>
       </div>
     </div>

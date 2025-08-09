@@ -19,6 +19,13 @@ import { ArrowLeft, LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
+import {
+  createServerT,
+  loadMessages,
+  normalizeLocale,
+  toOpenGraphLocale,
+} from "@/lib/i18n";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -47,20 +54,28 @@ export async function generateMetadata({
   }
 
   if (!listDetails) {
-    return {
-      title: "ClippyMap",
-      description: "行きたい場所を共有できるサービス",
-    };
+    const cookieStore = await cookies();
+    const locale = normalizeLocale(cookieStore.get("lang")?.value);
+    const msgs = await loadMessages(locale);
+    const t = createServerT(msgs as Record<string, string>);
+    return { title: "ClippyMap", description: t("meta.root.description") };
   }
 
   const owner = listDetails.collaborators.find((c: Collaborator) => c.isOwner);
   const placesCount = listDetails.places.length;
 
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
   const description = listDetails.description
-    ? `${listDetails.description} - ${placesCount}件の場所が登録されています`
-    : `${
-        owner?.name || "ユーザー"
-      }さんが作成したリスト - ${placesCount}件の場所が登録されています`;
+    ? `${listDetails.description} - ${t("listsDetail.placesCount", {
+        n: placesCount,
+      })}`
+    : `${owner?.name || t("user.unknown")} ${t("listsDetail.createdBy")} - ${t(
+        "listsDetail.placesCount",
+        { n: placesCount }
+      )}`;
 
   return {
     title: `${listDetails.name} | ClippyMap`,
@@ -72,7 +87,7 @@ export async function generateMetadata({
       title: `${listDetails.name} | ClippyMap`,
       description,
       type: "article",
-      locale: "ja_JP",
+      locale: toOpenGraphLocale(locale),
       images: [
         {
           url: "/ogp-image.webp",
@@ -149,10 +164,16 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     notFound();
   }
 
+  // i18n
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
+
   // 構造化データの生成
   const breadcrumbs = [
-    { name: "ホーム", url: "/" },
-    { name: "マイリスト", url: "/lists" },
+    { name: t("footer.link.home"), url: "/" },
+    { name: t("listsPage.title"), url: "/lists" },
     { name: listDetails.name, url: `/lists/${listId}` },
   ];
 
@@ -167,7 +188,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
             className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            {user ? "マイリスト一覧に戻る" : "ホームに戻る"}
+            {user ? t("noAccess.backToLists") : t("noAccess.backToHome")}
           </Link>
         </div>
 
@@ -181,9 +202,15 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
               <span className="ml-1">
                 <span
                   aria-label={
-                    listDetails.is_public ? "公開リスト" : "非公開リスト"
+                    listDetails.is_public
+                      ? t("lists.public")
+                      : t("lists.private")
                   }
-                  title={listDetails.is_public ? "公開リスト" : "非公開リスト"}
+                  title={
+                    listDetails.is_public
+                      ? t("lists.public")
+                      : t("lists.private")
+                  }
                 >
                   {listDetails.is_public ? (
                     <LockKeyholeOpen className="h-5 w-5 text-primary-500" />

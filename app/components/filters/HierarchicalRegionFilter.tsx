@@ -1,9 +1,10 @@
 "use client";
 
+import { useI18n } from "@/hooks/use-i18n";
 import {
+  FilterOption,
   getAvailableCountries,
   getAvailableStates,
-  FilterOption,
 } from "@/lib/actions/hierarchical-filter-actions";
 import { Globe, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -21,26 +22,31 @@ interface HierarchicalRegionFilterProps {
   className?: string;
 }
 
-// 地域ラベルの多言語対応
-function getStateLabel(countryCode: string): string {
-  const labels: Record<string, string> = {
-    JP: "都道府県",
-    US: "州",
-    CA: "州・準州",
-    AU: "州・特別地域",
-    CN: "省・直轄市",
-    DE: "州",
-    FR: "地域圏",
-    IT: "州",
-    ES: "自治州",
-    GB: "地域",
-    IN: "州・連邦直轄領",
-    BR: "州",
-    MX: "州",
-    RU: "連邦構成主体",
-    KR: "道・特別市・広域市",
+// 地域ラベルの多言語対応（tを使用）
+type TranslateFn = (
+  key: string,
+  params?: Record<string, string | number>
+) => string;
+function getStateLabel(t: TranslateFn, countryCode: string): string {
+  const keyMap: Record<string, string> = {
+    JP: "filter.states.JP",
+    US: "filter.states.US",
+    CA: "filter.states.CA",
+    AU: "filter.states.AU",
+    CN: "filter.states.CN",
+    DE: "filter.states.DE",
+    FR: "filter.states.FR",
+    IT: "filter.states.IT",
+    ES: "filter.states.ES",
+    GB: "filter.states.GB",
+    IN: "filter.states.IN",
+    BR: "filter.states.BR",
+    MX: "filter.states.MX",
+    RU: "filter.states.RU",
+    KR: "filter.states.KR",
   };
-  return labels[countryCode] || "地域";
+  const key = keyMap[countryCode] || "filter.states.default";
+  return t(key);
 }
 
 // フィルター説明文の生成
@@ -72,11 +78,12 @@ export default function HierarchicalRegionFilter({
   initialFilter = {},
   className = "",
 }: HierarchicalRegionFilterProps) {
+  const { t } = useI18n();
   const [filter, setFilter] = useState<HierarchicalFilter>(initialFilter);
   const [countries, setCountries] = useState<FilterOption[]>([]);
   const [states, setStates] = useState<FilterOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
 
   // 国一覧の取得
   useEffect(() => {
@@ -84,14 +91,14 @@ export default function HierarchicalRegionFilter({
       if (!listId) return;
 
       setLoading(true);
-      setError(null);
+      setErrorKey(null);
 
       try {
         const countryOptions = await getAvailableCountries(listId);
         setCountries(countryOptions);
       } catch (error) {
         console.error("Failed to load countries:", error);
-        setError("国一覧の取得に失敗しました");
+        setErrorKey("filter.errors.countriesFailed");
         setCountries([]);
       } finally {
         setLoading(false);
@@ -110,14 +117,14 @@ export default function HierarchicalRegionFilter({
       }
 
       setLoading(true);
-      setError(null);
+      setErrorKey(null);
 
       try {
         const stateOptions = await getAvailableStates(listId, filter.country);
         setStates(stateOptions);
       } catch (error) {
         console.error("Failed to load states:", error);
-        setError("地域一覧の取得に失敗しました");
+        setErrorKey("filter.errors.statesFailed");
         setStates([]);
       } finally {
         setLoading(false);
@@ -161,10 +168,10 @@ export default function HierarchicalRegionFilter({
   };
 
   // エラー表示
-  if (error) {
+  if (errorKey) {
     return (
       <div className={`text-sm text-red-600 ${className}`}>
-        <p>{error}</p>
+        <p>{t(errorKey)}</p>
       </div>
     );
   }
@@ -175,7 +182,7 @@ export default function HierarchicalRegionFilter({
       <div>
         <label className="flex items-center text-sm font-medium text-neutral-700 mb-2">
           <Globe className="h-4 w-4 mr-1.5" />
-          国・地域
+          {t("filter.country")}
         </label>
         <select
           value={filter.country || ""}
@@ -183,7 +190,7 @@ export default function HierarchicalRegionFilter({
           disabled={loading || countries.length === 0}
           className="w-full px-3 py-2 border border-neutral-200 rounded-soft bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-neutral-50 disabled:text-neutral-400"
         >
-          <option value="">すべての国</option>
+          <option value="">{t("filter.allCountries")}</option>
           {countries.map((country) => (
             <option key={country.value} value={country.value}>
               {country.label} ({country.count})
@@ -197,7 +204,8 @@ export default function HierarchicalRegionFilter({
         <div>
           <label className="flex items-center text-sm font-medium text-neutral-700 mb-2">
             <MapPin className="h-4 w-4 mr-1.5" />
-            {getStateLabel(filter.country)}（複数選択可）
+            {getStateLabel(t, filter.country)}
+            {t("filter.multiNote")}
           </label>
           <div className="space-y-2 max-h-48 overflow-y-auto border border-neutral-200 rounded-soft p-3 bg-white">
             {states.map((state) => (
@@ -227,7 +235,7 @@ export default function HierarchicalRegionFilter({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-primary-800 font-medium">
-                現在のフィルター
+                {t("filter.current")}
               </p>
               <p className="text-sm text-primary-700">
                 {buildFilterDescription(filter, countries, states)}
@@ -237,7 +245,7 @@ export default function HierarchicalRegionFilter({
               onClick={handleClearFilter}
               className="text-sm text-primary-600 hover:text-primary-800 font-medium transition-colors"
             >
-              クリア
+              {t("common.clear")}
             </button>
           </div>
         </div>
@@ -247,14 +255,16 @@ export default function HierarchicalRegionFilter({
       {loading && (
         <div className="flex items-center justify-center py-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-          <span className="ml-2 text-sm text-neutral-600">読み込み中...</span>
+          <span className="ml-2 text-sm text-neutral-600">
+            {t("common.loading")}
+          </span>
         </div>
       )}
 
       {/* データなしメッセージ */}
       {!loading && countries.length === 0 && (
         <div className="text-sm text-neutral-500 text-center py-2">
-          地域データがありません
+          {t("filter.noRegions")}
         </div>
       )}
     </div>

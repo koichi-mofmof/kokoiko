@@ -1,5 +1,6 @@
 "use server";
 
+import { normalizeLocale } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCSRFTokenServer,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/validators/auth";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { bookmarkList } from "./lists";
@@ -21,12 +22,14 @@ import { bookmarkList } from "./lists";
 // 認証状態の型定義 (useFormState用)
 export interface AuthState {
   message: string | null;
+  messageKey?: string; // i18n用メッセージキー
   errors?: {
     email?: string[];
     password?: string[];
     confirmPassword?: string[];
     termsAccepted?: string[]; // termsAccepted のエラーを追加
     general?: string[];
+    generalKey?: string; // i18n用エラーキー
   };
   success: boolean;
   googleUrl?: string; // Googleログイン用の認証URLを追加
@@ -64,8 +67,10 @@ export async function loginWithCredentials(
 
     return {
       message: "無効なリクエストです。",
+      messageKey: "errors.request.invalid",
       errors: {
         general: ["セキュリティエラー: ページを再読み込みしてください。"],
+        generalKey: "errors.security.reloadPage",
       },
       success: false,
     };
@@ -80,6 +85,7 @@ export async function loginWithCredentials(
   if (!validatedFields.success) {
     return {
       message: "入力内容を確認してください。",
+      messageKey: "errors.validation.checkInput",
       errors: validatedFields.error.flatten().fieldErrors,
       success: false,
     };
@@ -109,8 +115,10 @@ export async function loginWithCredentials(
     return {
       message:
         "ログインに失敗しました。メールアドレスとパスワードを確認してください。",
+      messageKey: "auth.login.failed",
       errors: {
         general: ["メールアドレスまたはパスワードが正しくありません。"],
+        generalKey: "auth.login.incorrectEmailOrPassword",
       },
       success: false,
     };
@@ -149,6 +157,7 @@ export async function loginWithCredentials(
     return {
       message:
         "確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。",
+      messageKey: "auth.email.confirmationSent",
       errors: {},
       success: true,
       googleUrl: undefined, // AuthStateに合わせる
@@ -157,7 +166,11 @@ export async function loginWithCredentials(
     // 予期せぬケース
     return {
       message: "ユーザー登録中に予期せぬエラーが発生しました。",
-      errors: { general: ["ユーザー登録中に予期せぬエラーが発生しました。"] },
+      messageKey: "errors.unexpected.signup",
+      errors: {
+        general: ["ユーザー登録中に予期せぬエラーが発生しました。"],
+        generalKey: "errors.unexpected.signup",
+      },
       success: false,
     };
   }
@@ -174,8 +187,10 @@ export async function signupWithCredentials(
   if (!csrfToken || !(await verifyCSRFTokenServer(csrfToken))) {
     return {
       message: "無効なリクエストです。",
+      messageKey: "errors.request.invalid",
       errors: {
         general: ["セキュリティエラー: ページを再読み込みしてください。"],
+        generalKey: "errors.security.reloadPage",
       },
       success: false,
     };
@@ -193,6 +208,7 @@ export async function signupWithCredentials(
     console.log("Validation Errors:", validatedFields.error.flatten());
     return {
       message: "入力内容を確認してください。",
+      messageKey: "errors.validation.checkInput",
       errors: validatedFields.error.flatten().fieldErrors,
       success: false,
     };
@@ -225,10 +241,12 @@ export async function signupWithCredentials(
 
     return {
       message: "ユーザー登録に失敗しました。",
+      messageKey: "auth.signup.failed",
       errors: {
         general: [
           "ユーザー登録に失敗しました。時間をおいて再度お試しください。",
         ],
+        generalKey: "auth.signup.retryLater",
       },
       success: false,
     };
@@ -265,6 +283,7 @@ export async function signupWithCredentials(
     return {
       message:
         "確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。",
+      messageKey: "auth.email.confirmationSent",
       errors: {},
       success: true,
       googleUrl: undefined, // AuthStateに合わせる
@@ -273,7 +292,11 @@ export async function signupWithCredentials(
     // 予期せぬケース
     return {
       message: "ユーザー登録中に予期せぬエラーが発生しました。",
-      errors: { general: ["ユーザー登録中に予期せぬエラーが発生しました。"] },
+      messageKey: "errors.unexpected.signup",
+      errors: {
+        general: ["ユーザー登録中に予期せぬエラーが発生しました。"],
+        generalKey: "errors.unexpected.signup",
+      },
       success: false,
     };
   }
@@ -309,6 +332,10 @@ export async function loginWithGoogle(
     options: {
       redirectTo: redirectTo.toString(),
       skipBrowserRedirect: true, // サーバーサイドでURLを取得するため
+      queryParams: {
+        // Google OAuth 画面のUI言語を現在のアプリ言語に合わせる
+        hl: normalizeLocale((await cookies()).get("lang")?.value || "ja"),
+      },
     },
   });
 
@@ -316,7 +343,11 @@ export async function loginWithGoogle(
     console.error("Google OAuth error:", error.message);
     return {
       message: "Googleログインの開始に失敗しました。",
-      errors: { general: ["Googleログインの開始に失敗しました。"] },
+      messageKey: "auth.google.startFailed",
+      errors: {
+        general: ["Googleログインの開始に失敗しました。"],
+        generalKey: "auth.google.startFailed",
+      },
       success: false,
     };
   }
@@ -333,7 +364,11 @@ export async function loginWithGoogle(
     // 通常ここには来ないはずだが、念のため
     return {
       message: "Googleログイン用のURLを取得できませんでした。",
-      errors: { general: ["Googleログイン用のURLを取得できませんでした。"] },
+      messageKey: "auth.google.urlAcquireFailed",
+      errors: {
+        general: ["Googleログイン用のURLを取得できませんでした。"],
+        generalKey: "auth.google.urlAcquireFailed",
+      },
       success: false,
     };
   }
@@ -370,6 +405,7 @@ const newPasswordSchema = z.object({
 interface ActionResult {
   success: boolean;
   message: string;
+  messageKey?: string;
   errors?: { field?: string; message: string }[];
 }
 
@@ -391,6 +427,7 @@ export async function updateUserPassword(
     return {
       success: false,
       message: "認証されていません。パスワードを変更できません。",
+      messageKey: "errors.common.unauthorized",
     };
   }
 
@@ -406,6 +443,7 @@ export async function updateUserPassword(
     return {
       success: false,
       message: "現在のパスワードが正しくありません。",
+      messageKey: "auth.password.currentIncorrect",
       errors: [
         {
           field: "currentPassword",
@@ -424,6 +462,7 @@ export async function updateUserPassword(
     return {
       success: false,
       message: "入力内容に誤りがあります。",
+      messageKey: "errors.validation.checkInput",
       errors: validationResult.error
         .flatten()
         .fieldErrors.newPassword?.map((e) => ({
@@ -451,12 +490,14 @@ export async function updateUserPassword(
     return {
       success: false,
       message: errorMessage,
+      messageKey: "auth.password.updateFailed",
     };
   }
 
   return {
     success: true,
     message: "パスワードが正常に変更されました。",
+    messageKey: "auth.password.updateSuccess",
   };
 }
 
@@ -468,6 +509,7 @@ export async function checkUserSubscriptionStatus(): Promise<{
   subscriptionType?: string;
   subscriptionStatus?: string;
   message?: string;
+  messageKey?: string;
   isWarningLevel?: boolean;
 }> {
   const supabase = await createClient();
@@ -482,6 +524,7 @@ export async function checkUserSubscriptionStatus(): Promise<{
     return {
       hasActiveSubscription: false,
       message: "認証されていません。",
+      messageKey: "errors.common.unauthorized",
     };
   }
 
@@ -502,6 +545,7 @@ export async function checkUserSubscriptionStatus(): Promise<{
       return {
         hasActiveSubscription: false,
         message: "サブスクリプション状態の確認に失敗しました。",
+        messageKey: "errors.common.fetchFailed",
       };
     }
 
@@ -516,6 +560,7 @@ export async function checkUserSubscriptionStatus(): Promise<{
         return {
           hasActiveSubscription: false,
           message: "すべてのサブスクリプションがキャンセル済みです。",
+          messageKey: "subscription.allCanceled",
         };
       }
 
@@ -530,6 +575,7 @@ export async function checkUserSubscriptionStatus(): Promise<{
           subscriptionType: blockingSubscription.price_id || "premium",
           subscriptionStatus: blockingSubscription.status,
           message: `${blockingSubscription.status}状態のサブスクリプションがあります。`,
+          messageKey: "subscription.activeBlocking",
         };
       }
 
@@ -540,6 +586,7 @@ export async function checkUserSubscriptionStatus(): Promise<{
         subscriptionType: warningSubscription.price_id || "premium",
         subscriptionStatus: warningSubscription.status,
         message: `${warningSubscription.status}状態のサブスクリプションがあります。`,
+        messageKey: "subscription.activeWarning",
         isWarningLevel: true,
       };
     }
@@ -547,12 +594,14 @@ export async function checkUserSubscriptionStatus(): Promise<{
     return {
       hasActiveSubscription: false,
       message: "アクティブなサブスクリプションはありません。",
+      messageKey: "subscription.noneActive",
     };
   } catch (error) {
     console.error("サブスクリプション確認処理エラー:", error);
     return {
       hasActiveSubscription: false,
       message: "サブスクリプション状態の確認中にエラーが発生しました。",
+      messageKey: "errors.unexpected.common",
     };
   }
 }
@@ -576,6 +625,7 @@ export async function deleteUserAccount(
     return {
       success: false,
       message: "認証されていません。アカウントを削除できません。",
+      messageKey: "errors.common.unauthorized",
     };
   }
 
@@ -589,6 +639,7 @@ export async function deleteUserAccount(
     return {
       success: false,
       message: "入力内容を確認してください。",
+      messageKey: "errors.validation.checkInput",
       errors:
         validatedFields.error.flatten().fieldErrors.password?.map((e) => ({
           field: "password",
@@ -613,6 +664,7 @@ export async function deleteUserAccount(
     return {
       success: false,
       message: "パスワードが正しくありません。",
+      messageKey: "auth.password.currentIncorrect",
       errors: [
         {
           field: "password",
@@ -628,6 +680,7 @@ export async function deleteUserAccount(
       return {
         success: false,
         message: "サーバー設定に問題があります。管理者にお問い合わせください。",
+        messageKey: "errors.common.serverMisconfigured",
       };
     }
 
@@ -647,6 +700,7 @@ export async function deleteUserAccount(
       return {
         success: false,
         message: `関連データの削除に失敗しました: ${deleteDataError.message}`,
+        messageKey: "errors.common.deleteFailed",
       };
     }
 
@@ -656,6 +710,7 @@ export async function deleteUserAccount(
         success: false,
         message:
           deleteResult?.message || "関連データの削除中にエラーが発生しました。",
+        messageKey: "errors.common.deleteFailed",
       };
     }
 
@@ -688,6 +743,7 @@ export async function deleteUserAccount(
         message: `アカウント削除の準備確認に失敗しました: ${
           confirmError?.message || confirmResult?.message || "不明なエラー"
         }`,
+        messageKey: "errors.common.deleteFailed",
       };
     }
 
@@ -700,6 +756,7 @@ export async function deleteUserAccount(
       return {
         success: false,
         message: `アカウントの削除に失敗しました: ${deleteError.message}`,
+        messageKey: "errors.common.deleteFailed",
       };
     }
 
@@ -719,6 +776,7 @@ export async function deleteUserAccount(
       message: `アカウントの削除中にエラーが発生しました: ${
         error instanceof Error ? error.message : "Unknown error"
       }`,
+      messageKey: "errors.unexpected.common",
       errors: [],
     };
   }

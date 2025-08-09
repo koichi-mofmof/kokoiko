@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useI18n } from "@/hooks/use-i18n";
 import { Place, RankedPlace } from "@/types";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -86,6 +87,7 @@ export default function RankingCard({
   listId,
 }: RankingCardProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const isTopThree = rankedPlace.rank <= 3;
   const rankIdx = rankedPlace.rank - 1;
   const style = isTopThree ? rankStyles[rankIdx] : defaultStyle;
@@ -107,7 +109,10 @@ export default function RankingCard({
       role="article"
       className={`${cardClasses} transform transition-all duration-500 hover:-translate-y-1`}
       tabIndex={0}
-      aria-label={`${rankedPlace.rank}位: ${place.name}`}
+      aria-label={t("lists.ranking.rankAria", {
+        rank: rankedPlace.rank,
+        name: place.name,
+      })}
     >
       <div className="relative flex flex-col h-full">
         {/* ランク表示バッジ - より目立つ位置に */}
@@ -214,7 +219,7 @@ export default function RankingCard({
               size="sm"
               onClick={handleDetailClick}
               tabIndex={0}
-              aria-label="詳細を見る"
+              aria-label={t("lists.ranking.seeDetails")}
               className={`group/button rounded-full transition-all duration-300 ease-in-out
                 ${isTopThree ? "px-5 py-2.5 text-sm" : "px-3.5 py-1.5 text-xs"} 
                 ${
@@ -223,7 +228,7 @@ export default function RankingCard({
                 hover:border-current/70 hover:bg-black/5 dark:hover:bg-white/5
                 hover:scale-105 active:scale-95`}
             >
-              詳細を見る
+              {t("lists.ranking.seeDetails")}
               <ArrowRight
                 className={`ml-1.5 ${
                   isTopThree ? "h-4 w-4" : "h-3.5 w-3.5"

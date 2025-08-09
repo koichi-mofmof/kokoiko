@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import type { Database } from "@/types/supabase";
 import Link from "next/link";
 
@@ -15,11 +16,12 @@ type CreatorInfoCardProps = {
 };
 
 export function CreatorInfoCard({ creator }: CreatorInfoCardProps) {
+  const { t } = useI18n();
   if (!creator) {
     return null;
   }
-
-  const displayName = creator.display_name || creator.username || "ユーザー";
+  const displayName =
+    creator.display_name || creator.username || t("user.unknown");
   const avatarUrl = creator.avatar_url;
 
   return (
@@ -35,7 +37,7 @@ export function CreatorInfoCard({ creator }: CreatorInfoCardProps) {
 
           <div className="min-w-0 flex-1">
             <p className="text-sm text-neutral-500 dark:text-gray-400">
-              このリストの作成者
+              {t("lists.creator.owner")}
             </p>
             <h2 className="truncate font-semibold text-neutral-900 dark:text-white">
               {displayName}
@@ -44,7 +46,9 @@ export function CreatorInfoCard({ creator }: CreatorInfoCardProps) {
         </div>
 
         <Button asChild variant="secondary" className="ml-3 flex-shrink-0">
-          <Link href={`/users/${creator.id}`}>他のリストを見る</Link>
+          <Link href={`/users/${creator.id}`}>
+            {t("lists.creator.viewMore")}
+          </Link>
         </Button>
       </div>
     </div>

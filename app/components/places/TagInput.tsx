@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/hooks/use-i18n";
 import { Plus, Tag as TagIcon, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -25,10 +26,11 @@ interface TagInputProps {
 export default function TagInput({
   selectedTags,
   onTagsChange,
-  placeholder = "タグを入力してEnter",
-  label = "タグ（任意）",
+  placeholder,
+  label,
   existingTags = [],
 }: TagInputProps) {
+  const { t } = useI18n();
   const [tagInputValue, setTagInputValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState<
@@ -107,7 +109,7 @@ export default function TagInput({
   return (
     <div className="space-y-2">
       <Label htmlFor="tags-input" className="block text-sm font-medium">
-        {label}
+        {label ?? t("place.tags.labelOptional")}
       </Label>
 
       {/* 選択済みタグの表示 */}
@@ -129,7 +131,9 @@ export default function TagInput({
                 onClick={() => removeTag(tag)}
               >
                 <X className="h-3 w-3" />
-                <span className="sr-only">Remove {tag}</span>
+                <span className="sr-only">
+                  {t("place.tags.removeTagAria", { name: tag })}
+                </span>
               </Button>
             </Badge>
           ))}
@@ -149,7 +153,9 @@ export default function TagInput({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             placeholder={
-              selectedTags.length > 0 ? "さらにタグを追加..." : placeholder
+              selectedTags.length > 0
+                ? t("place.tags.addMore")
+                : placeholder ?? t("place.tags.inputPlaceholder")
             }
             className="flex-1"
           />
@@ -162,7 +168,7 @@ export default function TagInput({
             className="px-3 py-2 flex-shrink-0 min-w-[64px]"
           >
             <Plus className="h-4 w-4 sm:mr-1" />
-            <span className="hidden sm:inline">追加</span>
+            <span className="hidden sm:inline">{t("common.add")}</span>
           </Button>
         </div>
 
@@ -171,7 +177,7 @@ export default function TagInput({
           <div className="mt-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md shadow-sm max-h-48 overflow-y-auto">
             <div className="p-3">
               <div className="text-xs text-neutral-500 mb-2">
-                このリストでよく使われるタグ
+                {t("place.tags.suggestionsTitle")}
               </div>
               <div className="space-y-1">
                 {filteredSuggestions.map((suggestion) => (
@@ -188,7 +194,7 @@ export default function TagInput({
                         <span className="text-sm">{suggestion.name}</span>
                       </div>
                       <Badge variant="outline" className="text-xs">
-                        {suggestion.count}回使用
+                        {t("place.tags.usedCount", { n: suggestion.count })}
                       </Badge>
                     </div>
                   </Button>
@@ -205,7 +211,7 @@ export default function TagInput({
           (tag) => tag.name.toLowerCase() === tagInputValue.toLowerCase()
         ) && (
           <div className="text-xs text-neutral-500">
-            「{tagInputValue}」を新しいタグとして追加
+            {t("place.tags.addNew", { name: tagInputValue })}
           </div>
         )}
     </div>

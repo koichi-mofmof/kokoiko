@@ -6,12 +6,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { PublicListCard } from "./public-list-card";
+import { useI18n } from "@/hooks/use-i18n";
 
 interface PublicListsSectionProps {
   publicLists: PublicListForHome[];
 }
 
 export function PublicListsSection({ publicLists }: PublicListsSectionProps) {
+  const { t } = useI18n();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -62,10 +64,10 @@ export function PublicListsSection({ publicLists }: PublicListsSectionProps) {
           className="lg:text-center mb-16"
         >
           <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
-            みんなのリスト
+            {t("home.publicLists.title")}
           </h2>
           <p className="mt-2 text-2xl sm:text-4xl leading-8 font-bold text-neutral-900">
-            実際のリストをご紹介
+            {t("home.publicLists.subtitle")}
           </p>
         </motion.div>
 
@@ -129,7 +131,9 @@ export function PublicListsSection({ publicLists }: PublicListsSectionProps) {
                     ? "bg-primary-600 scale-125"
                     : "bg-neutral-300 hover:bg-neutral-400"
                 }`}
-                aria-label={`カード ${index + 1} に移動`}
+                aria-label={t("home.publicLists.moveToCard", {
+                  index: index + 1,
+                })}
               />
             ))}
           </motion.div>
@@ -143,7 +147,7 @@ export function PublicListsSection({ publicLists }: PublicListsSectionProps) {
           className="text-center mt-10"
         >
           <Button variant="secondary" size="lg" asChild>
-            <Link href="/public-lists">もっと見る</Link>
+            <Link href="/public-lists">{t("home.publicLists.more")}</Link>
           </Button>
         </motion.div>
       </div>

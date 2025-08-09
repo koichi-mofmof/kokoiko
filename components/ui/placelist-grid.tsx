@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useI18n } from "@/hooks/use-i18n";
 import { ListForClient } from "@/lib/dal/lists";
 import type { Place, User } from "@/types";
 import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
@@ -49,10 +50,27 @@ export type PlaceListGridProps<T extends ListDisplayItem> = {
 const MAX_AVATARS_DISPLAYED = 5;
 
 export function renderLabeledCollaborators<T extends ListDisplayItem>(
-  list: T,
+  _list: T,
   displayedCollaborators: User[],
   remainingCount: number
 ) {
+  return (
+    <LabeledCollaborators
+      displayedCollaborators={displayedCollaborators}
+      remainingCount={remainingCount}
+    />
+  );
+}
+
+// i18n対応: ラベル付きコラボレーター表示をコンポーネント化
+function LabeledCollaborators({
+  displayedCollaborators,
+  remainingCount,
+}: {
+  displayedCollaborators: User[];
+  remainingCount: number;
+}) {
+  const { t } = useI18n();
   const owners = displayedCollaborators.filter((user) => user.isOwner);
   const members = displayedCollaborators.filter(
     (user) => !user.isOwner && user.permission === "edit"
@@ -69,7 +87,9 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
             <Tooltip key={owner.id}>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm">
-                  <span className="text-primary-700 font-medium">作成者</span>
+                  <span className="text-primary-700 font-medium">
+                    {t("lists.owner")}
+                  </span>
                   <Avatar className="h-5 w-5">
                     <AvatarImage
                       src={owner.avatarUrl || undefined}
@@ -92,7 +112,9 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
           ))}
           {members.length > 0 && (
             <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm">
-              <span className="text-neutral-700 mr-1">共同編集者</span>
+              <span className="text-neutral-700 mr-1">
+                {t("lists.editors")}
+              </span>
               <div className="flex -space-x-1">
                 {members.map((member) => (
                   <Tooltip key={member.id}>
@@ -123,7 +145,9 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
           )}
           {viewers.length > 0 && (
             <div className="flex items-center gap-1 bg-white rounded-full pl-2 pr-0.5 py-0.5 text-xs border border-neutral-200 shadow-sm">
-              <span className="text-neutral-700 mr-1">閲覧者</span>
+              <span className="text-neutral-700 mr-1">
+                {t("lists.viewers")}
+              </span>
               <div className="flex -space-x-1">
                 {viewers.map((viewer) => (
                   <Tooltip key={viewer.id}>
@@ -157,7 +181,7 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1 bg-white rounded-full px-2 py-0.5 text-xs border border-neutral-200 shadow-sm">
                   <span className="text-neutral-700">
-                    他 {remainingCount} 人
+                    {t("lists.others", { n: remainingCount })}
                   </span>
                 </div>
               </TooltipTrigger>
@@ -166,66 +190,7 @@ export function renderLabeledCollaborators<T extends ListDisplayItem>(
                 align="center"
                 className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
               >
-                他のメンバー {remainingCount} 人
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      ) : (
-        <div className="h-6"></div>
-      )}
-    </div>
-  );
-}
-
-export function renderOverlappingCollaborators<T extends ListDisplayItem>(
-  list: T,
-  displayedCollaborators: User[],
-  remainingCount: number
-) {
-  return (
-    <div className="flex items-center">
-      {displayedCollaborators && displayedCollaborators.length > 0 ? (
-        <div className="flex -space-x-2 overflow-hidden mr-2">
-          {displayedCollaborators.map((collaborator) => (
-            <Tooltip key={collaborator.id}>
-              <TooltipTrigger asChild>
-                <Avatar className="h-6 w-6 border-2 border-white">
-                  <AvatarImage
-                    src={collaborator.avatarUrl || undefined}
-                    alt={collaborator.name || "User"}
-                  />
-                  <AvatarFallback className="text-xs">
-                    {collaborator.name
-                      ? collaborator.name.slice(0, 1).toUpperCase()
-                      : "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                align="center"
-                className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
-              >
-                {collaborator.name}
-              </TooltipContent>
-            </Tooltip>
-          ))}
-          {remainingCount > 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Avatar className="h-6 w-6 border-2 border-white">
-                  <AvatarFallback className="text-xs bg-neutral-200 text-neutral-600">
-                    +{remainingCount}
-                  </AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                align="center"
-                className="z-[100] rounded-md bg-black text-white border-0 px-3 py-1.5 text-xs font-medium shadow-md"
-              >
-                他 {remainingCount} 人
+                {t("lists.otherMembers", { n: remainingCount })}
               </TooltipContent>
             </Tooltip>
           )}
@@ -240,11 +205,17 @@ export function renderOverlappingCollaborators<T extends ListDisplayItem>(
 export function PlaceListGrid<T extends ListDisplayItem>({
   initialLists,
   getLinkHref,
-  renderCollaborators = renderLabeledCollaborators,
-  emptyMessage = "リストは見つかりませんでした。",
+  renderCollaborators = (_list, displayed, remaining) => (
+    <LabeledCollaborators
+      displayedCollaborators={displayed}
+      remainingCount={remaining}
+    />
+  ),
+  emptyMessage,
   className = "",
 }: PlaceListGridProps<T>) {
   const displayLists = initialLists;
+  const { t } = useI18n();
 
   return (
     <TooltipProvider>
@@ -291,8 +262,8 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                                   <span
                                     aria-label={
                                       list.is_public
-                                        ? "公開リスト"
-                                        : "非公開リスト"
+                                        ? t("lists.public")
+                                        : t("lists.private")
                                     }
                                   >
                                     {list.is_public ? (
@@ -304,8 +275,8 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                                 </TooltipTrigger>
                                 <TooltipContent side="top" align="center">
                                   {list.is_public
-                                    ? "公開リスト"
-                                    : "非公開リスト"}
+                                    ? t("lists.public")
+                                    : t("lists.private")}
                                 </TooltipContent>
                               </Tooltip>
                             ) : null}
@@ -326,7 +297,9 @@ export function PlaceListGrid<T extends ListDisplayItem>({
                           variant="outline"
                           className="px-2.5 py-0.5 text-xs leading-5 font-semibold rounded-full bg-neutral-100 text-neutral-700"
                         >
-                          {`${list.place_count ?? list.places.length}件`}
+                          {t("lists.placeCount", {
+                            n: list.place_count ?? list.places.length,
+                          })}
                         </Badge>
                       </div>
                     </CardContent>
@@ -336,7 +309,9 @@ export function PlaceListGrid<T extends ListDisplayItem>({
             })}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground">{emptyMessage}</p>
+          <p className="text-center text-muted-foreground">
+            {emptyMessage ?? t("lists.empty")}
+          </p>
         )}
       </div>
     </TooltipProvider>

@@ -1,17 +1,22 @@
 import { PublicListForHome } from "@/lib/dal/public-lists";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ja } from "date-fns/locale";
+import { enUS, ja } from "date-fns/locale";
+import { normalizeLocale } from "@/lib/i18n";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useI18n } from "@/hooks/use-i18n";
 
 interface PublicListCardProps {
   list: PublicListForHome;
 }
 
 export function PublicListCard({ list }: PublicListCardProps) {
+  const { locale, t } = useI18n();
+  const normalized = normalizeLocale(locale);
+  const dfLocale = normalized === "en" ? enUS : ja;
   const relativeTime = formatDistanceToNow(new Date(list.updatedAt), {
     addSuffix: true,
-    locale: ja,
+    locale: dfLocale,
   });
 
   return (
@@ -50,11 +55,13 @@ export function PublicListCard({ list }: PublicListCardProps) {
             </div>
 
             <div className="text-sm text-neutral-500 flex-shrink-0">
-              {list.placeCount}地点
+              {t("home.publicListCard.placeCount", { count: list.placeCount })}
             </div>
           </div>
 
-          <div className="text-xs text-neutral-400">{relativeTime}に更新</div>
+          <div className="text-xs text-neutral-400">
+            {t("home.publicListCard.updated", { relativeTime })}
+          </div>
         </div>
       </div>
     </Link>

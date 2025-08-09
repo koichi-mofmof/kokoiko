@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useI18n } from "@/hooks/use-i18n";
 import { ListForClient as MyListClientData } from "@/lib/dal/lists";
 import { ArrowDown, ArrowUp, ListFilter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -35,6 +36,7 @@ type SortOption = "name" | "updated_at" | "created_at" | "place_count";
 type SortOrder = "asc" | "desc";
 
 export function MyLists({ initialLists }: MyListsProps) {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
@@ -107,7 +109,7 @@ export function MyLists({ initialLists }: MyListsProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="検索..."
+              placeholder={t("lists.my.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 w-full"
@@ -123,13 +125,21 @@ export function MyLists({ initialLists }: MyListsProps) {
               <ListFilter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
               <Select value={sortOption} onValueChange={handleSortOptionChange}>
                 <SelectTrigger className="pl-10 w-full">
-                  <SelectValue placeholder="並び替え" />
+                  <SelectValue placeholder={t("lists.my.sort.placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="updated_at">更新日時</SelectItem>
-                  <SelectItem value="created_at">作成日時</SelectItem>
-                  <SelectItem value="name">リスト名</SelectItem>
-                  <SelectItem value="place_count">登録地点数</SelectItem>
+                  <SelectItem value="updated_at">
+                    {t("lists.my.sort.updatedAt")}
+                  </SelectItem>
+                  <SelectItem value="created_at">
+                    {t("lists.my.sort.createdAt")}
+                  </SelectItem>
+                  <SelectItem value="name">
+                    {t("lists.my.sort.name")}
+                  </SelectItem>
+                  <SelectItem value="place_count">
+                    {t("lists.my.sort.placeCount")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -154,8 +164,10 @@ export function MyLists({ initialLists }: MyListsProps) {
 
         <Tabs defaultValue="my-lists" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="my-lists">作成・共有リスト</TabsTrigger>
-            <TabsTrigger value="bookmarked">ブックマーク</TabsTrigger>
+            <TabsTrigger value="my-lists">{t("lists.my.tab.mine")}</TabsTrigger>
+            <TabsTrigger value="bookmarked">
+              {t("lists.my.tab.bookmarked")}
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="my-lists" className="mt-4">
             {initialLists.length > 0 ? (
@@ -180,7 +192,9 @@ export function MyLists({ initialLists }: MyListsProps) {
                     {ownerLists.length > 0 && (
                       <AccordionItem value="owner">
                         <AccordionTrigger>
-                          自分が作成したリスト（{ownerLists.length}件）
+                          {t("lists.my.section.owner", {
+                            n: ownerLists.length,
+                          })}
                         </AccordionTrigger>
                         <AccordionContent>
                           <PlaceListGrid
@@ -200,9 +214,9 @@ export function MyLists({ initialLists }: MyListsProps) {
                     {editorLists.length > 0 && (
                       <AccordionItem value="editor">
                         <AccordionTrigger>
-                          共同編集者として参加しているリスト（
-                          {editorLists.length}
-                          件）
+                          {t("lists.my.section.editor", {
+                            n: editorLists.length,
+                          })}
                         </AccordionTrigger>
                         <AccordionContent>
                           <PlaceListGrid
@@ -222,7 +236,9 @@ export function MyLists({ initialLists }: MyListsProps) {
                     {viewerLists.length > 0 && (
                       <AccordionItem value="viewer">
                         <AccordionTrigger>
-                          閲覧者として招待されたリスト（{viewerLists.length}件）
+                          {t("lists.my.section.viewer", {
+                            n: viewerLists.length,
+                          })}
                         </AccordionTrigger>
                         <AccordionContent>
                           <PlaceListGrid
@@ -243,12 +259,12 @@ export function MyLists({ initialLists }: MyListsProps) {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8">
-                  検索条件に一致するリストはありません。
+                  {t("lists.my.noMatch")}
                 </p>
               )
             ) : (
               <p className="text-center text-muted-foreground py-8">
-                まだリストは作成されていません。
+                {t("lists.my.noneYet")}
               </p>
             )}
           </TabsContent>
@@ -266,8 +282,8 @@ export function MyLists({ initialLists }: MyListsProps) {
             ) : (
               <p className="text-center text-muted-foreground py-8">
                 {searchQuery
-                  ? "検索条件に一致するブックマークはありません。"
-                  : "ブックマークしたリストはありません。"}
+                  ? t("lists.my.noBookmarksMatch")
+                  : t("lists.my.noBookmarks")}
               </p>
             )}
           </TabsContent>

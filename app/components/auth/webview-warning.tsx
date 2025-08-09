@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useI18n } from "@/hooks/use-i18n";
 import {
   getExternalBrowserAdvice,
   isGoogleOAuthBlocked,
@@ -11,6 +12,7 @@ import { useEffect, useState } from "react";
 export function WebViewWarning() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [advice, setAdvice] = useState("");
+  const { t } = useI18n();
 
   useEffect(() => {
     setIsBlocked(isGoogleOAuthBlocked());
@@ -25,12 +27,10 @@ export function WebViewWarning() {
     <Alert className="mb-4 border-orange-200 bg-orange-50">
       <AlertTriangle className="h-4 w-4 text-orange-600" />
       <AlertTitle className="text-orange-900">
-        Googleログインが制限されています
+        {t("auth.webview.googleLoginBlocked.title")}
       </AlertTitle>
       <AlertDescription className="space-y-3 text-orange-800">
-        <p>
-          アプリ内ブラウザからのGoogleログインは、セキュリティの理由により制限されています。
-        </p>
+        <p>{t("auth.webview.googleLoginBlocked.desc")}</p>
         <p>{advice}</p>
       </AlertDescription>
     </Alert>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import isEqual from "lodash/isEqual";
 import { useEffect, useReducer, useRef } from "react";
 
@@ -55,6 +56,7 @@ export function ListFormComponent({
   onCancel,
   cancelButtonText = "キャンセル",
 }: ListFormComponentProps) {
+  const { t } = useI18n();
   const [formData, dispatch] = useReducer(formReducer, initialData);
   const prevInitialDataRef = useRef<ListFormData>(initialData);
 
@@ -91,32 +93,34 @@ export function ListFormComponent({
       <div className="grid gap-4 py-4">
         <div className="grid gap-2">
           <Label htmlFor="name" className="required">
-            リスト名
+            {t("lists.form.name")}
           </Label>
           <Input
             id="name"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="例：行きたいカフェリスト"
+            placeholder={t("lists.form.namePlaceholder")}
             required
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="description">説明（任意）</Label>
+          <Label htmlFor="description">
+            {t("lists.form.descriptionOptional")}
+          </Label>
           <Textarea
             id="description"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="例：東京都内のおすすめカフェリスト"
+            placeholder={t("lists.form.descriptionPlaceholder")}
             rows={3}
           />
         </div>
 
         <div className="grid gap-3">
-          <Label>公開設定</Label>
+          <Label>{t("lists.form.visibility")}</Label>
           <RadioGroup
             value={formData.isPublic ? "public" : "private"}
             onValueChange={(value) => handleIsPublicChange(value === "public")}
@@ -126,22 +130,22 @@ export function ListFormComponent({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="private" id="private" />
                 <Label htmlFor="private" className="font-normal">
-                  非公開
+                  {t("lists.form.private")}
                 </Label>
               </div>
               <p className="pl-6 text-sm text-muted-foreground">
-                自分と招待したメンバーのみが閲覧できます。
+                {t("lists.form.privateHelp")}
               </p>
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="public" id="public" />
                 <Label htmlFor="public" className="font-normal">
-                  公開
+                  {t("lists.form.public")}
                 </Label>
               </div>
               <p className="pl-6 text-sm text-muted-foreground">
-                リンクを知っているすべての人が閲覧できます。
+                {t("lists.form.publicHelp")}
               </p>
             </div>
           </RadioGroup>
@@ -151,7 +155,7 @@ export function ListFormComponent({
       <DialogFooter className="mt-4 flex gap-2">
         {showCancelButton && onCancel && (
           <Button variant="outline" type="button" onClick={onCancel}>
-            {cancelButtonText}
+            {cancelButtonText || t("common.cancel")}
           </Button>
         )}
         <Button
@@ -159,7 +163,7 @@ export function ListFormComponent({
           disabled={isSubmitting}
           className="w-full sm:w-auto"
         >
-          {isSubmitting ? "処理中..." : submitButtonText}
+          {isSubmitting ? t("common.processing") : submitButtonText}
         </Button>
       </DialogFooter>
     </form>

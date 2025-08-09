@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useI18n } from "@/hooks/use-i18n";
 import { ArrowDown, ArrowUp } from "lucide-react";
 
 interface PublicListsFiltersProps {
@@ -21,6 +22,7 @@ export function PublicListsFilters({
   currentOrder,
   onSort,
 }: PublicListsFiltersProps) {
+  const { t } = useI18n();
   const handleSortChange = (value: string) => {
     onSort(value, currentOrder);
   };
@@ -34,13 +36,23 @@ export function PublicListsFilters({
     <div className="flex items-center gap-2">
       <Select value={currentSort} onValueChange={handleSortChange}>
         <SelectTrigger className="w-40">
-          <SelectValue placeholder="並び替え" />
+          <SelectValue
+            placeholder={t("publicLists.filters.sort.placeholder")}
+          />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="updated_at">更新日時</SelectItem>
-          <SelectItem value="created_at">作成日時</SelectItem>
-          <SelectItem value="name">リスト名</SelectItem>
-          <SelectItem value="place_count">登録地点数</SelectItem>
+          <SelectItem value="updated_at">
+            {t("publicLists.filters.sort.updated_at")}
+          </SelectItem>
+          <SelectItem value="created_at">
+            {t("publicLists.filters.sort.created_at")}
+          </SelectItem>
+          <SelectItem value="name">
+            {t("publicLists.filters.sort.name")}
+          </SelectItem>
+          <SelectItem value="place_count">
+            {t("publicLists.filters.sort.place_count")}
+          </SelectItem>
         </SelectContent>
       </Select>
 
@@ -49,7 +61,7 @@ export function PublicListsFilters({
         size="icon"
         onClick={toggleOrder}
         className="flex-shrink-0"
-        aria-label="ソート順を切り替え"
+        aria-label={t("publicLists.filters.toggleOrderAria")}
       >
         {currentOrder === "asc" ? (
           <ArrowUp className="h-4 w-4" />

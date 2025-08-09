@@ -5,13 +5,19 @@ interface CheckoutRequestBody {
   userId: string;
   priceId: string;
   returnUrl: string;
+  locale?: "ja" | "en";
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body: CheckoutRequestBody = await req.json();
-    const { userId, priceId, returnUrl } = body;
-    const result = await createCheckoutSession({ userId, priceId, returnUrl });
+    const { userId, priceId, returnUrl, locale } = body;
+    const result = await createCheckoutSession({
+      userId,
+      priceId,
+      returnUrl,
+      locale,
+    });
     return NextResponse.json(result);
   } catch (e) {
     const message = e instanceof Error ? e.message : "API Error";

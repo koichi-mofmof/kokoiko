@@ -1,5 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
+import { cookies } from "next/headers";
+import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import type { Metadata } from "next";
 import { Button } from "@/components/ui";
 
 const Row = ({
@@ -19,7 +22,22 @@ const Row = ({
   </div>
 );
 
-export default function TokushohoPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
+  return {
+    title: t("tokushoho.meta.title"),
+    description: t("tokushoho.meta.description"),
+  };
+}
+
+export default async function TokushohoPage() {
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = await loadMessages(locale);
+  const t = createServerT(msgs as Record<string, string>);
   return (
     <div className="bg-neutral-50 py-4 sm:py-8">
       <div className="max-w-3xl w-full mx-auto p-3 sm:p-4 md:p-6">
@@ -28,32 +46,34 @@ export default function TokushohoPage() {
             <div className="flex items-center gap-3">
               <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-neutral-600 flex-shrink-0" />
               <CardTitle className="text-lg sm:text-xl font-bold text-neutral-800 leading-tight">
-                特定商取引法に基づく表記
+                {t("tokushoho.title")}
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="flex flex-col sm:table w-full sm:border-separate sm:border-spacing-y-1">
               <div className="sm:table-body">
-                <Row label="販売業者の名称">
-                  <span>市川恒太</span>
+                <Row label={t("tokushoho.label.sellerName")}>
+                  <span>{t("tokushoho.value.sellerName")}</span>
                 </Row>
-                <Row label="運営統括責任者">市川恒太</Row>
-                <Row label="所在地">
+                <Row label={t("tokushoho.label.manager")}>
+                  {t("tokushoho.value.manager")}
+                </Row>
+                <Row label={t("tokushoho.label.address")}>
                   <span className="text-sm text-neutral-600">
-                    請求があったら遅滞なく電子メール等で開示します
+                    {t("tokushoho.value.discloseOnRequest")}
                   </span>
                 </Row>
-                <Row label="電話番号">
+                <Row label={t("tokushoho.label.phone")}>
                   <span className="text-sm text-neutral-600">
-                    請求があったら遅滞なく電子メール等で開示します
+                    {t("tokushoho.value.discloseOnRequest")}
                   </span>
                 </Row>
-                <Row label="お問い合わせ先">
+                <Row label={t("tokushoho.label.contact")}>
                   <div className="space-y-3">
                     <div className="break-words">
                       <strong className="block sm:inline">
-                        メールアドレス：
+                        {t("tokushoho.value.emailLabel")}：
                       </strong>
                       <a
                         href="mailto:contact@clippymap.com"
@@ -73,195 +93,188 @@ export default function TokushohoPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          お問い合わせフォームはこちら
+                          {t("tokushoho.contactButton")}
                         </a>
                       </Button>
                     </div>
                     <div className="text-xs text-neutral-500">
-                      お問い合わせへの回答は営業日の3営業日以内に行います
+                      {t("tokushoho.value.contactSla")}
                     </div>
                   </div>
                 </Row>
-                <Row label="販売価格">
+                <Row label={t("tokushoho.label.price")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      プレミアムプラン（月額）：500円（税込）
+                      {t("tokushoho.value.priceMonthly")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      プレミアムプラン（年額）：4,200円（税込）
+                      {t("tokushoho.value.priceYearly")}
                     </div>
                     <div className="text-xs text-neutral-500">
-                      ※価格は予告なく変更することがあります
+                      {t("tokushoho.value.priceNote")}
                     </div>
                   </div>
                 </Row>
-                <Row label="追加手数料等の追加料金">
+                <Row label={t("tokushoho.label.additionalFees")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      基本的に追加料金は発生しません
+                      {t("tokushoho.value.noExtraFees")}
                     </div>
                     <div className="text-xs sm:text-sm text-neutral-600">
-                      ※クレジットカード決済手数料はサービス料金に含まれています
+                      {t("tokushoho.value.cardFeeIncluded")}
                     </div>
                     <div className="text-xs sm:text-sm text-neutral-600">
-                      ※消費税は表示価格に含まれています
+                      {t("tokushoho.value.taxIncluded")}
                     </div>
                   </div>
                 </Row>
-                <Row label="支払い時期・方法">
+                <Row label={t("tokushoho.label.paymentTimingMethod")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      クレジットカード決済（Stripe）による前払い
+                      {t("tokushoho.value.paymentPrepaid")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      月額プラン：毎月の契約更新日に自動課金
+                      {t("tokushoho.value.paymentMonthly")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      年額プラン：毎年の契約更新日に自動課金
+                      {t("tokushoho.value.paymentYearly")}
                     </div>
                     <div className="text-xs text-neutral-500">
-                      ※決済はStripe Inc.が提供するシステムを使用します
+                      {t("tokushoho.value.stripeNote")}
                     </div>
                   </div>
                 </Row>
-                <Row label="サービス提供時期">
+                <Row label={t("tokushoho.label.serviceProvision")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      決済完了後、即時にプレミアム機能をご利用いただけます
+                      {t("tokushoho.value.serviceAvailability")}
                     </div>
                     <div className="text-xs text-neutral-500">
-                      ※システム障害等により提供が遅れる場合があります
+                      {t("tokushoho.value.serviceDelayNote")}
                     </div>
                   </div>
                 </Row>
-                <Row label="返品・キャンセル・返金">
+                <Row label={t("tokushoho.label.refundPolicy")}>
                   <div className="space-y-3">
                     <div className="font-medium text-sm sm:text-base">
-                      デジタルサービスの性質上、以下の通り取り扱います：
+                      {t("tokushoho.value.refundPolicyIntro")}
                     </div>
                     <ul className="text-xs sm:text-sm space-y-2 list-disc pl-4">
                       <li>
-                        <strong>原則返金なし：</strong>
-                        サービス利用開始後の返品・返金は一切行いません
+                        <strong>{t("tokushoho.value.noRefundTitle")}</strong>
+                        {t("tokushoho.value.noRefundBody")}
                       </li>
                       <li>
-                        <strong>無料トライアル：</strong>
-                        初回利用者は14日間の無料期間があり、この期間中の解約は料金が発生しません
+                        <strong>{t("tokushoho.value.freeTrialTitle")}</strong>
+                        {t("tokushoho.value.freeTrialBody")}
                       </li>
                       <li>
-                        <strong>自動更新の停止：</strong>
-                        いつでも自動更新を停止できますが、既に支払われた料金の返金はありません
+                        <strong>
+                          {t("tokushoho.value.autoRenewStopTitle")}
+                        </strong>
+                        {t("tokushoho.value.autoRenewStopBody")}
                       </li>
                       <li>
-                        <strong>運営者都合による停止：</strong>
-                        運営者の都合によりサービスを停止する場合、未使用期間分の返金を行うことがあります（ただし義務ではありません）
+                        <strong>
+                          {t("tokushoho.value.operatorStopTitle")}
+                        </strong>
+                        {t("tokushoho.value.operatorStopBody")}
                       </li>
                       <li>
-                        <strong>重大な不具合：</strong>
-                        運営者の故意または重過失により重大な不具合が生じ、サービスが全く利用できない状態が継続した場合のみ、個別に対応を検討します
+                        <strong>{t("tokushoho.value.severeBugTitle")}</strong>
+                        {t("tokushoho.value.severeBugBody")}
                       </li>
                     </ul>
                   </div>
                 </Row>
-                <Row label="サービス内容・制限事項">
+                <Row label={t("tokushoho.label.serviceContentLimit")}>
                   <div className="space-y-3">
                     <div className="text-sm sm:text-base">
-                      <strong>提供内容：</strong>
-                      場所情報の管理・共有サービス
+                      <strong>
+                        {t("tokushoho.value.serviceContentTitle")}
+                      </strong>
+                      {t("tokushoho.value.serviceContentBody")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      <strong>利用制限：</strong>
+                      <strong>{t("tokushoho.value.serviceLimitTitle")}</strong>
                     </div>
                     <ul className="text-xs sm:text-sm space-y-2 list-disc pl-4">
-                      <li>
-                        利用規約に違反した場合、予告なく利用停止することがあります
-                      </li>
-                      <li>
-                        サーバー負荷軽減のため、一定の利用制限を設ける場合があります
-                      </li>
-                      <li>
-                        外部サービス（Google
-                        Maps等）の仕様変更により機能が制限される場合があります
-                      </li>
-                      <li>
-                        メンテナンス・障害により一時的に利用できない場合があります
-                      </li>
+                      <li>{t("tokushoho.value.serviceLimit1")}</li>
+                      <li>{t("tokushoho.value.serviceLimit2")}</li>
+                      <li>{t("tokushoho.value.serviceLimit3")}</li>
+                      <li>{t("tokushoho.value.serviceLimit4")}</li>
                     </ul>
                   </div>
                 </Row>
-                <Row label="責任の制限">
+                <Row label={t("tokushoho.label.liabilityLimit")}>
                   <div className="space-y-3">
                     <div className="font-medium text-sm sm:text-base">
-                      以下の場合、運営者は一切の責任を負いません：
+                      {t("tokushoho.value.liabilityLimitIntro")}
                     </div>
                     <ul className="text-xs sm:text-sm space-y-2 list-disc pl-4">
-                      <li>天災、停電、通信障害等の不可抗力による影響</li>
-                      <li>
-                        ユーザーの機器・ソフトウェア・ネットワーク環境による問題
-                      </li>
-                      <li>
-                        外部サービス（Stripe、Google等）の障害・仕様変更による影響
-                      </li>
-                      <li>
-                        ユーザーのデータ消失・情報漏洩（運営者の故意・重過失を除く）
-                      </li>
-                      <li>サービス利用による間接的・派生的損害</li>
-                      <li>営業上の損失、機会損失、精神的損害</li>
+                      <li>{t("tokushoho.value.liability1")}</li>
+                      <li>{t("tokushoho.value.liability2")}</li>
+                      <li>{t("tokushoho.value.liability3")}</li>
+                      <li>{t("tokushoho.value.liability4")}</li>
+                      <li>{t("tokushoho.value.liability5")}</li>
+                      <li>{t("tokushoho.value.liability6")}</li>
                     </ul>
                   </div>
                 </Row>
-                <Row label="契約の解除・変更">
+                <Row label={t("tokushoho.label.contractChange")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      <strong>利用者による解約：</strong>
-                      いつでも可能（返金なし）
+                      <strong>{t("tokushoho.value.cancelByUserTitle")}</strong>
+                      {t("tokushoho.value.cancelByUserBody")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      <strong>運営者による解約：</strong>
-                      利用規約違反等の場合、即時解約可能
+                      <strong>
+                        {t("tokushoho.value.cancelByOperatorTitle")}
+                      </strong>
+                      {t("tokushoho.value.cancelByOperatorBody")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      <strong>サービス内容の変更：</strong>
-                      事前通知により変更可能
+                      <strong>{t("tokushoho.value.serviceChangeTitle")}</strong>
+                      {t("tokushoho.value.serviceChangeBody")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      <strong>料金の変更：</strong>
-                      30日前の事前通知により変更可能
+                      <strong>{t("tokushoho.value.priceChangeTitle")}</strong>
+                      {t("tokushoho.value.priceChangeBody")}
                     </div>
                   </div>
                 </Row>
-                <Row label="準拠法・管轄裁判所">
+                <Row label={t("tokushoho.label.governingLawCourt")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      <strong>準拠法：</strong>
-                      日本法
+                      <strong>{t("tokushoho.value.governingLawTitle")}</strong>
+                      {t("tokushoho.value.governingLawBody")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      <strong>管轄裁判所：</strong>
-                      東京簡易裁判所または東京地方裁判所
+                      <strong>{t("tokushoho.value.courtTitle")}</strong>
+                      {t("tokushoho.value.courtBody")}
                     </div>
                     <div className="text-xs text-neutral-500">
-                      紛争が生じた場合は、まず誠実な協議による解決を図ります
+                      {t("tokushoho.value.disputeResolutionNote")}
                     </div>
                   </div>
                 </Row>
-                <Row label="その他">
+                <Row label={t("tokushoho.label.other")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      本表記に記載のない事項は利用規約およびプライバシーポリシーに従います
+                      {t("tokushoho.value.other1")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      消費者契約法その他の消費者保護法規が適用される場合があります
+                      {t("tokushoho.value.other2")}
                     </div>
                     <div className="text-sm sm:text-base">
-                      ご不明点は上記フォームよりお問い合わせください
+                      {t("tokushoho.value.other3")}
                     </div>
                   </div>
                 </Row>
               </div>
             </div>
             <div className="text-right text-xs sm:text-sm text-neutral-600 mt-6 sm:mt-8">
-              <p>2025年6月12日 制定・施行</p>
+              <p>{t("common.enactedAt")}</p>
             </div>
           </CardContent>
         </Card>

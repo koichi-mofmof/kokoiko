@@ -1,6 +1,7 @@
 "use client";
 
 import { BookmarkSignupModal } from "@/app/components/conversion/BookmarkSignupModal";
+import { useI18n } from "@/hooks/use-i18n";
 import { bookmarkList, unbookmarkList } from "@/lib/actions/lists";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export function BookmarkButton({
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
   const [user, setUser] = useState<User | null>(null);
   const [showSignupModal, setShowSignupModal] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -68,7 +70,9 @@ export function BookmarkButton({
           "p-2 rounded-full hover:bg-gray-100 transition-colors",
           className
         )}
-        aria-label={isBookmarked ? "ブックマークを解除" : "ブックマーク"}
+        aria-label={
+          isBookmarked ? t("lists.bookmark.remove") : t("lists.bookmark.add")
+        }
       >
         <Bookmark
           className={cn(

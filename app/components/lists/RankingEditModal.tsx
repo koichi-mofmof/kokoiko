@@ -37,6 +37,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/hooks/use-i18n";
 
 interface RankingEditModalProps {
   list: PlaceListGroup;
@@ -53,6 +54,7 @@ export default function RankingEditModal({
   onRankingUpdate,
   mode = "edit",
 }: RankingEditModalProps) {
+  const { t } = useI18n();
   // ランキング件数選択用ステート
   const [rankingCount, setRankingCount] = useState<number>(
     list.ranking?.length || 3
@@ -129,13 +131,18 @@ export default function RankingEditModal({
         onOpenChange(false);
       } else {
         console.error("Failed to update ranking:", result?.error);
+        const err = result as { errorKey?: string; error?: string } | undefined;
         alert(
-          `ランキングの保存に失敗しました: ${result?.error || "不明なエラー"}`
+          t("ranking.edit.saveFailed", {
+            message: err?.errorKey
+              ? t(err.errorKey)
+              : err?.error || t("common.unknownError"),
+          })
         );
       }
     } catch (error) {
       console.error("Error calling saveRankingViewData:", error);
-      alert("ランキングの保存中に予期せぬエラーが発生しました。");
+      alert(t("ranking.edit.saveUnexpected"));
     } finally {
       setIsSaving(false);
     }
@@ -161,18 +168,20 @@ export default function RankingEditModal({
       <DialogContent className="sm:max-w-[600px] max-w-[95vw] mx-auto max-h-[80vh] overflow-y-auto flex flex-col">
         <DialogHeader className="pr-6 border-b pb-4">
           <DialogTitle className="text-neutral-900 dark:text-neutral-50">
-            {mode === "create" ? "ランキングを作成" : "ランキングを編集"}
+            {mode === "create"
+              ? t("ranking.edit.title.create")
+              : t("ranking.edit.title.edit")}
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
             {mode === "create"
-              ? "各場所の順位やコメントを設定してください。"
-              : "各場所の順位やコメントを編集してください。"}
+              ? t("ranking.edit.desc.create")
+              : t("ranking.edit.desc.edit")}
           </DialogDescription>
         </DialogHeader>
         {/* ランキング件数選択UI */}
         <div className="mb-4 px-2 text-neutral-800">
           <div className="font-semibold mb-2 dark:text-neutral-200">
-            ランキング件数を選択
+            {t("ranking.edit.count.select")}
           </div>
           <RadioGroup
             value={
@@ -208,26 +217,26 @@ export default function RankingEditModal({
               <div className="flex items-center gap-1">
                 <RadioGroupItem value="3" id="best3" />
                 <label htmlFor="best3" className="mr-2 text-sm">
-                  ベスト3
+                  {t("ranking.edit.count.best3")}
                 </label>
               </div>
               <div className="flex items-center gap-1">
                 <RadioGroupItem value="5" id="best5" />
                 <label htmlFor="best5" className="mr-2 text-sm">
-                  ベスト5
+                  {t("ranking.edit.count.best5")}
                 </label>
               </div>
               <div className="flex items-center gap-1">
                 <RadioGroupItem value="10" id="best10" />
                 <label htmlFor="best10" className="mr-2 text-sm">
-                  ベスト10
+                  {t("ranking.edit.count.best10")}
                 </label>
               </div>
             </div>
             <div className="flex items-center gap-1 mt-2 sm:mt-0">
               <RadioGroupItem value="custom" id="custom" />
               <label htmlFor="custom" className="mr-2 text-sm">
-                その他
+                {t("ranking.edit.count.custom")}
               </label>
               <Input
                 type="number"
@@ -246,18 +255,20 @@ export default function RankingEditModal({
                 className="w-20 h-8 text-xs ml-1"
                 disabled={false}
               />
-              <span className="text-xs ml-1">件</span>
+              <span className="text-xs ml-1">
+                {t("ranking.edit.count.unit")}
+              </span>
             </div>
           </RadioGroup>
         </div>
         {/* ランキング対象選択UI */}
         <div className="mb-4 px-2 text-neutral-800">
           <div className="font-semibold mb-2 dark:text-neutral-200">
-            ランキング対象を選択
+            {t("ranking.edit.target.select")}
           </div>
           <Input
             type="text"
-            placeholder="地点名で検索"
+            placeholder={t("ranking.edit.target.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="mb-2 w-full max-w-xs"
@@ -272,7 +283,7 @@ export default function RankingEditModal({
               : list.places.filter((p) => !rankingTargetIds.includes(p.id))
             ).length === 0 ? (
               <div className="text-sm text-neutral-400">
-                該当する地点がありません
+                {t("ranking.edit.target.noResults")}
               </div>
             ) : (
               (searchQuery
@@ -299,19 +310,19 @@ export default function RankingEditModal({
                     }
                     data-testid="add-to-ranking"
                   >
-                    追加
+                    {t("ranking.edit.target.add")}
                   </Button>
                 </div>
               ))
             )}
           </div>
           <div className="mt-2 text-xs text-neutral-500">
-            ※最大{rankingCount}件まで追加できます。
+            {t("ranking.edit.target.maxNote", { n: rankingCount })}
           </div>
           <div className="mt-1 text-xs text-neutral-500">
             {rankingTargetIds.length >= rankingCount && (
               <span className="text-destructive ml-2">
-                最大件数に達しています。
+                {t("ranking.edit.target.maxReached")}
               </span>
             )}
           </div>
@@ -319,11 +330,11 @@ export default function RankingEditModal({
         {/* ランキング対象リスト（追加済み地点） */}
         <div className="mb-4 px-2 text-neutral-800">
           <div className="font-semibold mb-2 dark:text-neutral-200">
-            ランキング対象リスト
+            {t("ranking.edit.target.list")}
           </div>
           {rankingTargetIds.length === 0 ? (
             <div className="text-sm text-neutral-400">
-              まだ地点が追加されていません
+              {t("ranking.edit.target.none")}
             </div>
           ) : (
             <DndContext
@@ -387,7 +398,7 @@ export default function RankingEditModal({
               variant="outline"
               className="text-neutral-700 dark:text-neutral-300"
             >
-              キャンセル
+              {t("common.cancel")}
             </Button>
           </DialogClose>
           <Button
@@ -398,11 +409,11 @@ export default function RankingEditModal({
           >
             {isSaving
               ? mode === "create"
-                ? "作成中..."
-                : "保存中..."
+                ? t("common.processing")
+                : t("common.saving")
               : mode === "create"
-              ? "ランキングを作成"
-              : "ランキングを保存"}
+              ? t("ranking.edit.title.create")
+              : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -429,6 +440,7 @@ function SortableRankingItem({
   onMoveDown: () => void;
   onRemove: () => void;
 }) {
+  const { t } = useI18n();
   const {
     attributes,
     listeners,
@@ -456,7 +468,9 @@ function SortableRankingItem({
         className="border rounded bg-neutral-50 dark:bg-neutral-800/30 border-neutral-200 dark:border-neutral-700/60"
       >
         <div className="flex flex-row items-center px-3 py-2 gap-2 w-full">
-          <span className="font-medium text-sm flex-shrink-0">{idx + 1}位</span>
+          <span className="font-medium text-sm flex-shrink-0">
+            {t("ranking.item.rank", { n: idx + 1 })}
+          </span>
           <span className="truncate text-sm min-w-0">{place.name}</span>
           <div className="flex flex-row gap-1 flex-shrink-0 ml-auto items-center">
             <Button
@@ -494,14 +508,16 @@ function SortableRankingItem({
         </div>
         <div className="px-3 pb-2">
           <AccordionTrigger className="text-xs px-2 py-1 border rounded bg-white dark:bg-neutral-900/40 border-neutral-300 dark:border-neutral-700 w-full sm:w-auto mt-2">
-            {rankingComments[id] ? "コメントあり" : "コメントを書く"}
+            {rankingComments[id]
+              ? t("ranking.edit.comment.has")
+              : t("ranking.edit.comment.write")}
           </AccordionTrigger>
         </div>
         <AccordionContent className="px-3 pb-3">
           <Textarea
             value={rankingComments[id] || ""}
             onChange={(e) => onRankingCommentChange(id, e.target.value)}
-            placeholder="コメント（任意）"
+            placeholder={t("ranking.edit.comment.placeholder")}
             className="w-full"
             rows={2}
           />
@@ -510,7 +526,7 @@ function SortableRankingItem({
       <span
         {...listeners}
         className="cursor-move select-none text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 absolute left-[-24px] top-1/2 -translate-y-1/2"
-        aria-label="ドラッグで並び替え"
+        aria-label={t("ranking.edit.dragReorder")}
         tabIndex={0}
         style={{
           userSelect: "none",

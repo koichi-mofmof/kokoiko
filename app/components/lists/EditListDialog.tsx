@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useI18n } from "@/hooks/use-i18n";
 import { toast } from "@/hooks/use-toast";
 import { updateList } from "@/lib/actions/lists";
 import { ListForClient } from "@/lib/dal/lists";
@@ -27,6 +28,7 @@ export function EditListDialog({
   onSuccess,
 }: EditListDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useI18n();
 
   const initialData: ListFormData = {
     name: list.name,
@@ -47,23 +49,23 @@ export function EditListDialog({
 
       if (result.success) {
         toast({
-          title: "更新完了",
-          description: "リストが更新されました。",
+          title: t("lists.edit.successTitle"),
+          description: t("lists.edit.successDesc"),
         });
         onSuccess();
         handleClose();
       } else {
         toast({
-          title: "エラー",
-          description: result.error || "リストの更新中にエラーが発生しました。",
+          title: t("common.error"),
+          description: result.error || t("lists.edit.failed"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Error updating list:", error);
       toast({
-        title: "エラー",
-        description: "予期せぬエラーが発生しました。",
+        title: t("common.error"),
+        description: t("common.unexpectedError"),
         variant: "destructive",
       });
     } finally {
@@ -93,20 +95,18 @@ export function EditListDialog({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>リストを編集</DialogTitle>
-          <DialogDescription>
-            リストの情報を更新してください。
-          </DialogDescription>
+          <DialogTitle>{t("lists.edit.title")}</DialogTitle>
+          <DialogDescription>{t("lists.edit.desc")}</DialogDescription>
         </DialogHeader>
 
         <ListFormComponent
           initialData={initialData}
           onSubmit={handleSubmit}
-          submitButtonText="更新する"
+          submitButtonText={t("lists.edit.submit")}
           isSubmitting={isLoading}
           showCancelButton={true}
           onCancel={handleCancel}
-          cancelButtonText="キャンセル"
+          cancelButtonText={t("common.cancel")}
         />
       </DialogContent>
     </Dialog>

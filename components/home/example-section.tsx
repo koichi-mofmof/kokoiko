@@ -3,10 +3,12 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function ExampleSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   // スクロール位置に基づいてアクティブなインデックスを更新
   useEffect(() => {
@@ -51,10 +53,10 @@ export function ExampleSection() {
           className="lg:text-center mb-16"
         >
           <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
-            使用例
+            {t("home.examples.title")}
           </h2>
           <p className="mt-2 text-2xl sm:text-4xl leading-8 font-bold text-neutral-900">
-            こんな使い方ができます
+            {t("home.examples.subtitle")}
           </p>
         </motion.div>
 
@@ -71,7 +73,7 @@ export function ExampleSection() {
               <div className="absolute inset-0">
                 <Image
                   src="https://images.pexels.com/photos/5086619/pexels-photo-5086619.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                  alt="カップル"
+                  alt={t("home.examples.card1.alt")}
                   fill
                   style={{ objectFit: "cover" }}
                   className="opacity-80 hover:scale-105 transition-transform duration-700"
@@ -80,10 +82,10 @@ export function ExampleSection() {
             </div>
             <div className="p-8">
               <h3 className="font-semibold text-xl mb-3 text-neutral-900">
-                カップルで
+                {t("home.examples.card1.title")}
               </h3>
               <p className="text-neutral-600 leading-relaxed">
-                「今度のデートはどこに行こう？」を解決。お互いが興味のある場所をリストアップして、週末の予定を立てやすくなります。
+                {t("home.examples.card1.desc")}
               </p>
             </div>
           </motion.div>
@@ -99,7 +101,7 @@ export function ExampleSection() {
               <div className="absolute inset-0">
                 <Image
                   src="https://images.pexels.com/photos/1267697/pexels-photo-1267697.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                  alt="友人グループ"
+                  alt={t("home.examples.card2.alt")}
                   fill
                   style={{ objectFit: "cover" }}
                   className="opacity-80 hover:scale-105 transition-transform duration-700"
@@ -108,10 +110,10 @@ export function ExampleSection() {
             </div>
             <div className="p-8">
               <h3 className="font-semibold text-xl mb-3 text-neutral-900">
-                友人グループで
+                {t("home.examples.card2.title")}
               </h3>
               <p className="text-neutral-600 leading-relaxed">
-                旅行計画やお出かけ先の候補を共有。「あのとき誰かが言ってた場所どこだっけ？」がなくなります。
+                {t("home.examples.card2.desc")}
               </p>
             </div>
           </motion.div>
@@ -127,7 +129,7 @@ export function ExampleSection() {
               <div className="absolute inset-0">
                 <Image
                   src="https://images.pexels.com/photos/3935702/pexels-photo-3935702.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                  alt="個人利用"
+                  alt={t("home.examples.card3.alt")}
                   fill
                   style={{ objectFit: "cover" }}
                   className="opacity-80 hover:scale-105 transition-transform duration-700"
@@ -136,10 +138,10 @@ export function ExampleSection() {
             </div>
             <div className="p-8">
               <h3 className="font-semibold text-xl mb-3 text-neutral-900">
-                一人でも
+                {t("home.examples.card3.title")}
               </h3>
               <p className="text-neutral-600 leading-relaxed">
-                SNSで見つけた気になるスポットや、あとで行きたいお店を整理。自分だけの行きたい場所コレクションを作れます。
+                {t("home.examples.card3.desc")}
               </p>
             </div>
           </motion.div>
@@ -159,7 +161,7 @@ export function ExampleSection() {
               msOverflowStyle: "none",
             }}
           >
-            {/* カード1: カップル */}
+            {/* カード1 */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -172,7 +174,7 @@ export function ExampleSection() {
                   <div className="absolute inset-0">
                     <Image
                       src="https://images.pexels.com/photos/5086619/pexels-photo-5086619.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                      alt="カップル"
+                      alt={t("home.examples.card1.alt")}
                       fill
                       style={{ objectFit: "cover" }}
                       className="opacity-80 hover:scale-105 transition-transform duration-700"
@@ -181,16 +183,16 @@ export function ExampleSection() {
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-lg mb-3 text-neutral-900">
-                    カップルで
+                    {t("home.examples.card1.title")}
                   </h3>
                   <p className="text-neutral-600 leading-relaxed text-sm">
-                    「今度のデートはどこに行こう？」を解決。お互いが興味のある場所をリストアップして、週末の予定を立てやすくなります。
+                    {t("home.examples.card1.desc")}
                   </p>
                 </div>
               </div>
             </motion.div>
 
-            {/* カード2: 友人グループ */}
+            {/* カード2 */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -203,7 +205,7 @@ export function ExampleSection() {
                   <div className="absolute inset-0">
                     <Image
                       src="https://images.pexels.com/photos/1267697/pexels-photo-1267697.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                      alt="友人グループ"
+                      alt={t("home.examples.card2.alt")}
                       fill
                       style={{ objectFit: "cover" }}
                       className="opacity-80 hover:scale-105 transition-transform duration-700"
@@ -212,16 +214,16 @@ export function ExampleSection() {
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-lg mb-3 text-neutral-900">
-                    友人グループで
+                    {t("home.examples.card2.title")}
                   </h3>
                   <p className="text-neutral-600 leading-relaxed text-sm">
-                    旅行計画やお出かけ先の候補を共有。「あのとき誰かが言ってた場所どこだっけ？」がなくなります。
+                    {t("home.examples.card2.desc")}
                   </p>
                 </div>
               </div>
             </motion.div>
 
-            {/* カード3: 個人利用 */}
+            {/* カード3 */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -234,7 +236,7 @@ export function ExampleSection() {
                   <div className="absolute inset-0">
                     <Image
                       src="https://images.pexels.com/photos/3935702/pexels-photo-3935702.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                      alt="個人利用"
+                      alt={t("home.examples.card3.alt")}
                       fill
                       style={{ objectFit: "cover" }}
                       className="opacity-80 hover:scale-105 transition-transform duration-700"
@@ -243,10 +245,10 @@ export function ExampleSection() {
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-lg mb-3 text-neutral-900">
-                    一人でも
+                    {t("home.examples.card3.title")}
                   </h3>
                   <p className="text-neutral-600 leading-relaxed text-sm">
-                    SNSで見つけた気になるスポットや、あとで行きたいお店を整理。自分だけの行きたい場所コレクションを作れます。
+                    {t("home.examples.card3.desc")}
                   </p>
                 </div>
               </div>
@@ -270,7 +272,7 @@ export function ExampleSection() {
                     ? "bg-primary-600 scale-125"
                     : "bg-neutral-300 hover:bg-neutral-400"
                 }`}
-                aria-label={`カード ${index + 1} に移動`}
+                aria-label={t("home.examples.moveToCard", { index: index + 1 })}
               />
             ))}
           </motion.div>

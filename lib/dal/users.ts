@@ -14,6 +14,7 @@ export interface ProfileSettingsData {
 interface UserProfileSettingsResult {
   profileSettings: ProfileSettingsData | null;
   error?: string;
+  errorKey?: string;
 }
 
 /**
@@ -39,7 +40,7 @@ async function fetchProfileDataInternal(
       console.error("Error fetching profile for user:", userId, profileError);
       return {
         profileSettings: null,
-        error: "プロファイル情報の取得に失敗しました。",
+        errorKey: "errors.common.fetchFailed",
       };
     }
 
@@ -78,7 +79,7 @@ async function fetchProfileDataInternal(
     );
     return {
       profileSettings: null,
-      error: "プロファイル情報の取得中に予期せぬエラーが発生しました。",
+      errorKey: "errors.unexpected.common",
     };
   }
 }
@@ -90,6 +91,7 @@ export interface UserWithProfileData extends ProfileSettingsData {
 interface FetchUserWithProfileResult {
   userWithProfile: UserWithProfileData | null;
   error?: string;
+  errorKey?: string;
   userUnauthenticated?: boolean;
 }
 
@@ -111,6 +113,7 @@ export async function fetchAuthenticatedUserWithProfile(): Promise<FetchUserWith
       userWithProfile: null,
       userUnauthenticated: true,
       error: authError?.message,
+      errorKey: "errors.common.unauthorized",
     };
   }
 
@@ -129,7 +132,8 @@ export async function fetchAuthenticatedUserWithProfile(): Promise<FetchUserWith
         avatarUrl: null,
         avatarPath: null,
       },
-      error: profileResult.error || "プロファイル情報を取得できませんでした。",
+      error: profileResult.error,
+      errorKey: profileResult.errorKey || "errors.common.fetchFailed",
       userUnauthenticated: false,
     };
   }

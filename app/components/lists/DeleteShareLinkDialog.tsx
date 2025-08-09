@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
-import React from "react";
+import { useI18n } from "@/hooks/use-i18n";
 import type { Database } from "@/types/supabase";
+import { Loader2 } from "lucide-react";
 
 interface DeleteShareLinkDialogProps {
   open: boolean;
@@ -19,11 +19,12 @@ export function DeleteShareLinkDialog({
   onClose,
   onDelete,
 }: DeleteShareLinkDialogProps) {
+  const { t } = useI18n();
   if (!link) return null;
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xs p-6">
-        <DialogTitle>本当に削除しますか？</DialogTitle>
+        <DialogTitle>{t("lists.share.deleteConfirmTitle")}</DialogTitle>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -31,7 +32,7 @@ export function DeleteShareLinkDialog({
             className="flex-1"
             disabled={loading}
           >
-            キャンセル
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -40,7 +41,7 @@ export function DeleteShareLinkDialog({
             disabled={loading}
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            削除
+            {t("common.delete")}
           </Button>
         </div>
       </DialogContent>

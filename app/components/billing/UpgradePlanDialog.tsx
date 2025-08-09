@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { Check } from "lucide-react";
 import { ReactNode, useState } from "react";
+import { useI18n } from "@/hooks/use-i18n";
 
 type UpgradePlanDialogProps = {
   trigger?: ReactNode;
@@ -31,6 +32,7 @@ export function UpgradePlanDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<"monthly" | "yearly">("monthly");
+  const { t } = useI18n();
 
   // 価格IDをプランごとに切り替え
   const priceId =
@@ -41,18 +43,18 @@ export function UpgradePlanDialog({
   // プランごとの表示内容
   const planInfo = {
     monthly: {
-      label: "月額プラン",
+      label: t("upgrade.monthly"),
       price: "500",
-      sub: "14日間無料／その後毎月500円",
-      note: "いつでもキャンセル可能",
+      sub: t("upgrade.freeTrial"),
+      note: t("upgrade.note"),
     },
     yearly: {
-      label: "年額プラン",
+      label: t("upgrade.yearly"),
       price: "4,200",
-      sub: "14日間無料／その後毎年4,200円",
-      note: "いつでもキャンセル可能",
+      sub: t("upgrade.freeTrial"),
+      note: t("upgrade.note"),
     },
-  };
+  } as const;
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -63,7 +65,7 @@ export function UpgradePlanDialog({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        setError("ログインが必要です");
+        setError(t("common.loginRequired"));
         setLoading(false);
         return;
       }
@@ -80,14 +82,14 @@ export function UpgradePlanDialog({
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setError(data.error || "セッション作成に失敗しました");
+        setError(data.error || t("errors.stripe.checkoutSessionFailed"));
         setLoading(false);
       }
     } catch (e) {
       if (e instanceof Error) {
-        setError(e.message || "不明なエラーが発生しました");
+        setError(e.message || t("common.unexpectedError"));
       } else {
-        setError("不明なエラーが発生しました");
+        setError(t("common.unexpectedError"));
       }
       setLoading(false);
     }
@@ -104,16 +106,14 @@ export function UpgradePlanDialog({
             size="sm"
             data-testid="upgrade-dialog-trigger"
           >
-            アップグレード
+            {t("upgrade.open")}
           </Button>
         </DialogTrigger>
       )}
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>プレミアムプランにアップグレード</DialogTitle>
-          <DialogDescription>
-            すべての機能を無制限でご利用いただけます。
-          </DialogDescription>
+          <DialogTitle>{t("upgrade.title")}</DialogTitle>
+          <DialogDescription>{t("upgrade.desc")}</DialogDescription>
         </DialogHeader>
         <Tabs
           value={plan}
@@ -129,7 +129,7 @@ export function UpgradePlanDialog({
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              月額
+              {t("upgrade.month")}
             </TabsTrigger>
             <TabsTrigger
               value="yearly"
@@ -140,10 +140,10 @@ export function UpgradePlanDialog({
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              年額
+              {t("upgrade.year")}
               <span className="ml-2 align-middle">
                 <Badge className="font-bold px-2 py-0.5 text-xs">
-                  30%お得！
+                  {t("upgrade.save30")}
                 </Badge>
               </span>
             </TabsTrigger>
@@ -157,7 +157,9 @@ export function UpgradePlanDialog({
                 </div>
                 <div className="text-2xl font-extrabold text-neutral-900 mb-1 text-center">
                   {planInfo.monthly.price}
-                  <span className="text-base ml-1 font-normal">円</span>
+                  <span className="text-base ml-1 font-normal">
+                    {t("upgrade.price.currency")}
+                  </span>
                 </div>
                 <div className="text-xs text-neutral-500 text-center mb-1">
                   {planInfo.monthly.sub}
@@ -169,13 +171,13 @@ export function UpgradePlanDialog({
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    登録地点数：上限なし
+                    {t("upgrade.features.unlimitedPlaces")}
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    共同編集用リンクを発行できるリスト数：無制限
+                    {t("upgrade.features.unlimitedSharedLinks")}
                   </li>
                   {/* <li className="flex items-center gap-2">
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
@@ -187,7 +189,7 @@ export function UpgradePlanDialog({
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    14日間無料トライアル付き
+                    {t("upgrade.features.freeTrial14Days")}
                   </li>
                 </ul>
                 <div className="text-xs text-neutral-500 text-center mt-2">
@@ -202,7 +204,7 @@ export function UpgradePlanDialog({
               <CardHeader className="p-4 pb-2">
                 <div className="flex justify-center mb-2">
                   <Badge className="font-bold px-2 py-0.5 text-xs">
-                    月額プランより30%お得！
+                    {t("upgrade.save30")}
                   </Badge>
                 </div>
                 <div className="text-base font-bold text-primary-700 mb-1 text-center">
@@ -210,10 +212,12 @@ export function UpgradePlanDialog({
                 </div>
                 <div className="text-2xl font-extrabold text-neutral-900 mb-1 text-center">
                   {planInfo.yearly.price}
-                  <span className="text-base ml-1 font-normal">円</span>
+                  <span className="text-base ml-1 font-normal">
+                    {t("upgrade.price.currency")}
+                  </span>
                 </div>
                 <div className="text-xs text-neutral-900 text-center mb-1 font-bold">
-                  ※1か月あたり350円
+                  {t("upgrade.perMonthNote")}
                 </div>
                 <div className="text-xs text-neutral-500 text-center mb-1">
                   {planInfo.yearly.sub}
@@ -225,13 +229,13 @@ export function UpgradePlanDialog({
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    登録地点数：上限なし
+                    {t("upgrade.features.unlimitedPlaces")}
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    共同編集用リンクを発行できるリスト数：無制限
+                    {t("upgrade.features.unlimitedSharedLinks")}
                   </li>
                   {/* <li className="flex items-center gap-2">
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
@@ -243,7 +247,7 @@ export function UpgradePlanDialog({
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
-                    14日間無料トライアル付き
+                    {t("upgrade.features.freeTrial14Days")}
                   </li>
                 </ul>
                 <div className="text-xs text-neutral-500 text-center mt-2">
@@ -262,8 +266,8 @@ export function UpgradePlanDialog({
             data-testid="checkout-button"
           >
             {loading
-              ? "リダイレクト中..."
-              : `${planInfo[plan].label}に申し込む`}
+              ? t("upgrade.redirecting")
+              : t("upgrade.apply", { plan: planInfo[plan].label })}
           </Button>
         </DialogFooter>
         {error && (

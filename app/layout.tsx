@@ -6,9 +6,16 @@ import JsonLd from "@/components/seo/JsonLd";
 import Footer from "@/components/ui/Footer";
 import Header from "@/components/ui/Header";
 import { Toaster } from "@/components/ui/toaster";
+import { I18nProvider } from "@/contexts/I18nProvider";
 import { SubscriptionProvider } from "@/contexts/SubscriptionProvider";
 import { logoutUser } from "@/lib/actions/auth";
 import type { ProfileSettingsData } from "@/lib/dal/users";
+import {
+  createServerT,
+  loadMessages,
+  normalizeLocale,
+  toOpenGraphLocale,
+} from "@/lib/i18n";
 import {
   generateOrganizationSchema,
   generateWebSiteSchema,
@@ -17,7 +24,7 @@ import { createClient } from "@/lib/supabase/server";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 
 const inter = Inter({
@@ -43,71 +50,81 @@ const quicksand = Quicksand({
   preload: false,
 });
 
-export const metadata: Metadata = {
-  title: "ClippyMap",
-  description: "行きたい場所を共有できるサービス",
-  metadataBase: new URL(
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const msgs = (await loadMessages(locale)) as Record<string, string>;
+  const t = createServerT(msgs);
+
+  const metadataBase = new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  ),
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
+  );
+
+  return {
     title: "ClippyMap",
-    description: "行きたい場所を共有できるサービス",
-    type: "website",
-    locale: "ja_JP",
-    url: "/",
-    siteName: "ClippyMap",
-    images: [
-      {
-        url: "/ogp-image.webp",
-        width: 1200,
-        height: 630,
-        alt: "ClippyMap - 行きたい場所を共有できるサービス",
-        type: "image/webp",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "ClippyMap",
-    description: "行きたい場所を共有できるサービス",
-    images: [
-      {
-        url: "/ogp-image.webp",
-        alt: "ClippyMap - 行きたい場所を共有できるサービス",
-      },
-    ],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      {
-        url: "/web-app-manifest-192x192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        url: "/web-app-manifest-512x512.webp",
-        sizes: "512x512",
-        type: "image/webp",
-      },
-    ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
-  },
-  manifest: "/manifest.json",
-};
+    description: t("meta.root.description"),
+    metadataBase,
+    alternates: { canonical: "/" },
+    openGraph: {
+      title: "ClippyMap",
+      description: t("meta.root.description"),
+      type: "website",
+      locale: toOpenGraphLocale(locale),
+      url: "/",
+      siteName: "ClippyMap",
+      images: [
+        {
+          url: "/ogp-image.webp",
+          width: 1200,
+          height: 630,
+          alt: t("meta.root.ogAlt"),
+          type: "image/webp",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "ClippyMap",
+      description: t("meta.root.description"),
+      images: [
+        {
+          url: "/ogp-image.webp",
+          alt: t("meta.root.ogAlt"),
+        },
+      ],
+    },
+    robots: { index: true, follow: true },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "32x32" },
+        {
+          url: "/web-app-manifest-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          url: "/web-app-manifest-512x512.webp",
+          sizes: "512x512",
+          type: "image/webp",
+        },
+      ],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    },
+    manifest: "/manifest.json",
+  };
+}
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Read locale from cookie; fallback to ja
+  const cookieStore = await cookies();
+  const raw = cookieStore.get("lang")?.value;
+  const locale = normalizeLocale(raw);
+  const messages = (await loadMessages(locale)) as Record<string, string>;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -155,7 +172,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="ja">
+    <html lang={locale}>
       <head>
         {/* DNS プリフェッチとプリコネクト */}
         <link rel="preconnect" href="https://images.pexels.com" />
@@ -179,31 +196,33 @@ export default async function RootLayout({
       >
         <AuthSyncProvider>
           <SubscriptionProvider>
-            {user && profileData ? (
-              <ProfileSetupProvider profileData={profileData}>
-                <Header
-                  currentUser={
-                    user
-                      ? {
-                          id: user.id,
-                          name: profileData?.displayName || "User",
-                          email: user.email || "",
-                          avatarUrl: profileData?.avatarUrl,
-                        }
-                      : null
-                  }
-                  onLogout={logoutUser}
-                />
-                <main className="flex-grow">{children}</main>
-                <Footer currentUser={user ? { id: user.id } : null} />
-              </ProfileSetupProvider>
-            ) : (
-              <>
-                <Header currentUser={null} onLogout={logoutUser} />
-                <main className="flex-grow">{children}</main>
-                <Footer currentUser={null} />
-              </>
-            )}
+            <I18nProvider initialLocale={locale} messages={messages}>
+              {user && profileData ? (
+                <ProfileSetupProvider profileData={profileData}>
+                  <Header
+                    currentUser={
+                      user
+                        ? {
+                            id: user.id,
+                            name: profileData?.displayName || "User",
+                            email: user.email || "",
+                            avatarUrl: profileData?.avatarUrl,
+                          }
+                        : null
+                    }
+                    onLogout={logoutUser}
+                  />
+                  <main className="flex-grow">{children}</main>
+                  <Footer currentUser={user ? { id: user.id } : null} />
+                </ProfileSetupProvider>
+              ) : (
+                <>
+                  <Header currentUser={null} onLogout={logoutUser} />
+                  <main className="flex-grow">{children}</main>
+                  <Footer currentUser={null} />
+                </>
+              )}
+            </I18nProvider>
           </SubscriptionProvider>
         </AuthSyncProvider>
         <Toaster />

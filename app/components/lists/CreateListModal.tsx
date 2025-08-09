@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { createList } from "@/lib/actions/lists";
 import { ListPlus } from "lucide-react";
@@ -25,6 +26,7 @@ export function CreateListModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useI18n();
 
   const handleSubmit = async (formData: ListFormData) => {
     setIsSubmitting(true);
@@ -45,8 +47,8 @@ export function CreateListModal() {
 
       if (result.success) {
         toast({
-          title: "リストを作成しました",
-          description: "新しいリストが正常に作成されました。",
+          title: t("lists.create.successTitle"),
+          description: t("lists.create.successDesc"),
         });
         setOpen(false);
         router.refresh();
@@ -55,18 +57,18 @@ export function CreateListModal() {
         }
       } else {
         toast({
-          title: "エラー",
-          description: result.error || "リストの作成に失敗しました",
+          title: t("common.error"),
+          description: result.error || t("lists.create.failed"),
           variant: "destructive",
         });
       }
     } catch (error: unknown) {
-      let errorMessage = "リスト作成中に問題が発生しました";
+      let errorMessage = t("lists.create.unexpected");
       if (error instanceof Error) {
         errorMessage = error.message;
       }
       toast({
-        title: "エラー",
+        title: t("common.error"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -87,12 +89,14 @@ export function CreateListModal() {
             <DialogTrigger asChild>
               <Button
                 className="h-10 w-10 md:w-auto md:h-auto rounded-full md:rounded-md shadow-lg items-center"
-                aria-label="リストを作成"
+                aria-label={t("lists.create.aria")}
                 aria-haspopup="menu"
                 aria-expanded="false"
               >
                 <ListPlus className="h-6 w-6 sm:h-4 sm:w-4" />
-                <span className="hidden md:inline">リストを作成</span>
+                <span className="hidden md:inline">
+                  {t("lists.create.cta")}
+                </span>
               </Button>
             </DialogTrigger>
           </TooltipTrigger>
@@ -104,16 +108,16 @@ export function CreateListModal() {
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>新しいリストを作成</DialogTitle>
+          <DialogTitle>{t("lists.create.title")}</DialogTitle>
         </DialogHeader>
 
         <ListFormComponent
           onSubmit={handleSubmit}
-          submitButtonText="リストを作成"
+          submitButtonText={t("lists.create.submit")}
           isSubmitting={isSubmitting}
           showCancelButton={true}
           onCancel={handleCancel}
-          cancelButtonText="キャンセル"
+          cancelButtonText={t("common.cancel")}
         />
       </DialogContent>
     </Dialog>

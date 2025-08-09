@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import {
   getPlaceDetails,
@@ -157,6 +158,10 @@ export default function AddPlaceForm({
 }: AddPlaceFormProps) {
   const { toast } = useToast(); // useToastフックを呼び出す
   const [isTransitionPending, startTransition] = useTransition(); // useTransitionフックを呼び出す
+  const { t, locale } = useI18n();
+  const isEn = locale?.startsWith("en");
+  const languageCode = isEn ? "en" : "ja";
+  const regionCode = isEn ? "US" : "JP";
   const [searchTerm, setSearchTerm] = useState("");
   const [sessionToken, setSessionToken] = useState<string | undefined>(
     undefined
@@ -222,7 +227,7 @@ export default function AddPlaceForm({
 
     if (autocompleteState?.error) {
       toast({
-        title: "検索エラー",
+        title: t("place.search.errorTitle"),
         description: autocompleteState.error,
         variant: "destructive",
       });
@@ -230,12 +235,12 @@ export default function AddPlaceForm({
     } else if (autocompleteState?.predictions) {
       setCurrentStep("select_prediction");
     }
-  }, [autocompleteState, searchAttempted, toast]);
+  }, [autocompleteState, searchAttempted, toast, t]);
 
   useEffect(() => {
     if (placeDetailsState?.error) {
       toast({
-        title: "場所詳細取得エラー",
+        title: t("place.details.errorTitle"),
         description: placeDetailsState.error,
         variant: "destructive",
       });
@@ -246,12 +251,12 @@ export default function AddPlaceForm({
       setIsFetchingDetails(false);
       setCurrentStep("add_details");
     }
-  }, [placeDetailsState, toast]);
+  }, [placeDetailsState, toast, t]);
 
   useEffect(() => {
     if (registerState?.success && registerState.message) {
       toast({
-        title: "登録成功",
+        title: t("place.register.successTitle"),
         description: registerState.message,
       });
       if (onPlaceRegistered) {
@@ -268,25 +273,26 @@ export default function AddPlaceForm({
       }
     } else if (registerState?.error) {
       toast({
-        title: "登録エラー",
+        title: t("place.register.errorTitle"),
         description: registerState.error,
         variant: "destructive",
       });
     }
-  }, [registerState, toast, onPlaceRegistered]);
+  }, [registerState, toast, onPlaceRegistered, t]);
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!searchTerm.trim() || !sessionToken) {
       toast({
-        title: "エラー",
-        description: "検索キーワードを入力してください。",
+        title: t("place.search.errorTitle"),
+        description: t("place.search.errorDesc"),
         variant: "destructive",
       });
       return;
     }
     const formData = new FormData(event.currentTarget);
     formData.set("sessionToken", sessionToken);
+    formData.set("languageCode", languageCode);
     setSearchAttempted(true);
     startTransition(() => {
       searchFormAction(formData);
@@ -296,8 +302,8 @@ export default function AddPlaceForm({
   const handleSelectPrediction = (prediction: AutocompletePrediction) => {
     if (!sessionToken) {
       toast({
-        title: "エラー",
-        description: "セッションが無効です。ページをリロードしてください。",
+        title: t("place.search.errorTitle"),
+        description: t("place.select.errorSession"),
         variant: "destructive",
       });
       return;
@@ -308,6 +314,8 @@ export default function AddPlaceForm({
     const formData = new FormData();
     formData.append("placeId", prediction.place_id);
     formData.append("sessionToken", sessionToken);
+    formData.append("languageCode", languageCode);
+    formData.append("regionCode", regionCode);
     startTransition(() => {
       detailsFormAction(formData);
     });
@@ -317,8 +325,8 @@ export default function AddPlaceForm({
     event.preventDefault();
     if (!placeDetailsState?.placeDetails || !selectedPredictionForDisplay) {
       toast({
-        title: "エラー",
-        description: "登録する場所が選択されていません。",
+        title: t("place.search.errorTitle"),
+        description: t("place.register.noSelection"),
         variant: "destructive",
       });
       return;
@@ -372,17 +380,15 @@ export default function AddPlaceForm({
     return (
       <Card className="text-neutral-900 w-full max-w-lg mx-auto">
         <CardHeader>
-          <CardTitle>場所を検索</CardTitle>
-          <CardDescription>
-            キーワード入力後、検索ボタンを押してください。
-          </CardDescription>
+          <CardTitle>{t("place.search.title")}</CardTitle>
+          <CardDescription>{t("place.search.desc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSearchSubmit} className="space-y-4">
             <div className="flex items-start space-x-2">
               <div className="flex-grow">
                 <Label htmlFor="search-term" className="sr-only">
-                  検索キーワード
+                  {t("place.search.aria")}
                 </Label>
                 <Input
                   ref={searchInputRef}
@@ -391,22 +397,24 @@ export default function AddPlaceForm({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="例: 東京タワー"
+                  placeholder={t("place.search.placeholder")}
                   className="w-full"
-                  aria-label="場所を検索"
+                  aria-label={t("place.search.aria")}
                 />
               </div>
               <Button
                 type="submit"
                 disabled={isTransitionPending}
-                aria-label="検索"
+                aria-label={t("place.search.button")}
               >
                 {isTransitionPending ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <Search className="h-5 w-5" />
                 )}
-                <span className="ml-2 sm:inline hidden">検索</span>
+                <span className="ml-2 sm:inline hidden">
+                  {t("place.search.button")}
+                </span>
               </Button>
             </div>
           </form>
@@ -414,9 +422,7 @@ export default function AddPlaceForm({
         <CardFooter className="space-y-2">
           <div className="flex items-start space-x-2">
             <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <p className="text-sm">
-              地名を追加すると見つかりやすくなります（例：○○カフェ 渋谷）
-            </p>
+            <p className="text-sm">{t("place.search.tip")}</p>
           </div>
         </CardFooter>
       </Card>
@@ -427,14 +433,14 @@ export default function AddPlaceForm({
     return (
       <Card className="w-full max-w-lg mx-auto">
         <CardHeader>
-          <CardTitle>検索結果</CardTitle>
-          <CardDescription>該当する場所を選択してください。</CardDescription>
+          <CardTitle>{t("place.results.title")}</CardTitle>
+          <CardDescription>{t("place.results.desc")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isTransitionPending && !isFetchingDetails && (
             <div className="flex justify-center items-center py-4">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="ml-2">検索中...</p>
+              <p className="ml-2">{t("place.search.loading")}</p>
             </div>
           )}
           {searchAttempted &&
@@ -475,7 +481,7 @@ export default function AddPlaceForm({
             autocompleteState?.predictions &&
             autocompleteState.predictions.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                該当する場所が見つかりませんでした。
+                {t("place.search.noResults")}
               </p>
             )}
         </CardContent>
@@ -485,7 +491,7 @@ export default function AddPlaceForm({
             onClick={resetToSearch}
             disabled={isTransitionPending || isFetchingDetails}
           >
-            再検索
+            {t("place.results.retry")}
           </Button>
         </CardFooter>
       </Card>
@@ -544,13 +550,13 @@ export default function AddPlaceForm({
             </div>
             <div>
               <Label htmlFor="memo" className="block text-sm font-medium mb-1">
-                コメント (任意)
+                {t("place.add.memoLabel")}
               </Label>
               <Textarea
                 id="memo"
                 name="memo"
                 rows={3}
-                placeholder="この場所に関するコメント..."
+                placeholder={t("place.add.memoPlaceholder")}
                 className="w-full"
               />
               {/* ★追加: コメントのフィールドエラー表示 */}
@@ -572,13 +578,13 @@ export default function AddPlaceForm({
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="not_visited" id="not_visited" />
                   <Label htmlFor="not_visited" className="font-normal">
-                    未訪問
+                    {t("place.add.status.notVisited")}
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="visited" id="visited" />
                   <Label htmlFor="visited" className="font-normal">
-                    訪問済み
+                    {t("place.add.status.visited")}
                   </Label>
                 </div>
               </RadioGroup>
@@ -591,11 +597,11 @@ export default function AddPlaceForm({
               type="button"
               disabled={isTransitionPending || isRegisterPending}
             >
-              戻る
+              {t("place.add.back")}
             </Button>
             <SubmitButton
-              label="この場所をリストに追加"
-              loadingLabel="追加中..."
+              label={t("place.add.submit")}
+              loadingLabel={t("place.add.submitting")}
               pending={isRegisterPending}
             />
           </CardFooter>

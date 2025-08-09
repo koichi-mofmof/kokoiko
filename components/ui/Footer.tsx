@@ -1,11 +1,15 @@
-import Link from "next/link";
+"use client";
+
+import { useI18n } from "@/hooks/use-i18n";
 import Image from "next/image";
+import Link from "next/link";
 
 interface FooterProps {
   currentUser?: { id: string } | null;
 }
 
 export default function Footer({ currentUser }: FooterProps) {
+  const { t } = useI18n();
   return (
     <footer className="bg-neutral-800 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,23 +33,23 @@ export default function Footer({ currentUser }: FooterProps) {
               </Link>
             </div>
             <p className="mt-2 text-sm text-neutral-400 max-w-md">
-              デートや旅行の計画に。
+              {t("footer.brand.line1")}
               <br />
-              &quot;行きたい場所&quot;をリスト化・共有できるサービスです。
+              {t("footer.brand.line2")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
-                サービス
+                {t("footer.section.services")}
               </h3>
               <div className="mt-4 space-y-2">
                 <Link
                   href="/"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  ホーム
+                  {t("footer.link.home")}
                 </Link>
                 {currentUser && (
                   <>
@@ -53,7 +57,7 @@ export default function Footer({ currentUser }: FooterProps) {
                       href="/lists"
                       className="text-sm text-neutral-400 hover:text-white block"
                     >
-                      マイリスト一覧
+                      {t("footer.link.myLists")}
                     </Link>
                   </>
                 )}
@@ -61,59 +65,59 @@ export default function Footer({ currentUser }: FooterProps) {
                   href="/public-lists"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  みんなのリスト
+                  {t("footer.link.publicLists")}
                 </Link>
               </div>
             </div>
 
             <div>
               <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
-                サポート
+                {t("footer.section.support")}
               </h3>
               <div className="mt-4 space-y-2">
                 <Link
                   href="/help"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  よくあるご質問
+                  {t("footer.link.faq")}
                 </Link>
                 <Link
                   href="https://forms.gle/vg9kMmdKiKxxN6EU6"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  お問い合わせ
+                  {t("footer.link.contact")}
                 </Link>
                 <Link
                   href="/terms"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  利用規約
+                  {t("footer.link.terms")}
                 </Link>
               </div>
             </div>
 
             <div>
               <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
-                法的情報
+                {t("footer.section.legal")}
               </h3>
               <div className="mt-4 space-y-2">
                 <Link
                   href="/privacy"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  プライバシーポリシー
+                  {t("footer.link.privacy")}
                 </Link>
                 <Link
                   href="/cookies"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  Cookie ポリシー
+                  {t("footer.link.cookies")}
                 </Link>
                 <Link
                   href="/tokushoho"
                   className="text-sm text-neutral-400 hover:text-white block"
                 >
-                  特定商取引法に基づく表記
+                  {t("footer.link.tokushoho")}
                 </Link>
               </div>
             </div>

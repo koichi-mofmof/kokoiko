@@ -1,9 +1,10 @@
-import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
 
+import { useI18n } from "@/hooks/use-i18n";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -65,6 +66,7 @@ interface CtaButtonProps {
 }
 
 export function CtaButton({ type }: CtaButtonProps) {
+  const { t } = useI18n();
   let href: string;
   let mainText: string;
   let subText: string | undefined;
@@ -83,7 +85,7 @@ export function CtaButton({ type }: CtaButtonProps) {
   switch (type) {
     case "login":
       href = "/lists";
-      mainText = "今すぐリストを作成する";
+      mainText = t("cta.createListNow");
       showChevron = true;
       variant = "default";
       buttonClassName =

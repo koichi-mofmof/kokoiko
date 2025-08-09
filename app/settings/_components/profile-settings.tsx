@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
@@ -30,6 +31,7 @@ interface ProfileSettingsProps {
 
 export function ProfileSettings({ initialData }: ProfileSettingsProps) {
   const { toast } = useToast();
+  const { t } = useI18n();
   const [image, setImage] = useState<string | null>(initialData.avatarUrl);
   const [nickname, setNickname] = useState(initialData.displayName);
   const [bio, setBio] = useState(initialData.bio);
@@ -49,7 +51,7 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
     if (!validation.isValid) {
       toast({
         variant: "destructive",
-        title: "エラー",
+        title: t("common.error"),
         description: validation.error,
       });
       // ファイル入力をクリア
@@ -62,9 +64,8 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
     if (!isValidContent) {
       toast({
         variant: "destructive",
-        title: "エラー",
-        description:
-          "ファイルの内容が無効です。正しい画像ファイルをアップロードしてください。",
+        title: t("common.error"),
+        description: t("settings.profile.image.invalidContent"),
       });
       e.target.value = "";
       return;
@@ -113,10 +114,9 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
             .remove([initialData.avatarPath]);
 
           if (removeError) {
-            // 削除エラーはログには残すが、処理は続行する（致命的なエラーとはしない）
             console.warn(
-              `古いアバター画像の削除に失敗しました: ${removeError.message}`,
-              removeError // エラーオブジェクト全体を出力するように変更
+              `Failed to remove old avatar: ${removeError.message}`,
+              removeError
             );
           }
         }
@@ -136,7 +136,9 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
 
         if (uploadError) {
           throw new Error(
-            `画像のアップロードに失敗しました: ${uploadError.message}`
+            t("settings.profile.image.uploadFailed", {
+              message: uploadError.message,
+            })
           );
         }
 
@@ -159,21 +161,21 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
 
       // 成功メッセージを表示
       toast({
-        title: "成功",
-        description: "プロフィール情報が正常に更新されました",
+        title: t("common.success"),
+        description: t("settings.profile.update.success"),
       });
 
       // プロフィール更新イベントを発火
       window.dispatchEvent(new CustomEvent("profile-updated"));
     } catch (error) {
-      console.error("プロフィール更新エラー:", error);
+      console.error("profile update error:", error);
       toast({
         variant: "destructive",
-        title: "エラー",
+        title: t("common.error"),
         description:
           error instanceof Error
             ? error.message
-            : "プロフィールの更新中にエラーが発生しました",
+            : t("settings.profile.update.unexpected"),
       });
     } finally {
       setIsLoading(false);
@@ -184,20 +186,26 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
     <div className="space-y-6 px-0 sm:px-4">
       <Card>
         <CardHeader>
-          <CardTitle>プロフィール設定</CardTitle>
+          <CardTitle>{t("settings.profile.title")}</CardTitle>
           <CardDescription>
-            プロフィール画像や基本情報を設定してください。
-            <span className="text-red-500">*</span> は必須項目です。
+            {t("settings.profile.description")}{" "}
+            <span className="text-red-500">*</span>{" "}
+            {t("settings.profile.requiredNote")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8 w-full">
             <section className="w-full">
-              <h3 className="mb-4 text-left">プロフィール画像</h3>
+              <h3 className="mb-4 text-left">
+                {t("settings.profile.image.title")}
+              </h3>
               <div className="flex flex-row items-center sm:items-start gap-4 sm:gap-6">
                 <Avatar className="h-16 w-16 border bg-muted">
                   {image ? (
-                    <AvatarImage src={image} alt="プロフィール画像" />
+                    <AvatarImage
+                      src={image}
+                      alt={t("settings.profile.image.alt")}
+                    />
                   ) : (
                     <AvatarFallback className="text-lg">
                       <User className="h-6 w-6 text-muted-foreground" />
@@ -211,7 +219,7 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
                       className="flex items-center justify-center px-3 py-1.5 text-sm border rounded-md hover:bg-accent cursor-pointer"
                     >
                       <Upload className="mr-2 h-4 w-4" />
-                      画像をアップロード
+                      {t("settings.profile.image.upload")}
                     </label>
                     <input
                       id="profile-image-upload"
@@ -219,32 +227,35 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
                       accept="image/*"
                       onChange={handleImageChange}
                       className="sr-only"
-                      aria-label="プロフィール画像をアップロード"
+                      aria-label={t("settings.profile.image.uploadAria")}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    JPG, PNG, GIF形式で最大2MBまで
+                    {t("settings.profile.image.help")}
                   </p>
                 </div>
               </div>
             </section>
 
             <section className="w-full">
-              <h3 className="font-medium mb-4 text-left">基本情報</h3>
+              <h3 className="font-medium mb-4 text-left">
+                {t("settings.profile.basic.title")}
+              </h3>
               <div className="space-y-5 w-full">
                 <div className="w-full">
                   <label
                     htmlFor="nickname"
                     className="block mb-1 text-sm text-left"
                   >
-                    表示名 <span className="text-red-500">*</span>
+                    {t("settings.profile.basic.displayName")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="w-full">
                     <Input
                       id="nickname"
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
-                      placeholder="あなたの名前"
+                      placeholder={t("settings.profile.basic.namePlaceholder")}
                       maxLength={50}
                       className={`w-full ${
                         validationErrors.display_name ? "border-red-500" : ""
@@ -261,19 +272,19 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
                     </p>
                   ))}
                   <p className="mt-1 text-xs text-muted-foreground text-left">
-                    50文字以内で入力してください
+                    {t("settings.profile.basic.max50")}
                   </p>
                 </div>
 
                 <div className="w-full">
                   <label htmlFor="bio" className="block mb-1 text-sm text-left">
-                    自己紹介
+                    {t("settings.profile.basic.bio")}
                   </label>
                   <Textarea
                     id="bio"
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    placeholder="あなたの自己紹介"
+                    placeholder={t("settings.profile.basic.bioPlaceholder")}
                     rows={5}
                     maxLength={500}
                     className={`resize-none w-full ${
@@ -290,7 +301,7 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
                   ))}
                   <div className="flex justify-end mt-1">
                     <p className="text-xs text-muted-foreground">
-                      {bio.length}/500文字
+                      {t("settings.profile.basic.bioCount", { n: bio.length })}
                     </p>
                   </div>
                 </div>
@@ -303,7 +314,9 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
                 disabled={isLoading}
                 className="bg-primary-600 text-white hover:bg-primary-600/90 w-full sm:w-auto px-8"
               >
-                {isLoading ? "保存中..." : "変更を保存"}
+                {isLoading
+                  ? t("settings.profile.saving")
+                  : t("settings.profile.save")}
               </Button>
             </div>
           </form>

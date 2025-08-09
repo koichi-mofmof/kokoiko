@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { Place } from "@/types";
 import { Check, Circle, MapPin, Tag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -23,16 +24,17 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   onClose,
 }) => {
   const router = useRouter();
+  const { t } = useI18n();
   const visitStatusElement =
     place.visited === "visited" ? (
       <div className="flex items-center text-xs text-primary-700">
         <Check className="h-5 w-5 mr-1 text-primary-500" />
-        訪問済み
+        {t("place.status.visited")}
       </div>
     ) : (
       <div className="flex items-center text-xs text-neutral-600">
         <Circle className="h-5 w-5 mr-1 text-neutral-400" />
-        未訪問
+        {t("place.status.notVisited")}
       </div>
     );
 
@@ -66,7 +68,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                   onClose();
                 }}
                 className="ml-2 p-1 rounded-full hover:bg-neutral-100 focus:outline-none flex-shrink-0"
-                aria-label="閉じる"
+                aria-label={t("common.close")}
                 tabIndex={0}
               >
                 <X className="h-5 w-5 text-neutral-400" strokeWidth={2} />
@@ -117,9 +119,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 size="sm"
                 onClick={handleDetailClick}
                 tabIndex={0}
-                aria-label="詳細を見る"
+                aria-label={t("place.viewDetails", { name: place.name })}
               >
-                詳細を見る
+                {t("place.detail.view")}
               </Button>
             </div>
           </div>

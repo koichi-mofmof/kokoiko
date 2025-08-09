@@ -13,7 +13,11 @@ export async function fetchRankingViewData(listId: string) {
     .select("place_id, rank, comment")
     .eq("list_id", listId)
     .order("rank", { ascending: true });
-  if (rankingError) return { error: rankingError.message };
+  if (rankingError)
+    return {
+      errorKey: "errors.common.fetchFailed",
+      error: rankingError.message,
+    };
 
   // place_id→placeIdへ変換
   const rankingsCamel = (rankings || []).map(
@@ -29,7 +33,11 @@ export async function fetchRankingViewData(listId: string) {
     .from("list_places")
     .select("place_id")
     .eq("list_id", listId);
-  if (listPlacesError) return { error: listPlacesError.message };
+  if (listPlacesError)
+    return {
+      errorKey: "errors.common.fetchFailed",
+      error: listPlacesError.message,
+    };
   const placeIds = listPlaces?.map((lp) => lp.place_id) || [];
 
   // 3. placesテーブルから詳細取得
@@ -39,7 +47,11 @@ export async function fetchRankingViewData(listId: string) {
       .from("places")
       .select("*")
       .in("id", placeIds);
-    if (placesError) return { error: placesError.message };
+    if (placesError)
+      return {
+        errorKey: "errors.common.fetchFailed",
+        error: placesError.message,
+      };
     places = placesData || [];
   }
 
@@ -65,7 +77,10 @@ export async function saveRankingViewData({
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return { error: "認証エラー: ログインが必要です" };
+    return {
+      errorKey: "errors.common.unauthorized",
+      error: "認証エラー: ログインが必要です",
+    };
   }
   const userId = user.id;
 
@@ -84,7 +99,11 @@ export async function saveRankingViewData({
     const { error: insertError } = await supabase
       .from("list_place_rankings")
       .insert(insertRows);
-    if (insertError) return { error: insertError.message };
+    if (insertError)
+      return {
+        errorKey: "errors.common.insertFailed",
+        error: insertError.message,
+      };
   }
 
   return { success: true };

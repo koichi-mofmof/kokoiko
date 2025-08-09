@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { markAuthCallbackPending } from "@/hooks/use-auth-sync";
+import { useI18n } from "@/hooks/use-i18n";
 import {
   AuthState,
   loginWithCredentials,
@@ -21,10 +22,11 @@ import { WebViewWarning } from "./webview-warning";
 // Submit ボタンコンポーネント (useFormStatusを使用)
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { t } = useI18n();
 
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "ログイン中..." : "ログイン"}
+      {pending ? t("auth.login.submit.pending") : t("auth.common.login")}
     </Button>
   );
 }
@@ -32,6 +34,7 @@ function SubmitButton() {
 // Google ログインボタンコンポーネント (useFormStatusを使用)
 function GoogleLoginButton() {
   const { pending } = useFormStatus();
+  const { t } = useI18n();
 
   return (
     <Button
@@ -41,7 +44,7 @@ function GoogleLoginButton() {
       disabled={pending}
     >
       <GoogleLogoIcon />
-      {pending ? "処理中..." : "Google でログイン"}
+      {pending ? t("common.processing") : t("auth.login.google")}
     </Button>
   );
 }
@@ -49,6 +52,7 @@ function GoogleLoginButton() {
 export function LoginForm() {
   const initialState: AuthState = { message: null, errors: {}, success: false };
   const [state, dispatch] = useActionState(loginWithCredentials, initialState);
+  const { t } = useI18n();
 
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect_url");
@@ -69,9 +73,9 @@ export function LoginForm() {
     // URLからエラーを取得して表示
     const error = searchParams.get("google_error");
     if (error) {
-      setGoogleError("Googleでのログインに失敗しました。");
+      setGoogleError(t("auth.login.error.googleFailed"));
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   useEffect(() => {
     // WebViewからのアクセスかチェック
@@ -102,7 +106,11 @@ export function LoginForm() {
       window.location.href = result.googleUrl;
     } else {
       // エラー処理
-      setGoogleError(result.message || "Googleログインの開始に失敗しました。");
+      setGoogleError(
+        (result as { messageKey?: string; message?: string }).messageKey
+          ? t((result as { messageKey?: string }).messageKey!)
+          : result.message || t("auth.login.error.googleStartFailed")
+      );
     }
   };
 
@@ -136,13 +144,13 @@ export function LoginForm() {
         )}
         <input type="hidden" name="csrf_token" value={csrfToken} />
         <div className="space-y-2">
-          <Label htmlFor="email">メールアドレス</Label>
+          <Label htmlFor="email">{t("auth.common.email")}</Label>
           <Input
             id="email"
             name="email" // Server Action で受け取るために name 属性を追加
             type="email"
             required
-            placeholder="you@example.com"
+            placeholder={t("auth.common.email.placeholder")}
             aria-describedby="email-error"
           />
           {/* Zod バリデーションエラー表示 */}
@@ -156,7 +164,7 @@ export function LoginForm() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">パスワード</Label>
+          <Label htmlFor="password">{t("auth.common.password")}</Label>
           <Input
             id="password"
             name="password"
@@ -187,7 +195,7 @@ export function LoginForm() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                または
+                {t("home.pricing.or")}
               </span>
             </div>
           </div>
@@ -211,29 +219,41 @@ export function LoginForm() {
       {/* パスワード忘れリンク */}
       <div className="text-center text-sm">
         <p className="cursor-pointer text-muted-foreground hover:underline">
-          パスワードをお忘れですか？
+          {t("auth.login.forgotPassword")}
         </p>
       </div>
 
       {/* 一般的な認証エラー表示 (メール/パスワード) */}
-      {state.errors?.general && (
+      {(state.messageKey ||
+        state.errors?.generalKey ||
+        state.errors?.general) && (
         <div aria-live="polite" aria-atomic="true">
-          {state.errors.general.map((error: string) => (
-            <p className="text-sm text-red-500" key={error}>
-              {error}
-            </p>
-          ))}
+          {/* サーバーからのトップレベルメッセージキー */}
+          {state.messageKey && (
+            <p className="text-sm text-red-500">{t(state.messageKey)}</p>
+          )}
+          {/* 一般エラーキー */}
+          {state.errors?.generalKey && (
+            <p className="text-sm text-red-500">{t(state.errors.generalKey)}</p>
+          )}
+          {/* 既存のメッセージ配列（フォールバック） */}
+          {state.errors?.general &&
+            state.errors.general.map((error: string) => (
+              <p className="text-sm text-red-500" key={error}>
+                {error}
+              </p>
+            ))}
         </div>
       )}
 
       {/* 新規登録リンク */}
       <div className="mt-4 text-center text-sm">
-        アカウントをお持ちでない場合 は{" "}
+        {t("auth.common.noAccountYet")}{" "}
         <Link
           href="/signup"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          新規登録
+          {t("auth.common.signup")}
         </Link>
       </div>
     </div>
