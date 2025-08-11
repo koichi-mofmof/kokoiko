@@ -47,19 +47,37 @@ const tabs = [
 
 export function HeroSection() {
   const [activeTab, setActiveTab] = useState("map");
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+
+  // タブID → ファイル名の対応表
+  const tabToFile: Record<(typeof tabs)[number]["id"], string> = {
+    map: "feature1.webp",
+    list: "feature2.webp",
+    detail: "feature3.webp",
+  };
+
+  // 現在のロケール（先頭2文字を使用）
+  const normalizedLocale = (locale || "ja").toLowerCase().split("-")[0];
+
+  // ロケール別の画像パス: ja のみローカライズ、それ以外はデフォルト
+  const getImageSrc = (tabId: (typeof tabs)[number]["id"]) => {
+    const file = tabToFile[tabId];
+    return normalizedLocale === "ja"
+      ? `/screenshots/ja/${file}`
+      : `/screenshots/${file}`;
+  };
 
   return (
     <section className="relative px-4 pb-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col border-2 sm:border-4 border-yellow-600 rounded-3xl">
       {/* 背景画像とオーバーレイ */}
       <div className="absolute inset-0 -z-10">
         <Image
-          src="https://images.pexels.com/photos/592753/pexels-photo-592753.jpeg"
-          alt="背景画像"
+          src={`https://images.pexels.com/photos/592753/pexels-photo-592753.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=1600`}
+          alt={t("home.hero.backgroundAlt")}
           fill
           className="object-cover"
           priority
-          quality={75}
+          quality={60}
           sizes="100vw"
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
@@ -130,7 +148,7 @@ export function HeroSection() {
                 {/* スクリーンショット */}
                 <div className="relative mx-auto w-[350px] h-[300px] sm:w-[730px] sm:h-[730px] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 backdrop-blur-sm">
                   <Image
-                    src={tab.image}
+                    src={getImageSrc(tab.id)}
                     alt={t("home.hero.screenshotAlt", {
                       title: t(tab.titleKey),
                     })}
@@ -138,8 +156,8 @@ export function HeroSection() {
                     height={600}
                     className="w-full h-full object-cover"
                     loading="lazy"
-                    quality={75}
-                    sizes="(max-width: 640px) 300px, (max-width: 1024px) 500px, 600px"
+                    quality={70}
+                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 500px, 700px"
                   />
                 </div>
 
