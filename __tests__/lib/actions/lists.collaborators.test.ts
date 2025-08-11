@@ -349,6 +349,7 @@ describe("updateCollaboratorPermissionOnSharedList: メンバー権限変更", (
     });
     expect(result).toEqual({
       success: false,
+      errorKey: "errors.common.forbidden",
       error: "この操作を行う権限がありません。",
     });
   });
@@ -387,6 +388,7 @@ describe("updateCollaboratorPermissionOnSharedList: メンバー権限変更", (
     });
     expect(result).toEqual({
       success: false,
+      errorKey: "errors.common.forbidden",
       error: "オーナーの権限は変更できません。",
     });
   });
@@ -505,6 +507,7 @@ describe("removeCollaboratorFromSharedList: メンバー共有解除", () => {
     });
     expect(result).toEqual({
       success: false,
+      errorKey: "errors.common.forbidden",
       error: "この操作を行う権限がありません。",
     });
   });
@@ -542,6 +545,7 @@ describe("removeCollaboratorFromSharedList: メンバー共有解除", () => {
     });
     expect(result).toEqual({
       success: false,
+      errorKey: "errors.common.forbidden",
       error: "オーナーは共有解除できません。",
     });
   });

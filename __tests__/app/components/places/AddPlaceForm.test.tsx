@@ -37,7 +37,8 @@ describe("AddPlaceForm", () => {
       render(<AddPlaceForm {...baseProps} />);
     });
 
-    expect(screen.getByText("場所を検索")).toBeInTheDocument();
+    // 見出しテキストはdiv要素なので、テキストで判定
+    expect(screen.getAllByText("場所を検索").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByPlaceholderText("例: 東京タワー")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /検索/ })).toBeInTheDocument();
   });

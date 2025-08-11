@@ -1,13 +1,20 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
+import { useI18n } from "@/hooks/use-i18n";
+import {
+  DISPLAY_PRICES,
+  formatPrice,
+  formatMonthlyFromYearly,
+  inferCurrencyFromLocale,
+  SUBSCRIPTION_LIMITS,
+} from "@/lib/constants/config/subscription";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
-import { useI18n } from "@/hooks/use-i18n";
 
 export function PricingSection() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const currency = inferCurrencyFromLocale(locale);
   return (
     <section className="py-16 bg-neutral-50 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,10 +96,11 @@ export function PricingSection() {
                   <span className="text-base sm:text-lg font-bold mr-2">
                     {t("home.pricing.premium.monthlyLabel")}
                   </span>
-                  500
-                  <span className="text-base sm:text-lg font-bold ml-1">
-                    {t("upgrade.price.currency")}
-                  </span>
+                  {formatPrice(
+                    DISPLAY_PRICES[currency].monthly,
+                    currency,
+                    locale
+                  )}
                   <span className="text-xs ml-1">
                     {t("home.pricing.taxIncluded")}
                   </span>
@@ -105,15 +113,22 @@ export function PricingSection() {
                     <span className="text-sm mr-2">
                       {t("home.pricing.premium.yearlyLabel")}
                     </span>
-                    4,200
-                    <span className="text-sm ml-1">
-                      {t("upgrade.price.currency")}
-                    </span>
+                    {formatPrice(
+                      DISPLAY_PRICES[currency].yearly,
+                      currency,
+                      locale
+                    )}
                     <span className="text-xs ml-1">
                       {t("home.pricing.taxIncluded")}
                     </span>
                     <span className="text-xs ml-1">
-                      {t("upgrade.perMonthNote")}
+                      {t("upgrade.perMonthNoteDynamic", {
+                        price: formatMonthlyFromYearly(
+                          DISPLAY_PRICES[currency].yearly,
+                          currency,
+                          locale
+                        ),
+                      })}
                     </span>
                   </div>
                 </div>

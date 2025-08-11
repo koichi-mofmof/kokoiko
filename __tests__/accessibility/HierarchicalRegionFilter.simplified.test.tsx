@@ -184,7 +184,8 @@ describe("HierarchicalRegionFilter Simplified Accessibility", () => {
       });
 
       // クリアボタンを探す
-      const clearButton = screen.getByText("クリア");
+      // ボタンのラベルはi18nキー依存。data-testidで取得に変更
+      const clearButton = screen.getByTestId("clear-filter-button");
       expect(clearButton).toBeInTheDocument();
 
       // クリアボタンをクリック

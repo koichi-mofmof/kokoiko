@@ -16,6 +16,7 @@ export function PublicListsSection({ publicLists }: PublicListsSectionProps) {
   const { t } = useI18n();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isDesktop, setIsDesktop] = useState<boolean>(true);
 
   // スクロール位置に基づいてアクティブなインデックスを更新
   useEffect(() => {
@@ -36,6 +37,29 @@ export function PublicListsSection({ publicLists }: PublicListsSectionProps) {
       return () => container.removeEventListener("scroll", handleScroll);
     }
   }, [publicLists.length]);
+
+  // 画面幅に基づいてデスクトップ/モバイルのどちらか一方のみをレンダリング
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function"
+    ) {
+      const mediaQuery = window.matchMedia("(min-width: 768px)");
+      const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+      setIsDesktop(mediaQuery.matches);
+      if (typeof mediaQuery.addEventListener === "function") {
+        mediaQuery.addEventListener("change", listener);
+        return () => mediaQuery.removeEventListener("change", listener);
+      } else if (typeof mediaQuery.addListener === "function") {
+        // Safari/JSDOM互換
+        mediaQuery.addListener(listener);
+        return () => mediaQuery.removeListener(listener);
+      }
+    } else {
+      // JSDOMなどではCSSが効かないため、重複描画を避けるためにデスクトップのみ表示
+      setIsDesktop(true);
+    }
+  }, []);
 
   // インジケータークリックでスクロール
   const scrollToIndex = (index: number) => {
@@ -71,73 +95,75 @@ export function PublicListsSection({ publicLists }: PublicListsSectionProps) {
           </p>
         </motion.div>
 
-        {/* デスクトップ用：従来のグリッドレイアウト */}
-        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {publicLists.map((list, index) => (
-            <motion.div
-              key={list.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <PublicListCard list={list} />
-            </motion.div>
-          ))}
-        </div>
-
-        {/* モバイル用：横スクロールレイアウト */}
-        <div className="md:hidden">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
-            ref={scrollContainerRef}
-            style={{
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
-          >
+        {isDesktop ? (
+          // デスクトップ用：グリッドレイアウト
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {publicLists.map((list, index) => (
               <motion.div
                 key={list.id}
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex-shrink-0 w-80 snap-start"
               >
                 <PublicListCard list={list} />
               </motion.div>
             ))}
-          </motion.div>
+          </div>
+        ) : (
+          // モバイル用：横スクロールレイアウト
+          <div className="">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
+              ref={scrollContainerRef}
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+            >
+              {publicLists.map((list, index) => (
+                <motion.div
+                  key={list.id}
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="flex-shrink-0 w-80 snap-start"
+                >
+                  <PublicListCard list={list} />
+                </motion.div>
+              ))}
+            </motion.div>
 
-          {/* 動的スクロールインジケーター */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            className="flex justify-center mt-6 space-x-2"
-          >
-            {publicLists.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => scrollToIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  activeIndex === index
-                    ? "bg-primary-600 scale-125"
-                    : "bg-neutral-300 hover:bg-neutral-400"
-                }`}
-                aria-label={t("home.publicLists.moveToCard", {
-                  index: index + 1,
-                })}
-              />
-            ))}
-          </motion.div>
-        </div>
+            {/* 動的スクロールインジケーター */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.5 }}
+              className="flex justify-center mt-6 space-x-2"
+            >
+              {publicLists.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => scrollToIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    activeIndex === index
+                      ? "bg-primary-600 scale-125"
+                      : "bg-neutral-300 hover:bg-neutral-400"
+                  }`}
+                  aria-label={t("home.publicLists.moveToCard", {
+                    index: index + 1,
+                  })}
+                />
+              ))}
+            </motion.div>
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

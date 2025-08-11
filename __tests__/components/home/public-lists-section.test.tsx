@@ -53,11 +53,8 @@ describe("PublicListsSection", () => {
   it("should render public lists section with title", () => {
     render(<PublicListsSection publicLists={mockLists} />);
 
-    expect(screen.getByText("みんなが作った")).toBeInTheDocument();
-    expect(screen.getByText("おすすめスポット")).toBeInTheDocument();
-    expect(
-      screen.getByText("実際のユーザーが作成したリストをご紹介")
-    ).toBeInTheDocument();
+    expect(screen.getByText("みんなのリスト")).toBeInTheDocument();
+    expect(screen.getByText("実際のリストをご紹介")).toBeInTheDocument();
   });
 
   it("should render all public lists", () => {

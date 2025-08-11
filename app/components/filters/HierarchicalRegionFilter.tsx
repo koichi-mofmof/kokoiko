@@ -244,6 +244,7 @@ export default function HierarchicalRegionFilter({
             <button
               onClick={handleClearFilter}
               className="text-sm text-primary-600 hover:text-primary-800 font-medium transition-colors"
+              data-testid="clear-filter-button"
             >
               {t("common.clear")}
             </button>

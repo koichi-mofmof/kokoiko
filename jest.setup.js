@@ -21,6 +21,11 @@ global.Response = require("node-fetch").Response;
 global.Headers = require("node-fetch").Headers;
 global.fetch = require("node-fetch");
 
+// URL.createObjectURL のモック（jsdom では未実装）
+if (!global.URL.createObjectURL) {
+  global.URL.createObjectURL = jest.fn(() => "blob:mock-url");
+}
+
 // MSWのセットアップ
 // import { server } from "./mocks/server";
 
@@ -306,6 +311,24 @@ Object.defineProperty(window, "matchMedia", {
 
 jest.mock("nanoid", () => require("nanoid/non-secure"));
 
+// i18nフックのモック（I18nProvider不要で動作させる）
+jest.mock("@/hooks/use-i18n", () => {
+  const ja = require("./messages/ja.json");
+  function translate(key, params) {
+    let text = ja[key] ?? key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        text = text.replace(new RegExp(`{${k}}`, "g"), String(v));
+      }
+    }
+    return text;
+  }
+  return {
+    __esModule: true,
+    useI18n: () => ({ t: translate, locale: "ja", setLocale: jest.fn() }),
+  };
+});
+
 // shadcn/ui系コンポーネントのグローバルモック
 jest.mock("@/components/ui/button", () => {
   const React = require("react");
@@ -560,9 +583,27 @@ jest.mock("@/components/ui/dialog", () => {
     DialogOverlay: ({ children }) => (
       <div data-testid="dialog-overlay">{children}</div>
     ),
-    DialogTrigger: ({ children }) => (
-      <button data-testid="dialog-trigger">{children}</button>
-    ),
+    DialogTrigger: ({ children, asChild, onOpenChange, ...props }) => {
+      const React = require("react");
+      const handleClick = () => onOpenChange && onOpenChange(true);
+      if (asChild && React.isValidElement(children)) {
+        return React.cloneElement(children, {
+          ...props,
+          ...children.props,
+          onClick: (...args) => {
+            if (typeof children.props.onClick === "function") {
+              children.props.onClick(...args);
+            }
+            handleClick();
+          },
+        });
+      }
+      return (
+        <button data-testid="dialog-trigger" onClick={handleClick} {...props}>
+          {children}
+        </button>
+      );
+    },
     DialogClose,
     DialogContent,
     DialogHeader: ({ children }) => (

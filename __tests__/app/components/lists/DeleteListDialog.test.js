@@ -223,9 +223,8 @@ describe("DeleteListDialogコンポーネントテスト", () => {
     await waitFor(
       () => {
         expect(screen.getByTestId("delete-button")).not.toBeDisabled();
-        expect(screen.getByTestId("delete-button")).toHaveTextContent(
-          "削除する"
-        );
+        // 文言は共通キー "common.delete" に合わせて「削除」
+        expect(screen.getByTestId("delete-button")).toHaveTextContent("削除");
       },
       { timeout: 200 }
     ); // setTimeoutの時間より長く待つ

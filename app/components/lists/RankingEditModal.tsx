@@ -413,7 +413,7 @@ export default function RankingEditModal({
                 : t("common.saving")
               : mode === "create"
               ? t("ranking.edit.title.create")
-              : t("common.save")}
+              : t("ranking.edit.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

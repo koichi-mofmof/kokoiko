@@ -1,9 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
-import { cookies } from "next/headers";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
-import type { Metadata } from "next";
 import { Button } from "@/components/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DISPLAY_PRICES,
+  formatPrice,
+  inferCurrencyFromLocale,
+  type SupportedCurrency,
+} from "@/lib/constants/config/subscription";
+import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { FileText } from "lucide-react";
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 const Row = ({
   label,
@@ -38,6 +44,17 @@ export default async function TokushohoPage() {
   const locale = normalizeLocale(cookieStore.get("lang")?.value);
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
+  const currency: SupportedCurrency = inferCurrencyFromLocale(locale);
+  const monthlyPrice = formatPrice(
+    DISPLAY_PRICES[currency].monthly,
+    currency,
+    locale
+  );
+  const yearlyPrice = formatPrice(
+    DISPLAY_PRICES[currency].yearly,
+    currency,
+    locale
+  );
   return (
     <div className="bg-neutral-50 py-4 sm:py-8">
       <div className="max-w-3xl w-full mx-auto p-3 sm:p-4 md:p-6">
@@ -105,10 +122,14 @@ export default async function TokushohoPage() {
                 <Row label={t("tokushoho.label.price")}>
                   <div className="space-y-1">
                     <div className="text-sm sm:text-base">
-                      {t("tokushoho.value.priceMonthly")}
+                      {t("tokushoho.value.priceMonthlyDynamic", {
+                        price: monthlyPrice,
+                      })}
                     </div>
                     <div className="text-sm sm:text-base">
-                      {t("tokushoho.value.priceYearly")}
+                      {t("tokushoho.value.priceYearlyDynamic", {
+                        price: yearlyPrice,
+                      })}
                     </div>
                     <div className="text-xs text-neutral-500">
                       {t("tokushoho.value.priceNote")}

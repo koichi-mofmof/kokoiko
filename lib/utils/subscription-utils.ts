@@ -1,5 +1,9 @@
-import { SupabaseClient } from "@supabase/supabase-js";
 import { BadgeProps } from "@/components/ui/badge";
+import {
+  PRICE_IDS_BY_CURRENCY,
+  type SupportedCurrency,
+} from "@/lib/constants/config/subscription";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * フリープランの「共有リスト数」判定ロジック（サーバー・クライアント共通）
@@ -107,19 +111,18 @@ export const getPlanStatus = (status: SubscriptionStatus): PlanStatus => {
   }
 };
 
-const premiumMonthlyPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY;
-const premiumYearlyPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY;
-
+// 価格ID → プラン名（日本語固定表示）
 export const getPlanName = (priceId: string | null | undefined): string => {
-  if (!priceId) {
-    return "フリープラン";
+  if (!priceId) return "フリープラン";
+  const entries = Object.entries(PRICE_IDS_BY_CURRENCY) as Array<
+    [
+      SupportedCurrency,
+      { monthly: string | undefined; yearly: string | undefined }
+    ]
+  >;
+  for (const [, ids] of entries) {
+    if (ids.monthly && priceId === ids.monthly) return "プレミアム（月額）";
+    if (ids.yearly && priceId === ids.yearly) return "プレミアム（年額）";
   }
-  switch (priceId) {
-    case premiumMonthlyPriceId:
-      return "プレミアム（月額）";
-    case premiumYearlyPriceId:
-      return "プレミアム（年額）";
-    default:
-      return "不明なプラン";
-  }
+  return "不明なプラン";
 };

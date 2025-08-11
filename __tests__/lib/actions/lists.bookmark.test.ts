@@ -49,12 +49,20 @@ describe("bookmarkList", () => {
       error: new Error("Unauthorized"),
     });
     const result = await bookmarkList(listId);
-    expect(result).toEqual({ success: false, error: "ログインが必要です。" });
+    expect(result).toEqual({
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "ログインが必要です。",
+    });
   });
 
   it("listIdがない場合はエラーを返す", async () => {
     const result = await bookmarkList("");
-    expect(result).toEqual({ success: false, error: "リストIDが無効です。" });
+    expect(result).toEqual({
+      success: false,
+      errorKey: "errors.validation.invalidInput",
+      error: "リストIDが無効です。",
+    });
   });
 
   it("対象リストが非公開の場合はエラーを返す", async () => {
@@ -69,6 +77,7 @@ describe("bookmarkList", () => {
     const result = await bookmarkList(listId);
     expect(result).toEqual({
       success: false,
+      errorKey: "errors.common.forbidden",
       error: "このリストはブックマークできません。",
     });
   });
@@ -153,6 +162,7 @@ describe("unbookmarkList", () => {
     const result = await unbookmarkList(listId);
     expect(result).toEqual({
       success: false,
+      errorKey: "errors.common.deleteFailed",
       error: "ブックマークの削除に失敗しました。",
     });
   });
@@ -163,6 +173,10 @@ describe("unbookmarkList", () => {
       error: new Error("Unauthorized"),
     });
     const result = await unbookmarkList("list-uuid-123");
-    expect(result).toEqual({ success: false, error: "ログインが必要です。" });
+    expect(result).toEqual({
+      success: false,
+      errorKey: "errors.common.unauthorized",
+      error: "ログインが必要です。",
+    });
   });
 });

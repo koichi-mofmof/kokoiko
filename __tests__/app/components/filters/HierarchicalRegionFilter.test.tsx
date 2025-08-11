@@ -136,8 +136,8 @@ describe("HierarchicalRegionFilter", () => {
       expect(screen.getByText("現在のフィルター")).toBeInTheDocument();
     });
 
-    // クリアボタンをクリック
-    const clearButton = screen.getByText("クリア");
+    // クリアボタンをクリック（i18n依存のためtestidで取得）
+    const clearButton = screen.getByTestId("clear-filter-button");
     fireEvent.click(clearButton);
 
     expect(mockOnFilterChange).toHaveBeenCalledWith({});

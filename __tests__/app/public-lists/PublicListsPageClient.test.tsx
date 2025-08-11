@@ -138,7 +138,7 @@ describe("PublicListsPageClient", () => {
   it("should display total count", () => {
     render(<PublicListsPageClient {...defaultProps} />);
 
-    expect(screen.getByText("2件の公開リスト")).toBeInTheDocument();
+    expect(screen.getByText("公開リスト 2件")).toBeInTheDocument();
   });
 
   it("should render all lists", () => {

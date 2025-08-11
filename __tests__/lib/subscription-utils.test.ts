@@ -1,35 +1,38 @@
-import {
-  getPlanName,
-  getPlanStatus,
-  SubscriptionStatus,
-} from "../../lib/utils/subscription-utils";
+import { getPlanName, getPlanStatus } from "../../lib/utils/subscription-utils";
 
-describe("getPlanName", () => {
-  const monthlyId = "test_monthly_id";
-  const yearlyId = "test_yearly_id";
-  let originalMonthly: string | undefined;
-  let originalYearly: string | undefined;
+describe("getPlanName (multi-currency)", () => {
+  const originalEnv = { ...process.env };
+  const testIds = {
+    JPY: { monthly: "price_test_jpy_month", yearly: "price_test_jpy_year" },
+    USD: { monthly: "price_test_usd_month", yearly: "price_test_usd_year" },
+    EUR: { monthly: "price_test_eur_month", yearly: "price_test_eur_year" },
+  } as const;
 
   beforeAll(() => {
-    originalMonthly = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY;
-    originalYearly = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY;
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY = monthlyId;
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY = yearlyId;
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY_JPY = testIds.JPY.monthly;
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY_JPY = testIds.JPY.yearly;
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY_USD = testIds.USD.monthly;
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY_USD = testIds.USD.yearly;
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY_EUR = testIds.EUR.monthly;
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY_EUR = testIds.EUR.yearly;
   });
 
   afterAll(() => {
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY = originalMonthly;
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY = originalYearly;
+    process.env = originalEnv;
   });
 
-  it("各プランの価格IDで正しいプラン名を返すこと", () => {
+  it("価格ID→プラン名を全通貨で正しく解決する", () => {
     jest.resetModules();
     const { getPlanName } = require("../../lib/utils/subscription-utils");
-    expect(getPlanName(monthlyId)).toBe("プレミアム（月額）");
-    expect(getPlanName(yearlyId)).toBe("プレミアム（年額）");
+    expect(getPlanName(testIds.JPY.monthly)).toBe("プレミアム（月額）");
+    expect(getPlanName(testIds.JPY.yearly)).toBe("プレミアム（年額）");
+    expect(getPlanName(testIds.USD.monthly)).toBe("プレミアム（月額）");
+    expect(getPlanName(testIds.USD.yearly)).toBe("プレミアム（年額）");
+    expect(getPlanName(testIds.EUR.monthly)).toBe("プレミアム（月額）");
+    expect(getPlanName(testIds.EUR.yearly)).toBe("プレミアム（年額）");
   });
 
-  it("nullや未定義のIDでフリープラン/不明なプランを返すこと", () => {
+  it("null/undefined/unknownは適切にフォールバックする", () => {
     jest.resetModules();
     const { getPlanName } = require("../../lib/utils/subscription-utils");
     expect(getPlanName(null)).toBe("フリープラン");

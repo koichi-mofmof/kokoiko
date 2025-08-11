@@ -13,10 +13,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useI18n } from "@/hooks/use-i18n";
+import {
+  DISPLAY_PRICES,
+  formatPrice,
+  formatMonthlyFromYearly,
+  getPriceId,
+  inferCurrencyFromLocale,
+  type BillingInterval,
+  type SupportedCurrency,
+} from "@/lib/constants/config/subscription";
 import { createClient } from "@/lib/supabase/client";
 import { Check } from "lucide-react";
 import { ReactNode, useState } from "react";
-import { useI18n } from "@/hooks/use-i18n";
 
 type UpgradePlanDialogProps = {
   trigger?: ReactNode;
@@ -31,26 +40,24 @@ export function UpgradePlanDialog({
 }: UpgradePlanDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [plan, setPlan] = useState<"monthly" | "yearly">("monthly");
-  const { t } = useI18n();
+  const [plan, setPlan] = useState<BillingInterval>("monthly");
+  const { t, locale } = useI18n();
+  const currency: SupportedCurrency = inferCurrencyFromLocale(locale);
 
-  // 価格IDをプランごとに切り替え
-  const priceId =
-    plan === "monthly"
-      ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY!
-      : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY!;
+  // 通貨×プランに応じた Price ID
+  const priceId = getPriceId(currency, plan);
 
   // プランごとの表示内容
   const planInfo = {
     monthly: {
       label: t("upgrade.monthly"),
-      price: "500",
+      price: formatPrice(DISPLAY_PRICES[currency].monthly, currency, locale),
       sub: t("upgrade.freeTrial"),
       note: t("upgrade.note"),
     },
     yearly: {
       label: t("upgrade.yearly"),
-      price: "4,200",
+      price: formatPrice(DISPLAY_PRICES[currency].yearly, currency, locale),
       sub: t("upgrade.freeTrial"),
       note: t("upgrade.note"),
     },
@@ -69,6 +76,11 @@ export function UpgradePlanDialog({
         setLoading(false);
         return;
       }
+      if (!priceId) {
+        setError(t("errors.stripe.checkoutSessionFailed"));
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,6 +88,8 @@ export function UpgradePlanDialog({
           userId: user.id,
           priceId,
           returnUrl: window.location.href,
+          locale,
+          currency,
         }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
@@ -157,9 +171,6 @@ export function UpgradePlanDialog({
                 </div>
                 <div className="text-2xl font-extrabold text-neutral-900 mb-1 text-center">
                   {planInfo.monthly.price}
-                  <span className="text-base ml-1 font-normal">
-                    {t("upgrade.price.currency")}
-                  </span>
                 </div>
                 <div className="text-xs text-neutral-500 text-center mb-1">
                   {planInfo.monthly.sub}
@@ -212,12 +223,15 @@ export function UpgradePlanDialog({
                 </div>
                 <div className="text-2xl font-extrabold text-neutral-900 mb-1 text-center">
                   {planInfo.yearly.price}
-                  <span className="text-base ml-1 font-normal">
-                    {t("upgrade.price.currency")}
-                  </span>
                 </div>
                 <div className="text-xs text-neutral-900 text-center mb-1 font-bold">
-                  {t("upgrade.perMonthNote")}
+                  {t("upgrade.perMonthNoteDynamic", {
+                    price: formatMonthlyFromYearly(
+                      DISPLAY_PRICES[currency].yearly,
+                      currency,
+                      locale
+                    ),
+                  })}
                 </div>
                 <div className="text-xs text-neutral-500 text-center mb-1">
                   {planInfo.yearly.sub}

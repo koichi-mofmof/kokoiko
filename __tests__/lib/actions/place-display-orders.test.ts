@@ -248,6 +248,7 @@ describe("place-display-orders API", () => {
         });
 
         expect(result).toEqual({
+          errorKey: "errors.common.unauthorized",
           error: "認証エラー: ログインが必要です",
         });
       });
@@ -262,6 +263,7 @@ describe("place-display-orders API", () => {
         });
 
         expect(result).toEqual({
+          errorKey: "errors.common.listNotFoundOrNoPermission",
           error: "リストが見つからないか、編集権限がありません",
         });
       });
@@ -276,6 +278,7 @@ describe("place-display-orders API", () => {
         });
 
         expect(result).toEqual({
+          errorKey: "errors.common.listNotFoundOrNoPermission",
           error: "リストが見つからないか、編集権限がありません",
         });
       });
@@ -290,6 +293,7 @@ describe("place-display-orders API", () => {
         });
 
         expect(result).toEqual({
+          errorKey: "errors.common.listNotFoundOrNoPermission",
           error: "リストが見つからないか、編集権限がありません",
         });
       });
@@ -356,6 +360,7 @@ describe("place-display-orders API", () => {
         });
 
         expect(result).toEqual({
+          errorKey: "errors.common.insertFailed",
           error: "Database connection failed",
         });
       });
@@ -416,6 +421,7 @@ describe("place-display-orders API", () => {
       const result = await getDisplayOrdersForList(testListId);
 
       expect(result).toEqual({
+        errorKey: "errors.common.fetchFailed",
         error: "Query failed",
       });
     });
@@ -517,6 +523,7 @@ describe("place-display-orders API", () => {
       const result = await normalizeDisplayOrders(testListId);
 
       expect(result).toEqual({
+        errorKey: "errors.common.listNotFoundOrNoPermission",
         error: "リストが見つからないか、編集権限がありません",
       });
     });

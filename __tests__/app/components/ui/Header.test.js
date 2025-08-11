@@ -65,8 +65,9 @@ describe("Headerコンポーネントテスト", () => {
       screen.queryByRole("link", { name: /ログイン/i })
     ).not.toBeInTheDocument();
 
-    // ドロップダウンのトリガー要素が存在する
-    expect(screen.getByTestId("dropdown-trigger")).toBeInTheDocument();
+    // ドロップダウントリガー要素（言語切替とユーザーアバターの2箇所）が少なくとも1つ存在する
+    const triggers = screen.getAllByTestId("dropdown-trigger");
+    expect(triggers.length).toBeGreaterThanOrEqual(1);
   });
 
   // アバター画像のテスト
@@ -82,8 +83,9 @@ describe("Headerコンポーネントテスト", () => {
     renderWithProviders(<Header currentUser={mockUser} />);
 
     // Avatarコンポーネントが表示されることを確認
-    // ドロップダウントリガーが存在することを確認
-    expect(screen.getByTestId("dropdown-trigger")).toBeInTheDocument();
+    // ドロップダウントリガーが少なくとも1つ存在することを確認
+    const triggers = screen.getAllByTestId("dropdown-trigger");
+    expect(triggers.length).toBeGreaterThanOrEqual(1);
   });
 
   // ログアウト機能のテスト

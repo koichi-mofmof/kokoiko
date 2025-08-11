@@ -2,6 +2,11 @@
 
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
+import {
+  PRICE_IDS_BY_CURRENCY,
+  type SupportedCurrency,
+  type BillingInterval,
+} from "@/lib/constants/config/subscription";
 
 // 型定義
 interface CreateCheckoutSessionParams {
@@ -9,6 +14,7 @@ interface CreateCheckoutSessionParams {
   priceId: string;
   returnUrl: string;
   locale?: "ja" | "en";
+  currency?: "JPY" | "USD" | "EUR";
 }
 
 // CloudFlare Workers環境でStripeクライアントを初期化
@@ -26,6 +32,7 @@ export async function createCheckoutSession({
   priceId,
   returnUrl,
   locale,
+  currency,
 }: CreateCheckoutSessionParams): Promise<
   { url: string } | { errorKey: string; error?: string }
 > {
@@ -125,14 +132,64 @@ export async function createCheckoutSession({
       }
     }
 
-    // 3. Checkout Session作成
+    // 3. カスタマー既存サブスクの通貨に合わせてPriceを強制（混在通貨エラー回避）
+    function resolveIntervalFromPriceId(id: string): BillingInterval | null {
+      for (const ccy of Object.keys(
+        PRICE_IDS_BY_CURRENCY
+      ) as SupportedCurrency[]) {
+        const ids = PRICE_IDS_BY_CURRENCY[ccy];
+        if (ids.monthly && ids.monthly === id) return "monthly";
+        if (ids.yearly && ids.yearly === id) return "yearly";
+      }
+      return null;
+    }
+
+    function resolveCurrencyFromPriceId(id: string): SupportedCurrency | null {
+      for (const ccy of Object.keys(
+        PRICE_IDS_BY_CURRENCY
+      ) as SupportedCurrency[]) {
+        const ids = PRICE_IDS_BY_CURRENCY[ccy];
+        if (ids.monthly === id || ids.yearly === id) return ccy;
+      }
+      return null;
+    }
+
+    let effectivePriceId = priceId;
+    const requestedInterval = resolveIntervalFromPriceId(priceId);
+    const requestedCurrency = resolveCurrencyFromPriceId(priceId);
+
+    if (stripeCustomerId) {
+      const existing = await stripe.subscriptions.list({
+        customer: stripeCustomerId,
+        status: "all",
+        limit: 1,
+      });
+      const firstItem = existing.data?.[0]?.items?.data?.[0];
+      const existingCurrencyRaw = firstItem?.price?.currency;
+      if (existingCurrencyRaw && requestedInterval) {
+        const existingCurrency =
+          existingCurrencyRaw.toUpperCase() as SupportedCurrency;
+        // 既存通貨と異なる通貨のPriceが指定された場合は、同一intervalの既存通貨Priceに強制
+        if (requestedCurrency && existingCurrency !== requestedCurrency) {
+          const mapped =
+            PRICE_IDS_BY_CURRENCY[existingCurrency]?.[requestedInterval];
+          if (mapped) {
+            effectivePriceId = mapped;
+          } else {
+            return { errorKey: "errors.stripe.currencyConflict" };
+          }
+        }
+      }
+    }
+
+    // 4. Checkout Session作成
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       customer: stripeCustomerId,
       line_items: [
         {
-          price: priceId,
+          price: effectivePriceId,
           quantity: 1,
         },
       ],
@@ -145,7 +202,7 @@ export async function createCheckoutSession({
         metadata: { user_id: userId },
         ...(alreadyTrialed ? {} : { trial_period_days: 14 }),
       },
-      metadata: { user_id: userId },
+      metadata: { user_id: userId, currency: currency || "" },
       allow_promotion_codes: true,
     });
 
