@@ -13,7 +13,7 @@ interface CreateCheckoutSessionParams {
   userId: string;
   priceId: string;
   returnUrl: string;
-  locale?: "ja" | "en";
+  locale?: string;
   currency?: "JPY" | "USD" | "EUR";
 }
 
@@ -26,6 +26,18 @@ function createStripeClient(): Stripe {
   });
   return stripe;
 }
+
+const mapLocaleToStripeLocale = (
+  input: string | undefined
+): Stripe.Checkout.SessionCreateParams.Locale => {
+  const l = (input || "en").toLowerCase();
+  if (l.startsWith("ja")) return "ja";
+  if (l.startsWith("de")) return "de";
+  if (l.startsWith("fr")) return "fr";
+  if (l.startsWith("es")) return "es";
+  if (l.startsWith("en")) return "en";
+  return "en";
+};
 
 export async function createCheckoutSession({
   userId,
@@ -183,6 +195,7 @@ export async function createCheckoutSession({
     }
 
     // 4. Checkout Session作成
+    const stripeLocale = mapLocaleToStripeLocale(locale);
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -195,9 +208,7 @@ export async function createCheckoutSession({
       ],
       success_url: returnUrl,
       cancel_url: returnUrl,
-      locale: (locale?.startsWith("en")
-        ? "en"
-        : "ja") as Stripe.Checkout.SessionCreateParams.Locale,
+      locale: stripeLocale,
       subscription_data: {
         metadata: { user_id: userId },
         ...(alreadyTrialed ? {} : { trial_period_days: 14 }),
@@ -214,7 +225,8 @@ export async function createCheckoutSession({
 }
 
 export async function createCustomerPortalSession(
-  userId: string
+  userId: string,
+  locale?: string
 ): Promise<{ url: string } | { errorKey: string; error?: string }> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -235,11 +247,13 @@ export async function createCustomerPortalSession(
     const stripe = createStripeClient();
 
     const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing`;
+    const portalLocale = mapLocaleToStripeLocale(locale);
 
     try {
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: subscription.stripe_customer_id,
         return_url: returnUrl,
+        locale: portalLocale,
       });
 
       if (!portalSession.url) {

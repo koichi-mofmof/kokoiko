@@ -205,6 +205,12 @@ export async function middleware(request: NextRequest) {
         ? "ja"
         : top.startsWith("en")
         ? "en"
+        : top.startsWith("es")
+        ? "es"
+        : top.startsWith("fr")
+        ? "fr"
+        : top.startsWith("de")
+        ? "de"
         : "ja";
       const response = NextResponse.next();
       response.cookies.set("lang", detected, {

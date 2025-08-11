@@ -16,12 +16,12 @@ export function ManagePlanButton({ userId }: ManagePlanButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const handleManagePlan = async () => {
     setLoading(true);
     try {
-      const result = await createCustomerPortalSession(userId);
+      const result = await createCustomerPortalSession(userId, locale);
       if ("url" in result && result.url) {
         router.push(result.url);
       } else if ("error" in result && result.error) {

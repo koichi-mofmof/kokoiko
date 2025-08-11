@@ -1,4 +1,7 @@
-import { getPlanName, getPlanStatus } from "../../lib/utils/subscription-utils";
+import {
+  getPlanNameKey,
+  getPlanStatusKey,
+} from "../../lib/utils/subscription-utils";
 
 describe("getPlanName (multi-currency)", () => {
   const originalEnv = { ...process.env };
@@ -21,63 +24,50 @@ describe("getPlanName (multi-currency)", () => {
     process.env = originalEnv;
   });
 
-  it("価格ID→プラン名を全通貨で正しく解決する", () => {
+  it("価格ID→プラン名キーを全通貨で正しく解決する", () => {
     jest.resetModules();
-    const { getPlanName } = require("../../lib/utils/subscription-utils");
-    expect(getPlanName(testIds.JPY.monthly)).toBe("プレミアム（月額）");
-    expect(getPlanName(testIds.JPY.yearly)).toBe("プレミアム（年額）");
-    expect(getPlanName(testIds.USD.monthly)).toBe("プレミアム（月額）");
-    expect(getPlanName(testIds.USD.yearly)).toBe("プレミアム（年額）");
-    expect(getPlanName(testIds.EUR.monthly)).toBe("プレミアム（月額）");
-    expect(getPlanName(testIds.EUR.yearly)).toBe("プレミアム（年額）");
+    expect(getPlanNameKey(testIds.JPY.monthly)).toBe(
+      "subscription.plan.premiumMonthly"
+    );
+    expect(getPlanNameKey(testIds.JPY.yearly)).toBe(
+      "subscription.plan.premiumYearly"
+    );
+    expect(getPlanNameKey(testIds.USD.monthly)).toBe(
+      "subscription.plan.premiumMonthly"
+    );
+    expect(getPlanNameKey(testIds.USD.yearly)).toBe(
+      "subscription.plan.premiumYearly"
+    );
+    expect(getPlanNameKey(testIds.EUR.monthly)).toBe(
+      "subscription.plan.premiumMonthly"
+    );
+    expect(getPlanNameKey(testIds.EUR.yearly)).toBe(
+      "subscription.plan.premiumYearly"
+    );
   });
 
   it("null/undefined/unknownは適切にフォールバックする", () => {
     jest.resetModules();
-    const { getPlanName } = require("../../lib/utils/subscription-utils");
-    expect(getPlanName(null)).toBe("フリープラン");
-    expect(getPlanName(undefined)).toBe("フリープラン");
-    expect(getPlanName("unknown_id")).toBe("不明なプラン");
+    expect(getPlanNameKey(null)).toBe("subscription.plan.free");
+    expect(getPlanNameKey(undefined)).toBe("subscription.plan.free");
+    expect(getPlanNameKey("unknown_id")).toBe("subscription.plan.unknown");
   });
 });
 
 describe("getPlanStatus", () => {
-  it("各契約ステータスで正しい日本語テキストとvariantを返すこと", () => {
-    expect(getPlanStatus("active")).toEqual({
-      text: "有効",
-      variant: "default",
-    });
-    expect(getPlanStatus("trialing")).toEqual({
-      text: "トライアル中",
-      variant: "default",
-    });
-    expect(getPlanStatus("canceled")).toEqual({
-      text: "キャンセル済み",
-      variant: "destructive",
-    });
-    expect(getPlanStatus("past_due")).toEqual({
-      text: "支払い遅延",
-      variant: "destructive",
-    });
-    expect(getPlanStatus("unpaid")).toEqual({
-      text: "未払い",
-      variant: "destructive",
-    });
-    expect(getPlanStatus("incomplete")).toEqual({
-      text: "支払い未完了",
-      variant: "destructive",
-    });
-    expect(getPlanStatus("incomplete_expired")).toEqual({
-      text: "支払い未完了",
-      variant: "destructive",
-    });
-    expect(getPlanStatus(null)).toEqual({
-      text: "フリー",
-      variant: "secondary",
-    });
-    expect(getPlanStatus(undefined)).toEqual({
-      text: "フリー",
-      variant: "secondary",
-    });
+  it("各契約ステータスで正しいキーを返すこと", () => {
+    expect(getPlanStatusKey("active")).toBe("subscription.status.active");
+    expect(getPlanStatusKey("trialing")).toBe("subscription.status.trialing");
+    expect(getPlanStatusKey("canceled")).toBe("subscription.status.canceled");
+    expect(getPlanStatusKey("past_due")).toBe("subscription.status.pastDue");
+    expect(getPlanStatusKey("unpaid")).toBe("subscription.status.unpaid");
+    expect(getPlanStatusKey("incomplete")).toBe(
+      "subscription.status.incomplete"
+    );
+    expect(getPlanStatusKey("incomplete_expired")).toBe(
+      "subscription.status.incompleteExpired"
+    );
+    expect(getPlanStatusKey(null)).toBe("subscription.status.free");
+    expect(getPlanStatusKey(undefined)).toBe("subscription.status.free");
   });
 });

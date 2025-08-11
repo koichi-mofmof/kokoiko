@@ -13,12 +13,12 @@ export const PlaceToRegisterSchema = z.object({
   tags: z.array(
     z
       .string()
-      .min(1, { message: "タグは1文字以上入力してください。" })
-      .max(50, { message: "タグは50文字以内で入力してください。" })
+      .min(1, { message: "validation.place.tag.min1" })
+      .max(50, { message: "validation.place.tag.max50" })
   ),
   memo: z
     .string()
-    .max(1000, { message: "メモは1000文字以内で入力してください。" })
+    .max(1000, { message: "validation.place.memo.max1000" })
     .optional(),
   listId: z.string().uuid(),
   visited_status: VisitedStatusEnum.optional(),
@@ -35,7 +35,7 @@ export const UpdatePlaceDetailsSchema = z.object({
   tags: z.array(
     z.object({
       id: z.string(),
-      name: z.string().min(1, "タグ名は空にできません"),
+      name: z.string().min(1, "validation.place.tag.nameRequired"),
     })
   ),
 });

@@ -53,7 +53,8 @@ export const FILE_SECURITY_CONFIG = {
 
 export interface FileValidationResult {
   isValid: boolean;
-  error?: string;
+  errorKey?: string; // i18nキー
+  error?: string; // 後方互換（既存呼び出しが参照している場合）
   sanitizedName?: string;
 }
 
@@ -89,6 +90,7 @@ export function validateFileUpload(
 
     return {
       isValid: false,
+      errorKey: "errors.file.maxSize",
       error: `ファイルサイズが大きすぎます。${
         FILE_SECURITY_CONFIG.MAX_FILE_SIZE / 1024 / 1024
       }MB以下にしてください。`,
@@ -99,6 +101,7 @@ export function validateFileUpload(
   if (file.size === 0) {
     return {
       isValid: false,
+      errorKey: "errors.file.empty",
       error: "ファイルが空です。",
     };
   }
@@ -126,6 +129,7 @@ export function validateFileUpload(
 
     return {
       isValid: false,
+      errorKey: "errors.file.unsupportedType",
       error:
         "サポートされていないファイル形式です。JPEG、PNG、GIF、WebPのみアップロード可能です。",
     };
@@ -154,6 +158,7 @@ export function validateFileUpload(
 
     return {
       isValid: false,
+      errorKey: "errors.file.dangerousMime",
       error: "このファイル形式はセキュリティ上アップロードできません。",
     };
   }
@@ -163,6 +168,7 @@ export function validateFileUpload(
   if (!sanitizedName) {
     return {
       isValid: false,
+      errorKey: "errors.file.invalidName",
       error: "ファイル名が無効です。",
     };
   }
@@ -176,6 +182,7 @@ export function validateFileUpload(
   ) {
     return {
       isValid: false,
+      errorKey: "errors.file.dangerousExt",
       error: "この拡張子のファイルはアップロードできません。",
     };
   }

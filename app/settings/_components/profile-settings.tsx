@@ -52,7 +52,9 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
       toast({
         variant: "destructive",
         title: t("common.error"),
-        description: validation.error,
+        description: validation.errorKey
+          ? t(validation.errorKey)
+          : validation.error,
       });
       // ファイル入力をクリア
       e.target.value = "";

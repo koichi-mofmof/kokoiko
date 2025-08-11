@@ -60,14 +60,11 @@ export function isGoogleOAuthBlocked(): boolean {
 /**
  * 外部ブラウザで開くためのアドバイスメッセージを取得
  */
-export function getExternalBrowserAdvice(): string {
-  if (isLineApp()) {
-    return "右下のメニューから「ブラウザで開く」を選択し、標準ブラウザで開いてください";
-  }
-
-  if (isWebView()) {
-    return "アプリ内ブラウザではなく、Safari/Chrome等の標準ブラウザで開いてください";
-  }
-
-  return "標準ブラウザで開いてください";
+/**
+ * UI 層で t(key) できるように、アドバイスの翻訳キーを返す
+ */
+export function getExternalBrowserAdviceKey(): string {
+  if (isLineApp()) return "auth.webview.advice.lineOpen";
+  if (isWebView()) return "auth.webview.advice.openInStandard";
+  return "auth.webview.advice.openStandardGeneric";
 }

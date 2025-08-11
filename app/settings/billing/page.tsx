@@ -15,8 +15,8 @@ import {
 } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import {
-  getPlanName,
-  getPlanStatus,
+  getPlanNameLocalized,
+  getPlanStatusLocalized,
   SubscriptionStatus,
 } from "@/lib/utils/subscription-utils";
 import { format } from "date-fns";
@@ -48,8 +48,11 @@ export default async function BillingSettingsPage() {
 
   const subscription = await getActiveSubscription(user.id);
 
-  const planName = getPlanName(subscription?.stripe_price_id);
-  const planStatus = getPlanStatus(subscription?.status as SubscriptionStatus);
+  const planName = getPlanNameLocalized(subscription?.stripe_price_id, t);
+  const planStatus = getPlanStatusLocalized(
+    subscription?.status as SubscriptionStatus,
+    t
+  );
 
   const renderSubscriptionDetails = () => {
     if (!subscription) {

@@ -91,29 +91,8 @@ type PlanStatus = {
   variant: BadgeProps["variant"];
 };
 
-export const getPlanStatus = (status: SubscriptionStatus): PlanStatus => {
-  switch (status) {
-    case "active":
-      return { text: "有効", variant: "default" };
-    case "trialing":
-      return { text: "トライアル中", variant: "default" };
-    case "canceled":
-      return { text: "キャンセル済み", variant: "destructive" };
-    case "past_due":
-      return { text: "支払い遅延", variant: "destructive" };
-    case "unpaid":
-      return { text: "未払い", variant: "destructive" };
-    case "incomplete":
-    case "incomplete_expired":
-      return { text: "支払い未完了", variant: "destructive" };
-    default:
-      return { text: "フリー", variant: "secondary" };
-  }
-};
-
-// 価格ID → プラン名（日本語固定表示）
-export const getPlanName = (priceId: string | null | undefined): string => {
-  if (!priceId) return "フリープラン";
+export const getPlanNameKey = (priceId: string | null | undefined): string => {
+  if (!priceId) return "subscription.plan.free";
   const entries = Object.entries(PRICE_IDS_BY_CURRENCY) as Array<
     [
       SupportedCurrency,
@@ -121,8 +100,59 @@ export const getPlanName = (priceId: string | null | undefined): string => {
     ]
   >;
   for (const [, ids] of entries) {
-    if (ids.monthly && priceId === ids.monthly) return "プレミアム（月額）";
-    if (ids.yearly && priceId === ids.yearly) return "プレミアム（年額）";
+    if (ids.monthly && priceId === ids.monthly)
+      return "subscription.plan.premiumMonthly";
+    if (ids.yearly && priceId === ids.yearly)
+      return "subscription.plan.premiumYearly";
   }
-  return "不明なプラン";
+  return "subscription.plan.unknown";
+};
+
+export const getPlanNameLocalized = (
+  priceId: string | null | undefined,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string => {
+  return t(getPlanNameKey(priceId));
+};
+
+export const getPlanStatusKey = (status: SubscriptionStatus): string => {
+  switch (status) {
+    case "active":
+      return "subscription.status.active";
+    case "trialing":
+      return "subscription.status.trialing";
+    case "canceled":
+      return "subscription.status.canceled";
+    case "past_due":
+      return "subscription.status.pastDue";
+    case "unpaid":
+      return "subscription.status.unpaid";
+    case "incomplete":
+      return "subscription.status.incomplete";
+    case "incomplete_expired":
+      return "subscription.status.incompleteExpired";
+    default:
+      return "subscription.status.free";
+  }
+};
+
+export const getPlanStatusLocalized = (
+  status: SubscriptionStatus,
+  t: (key: string, params?: Record<string, string | number>) => string
+): PlanStatus => {
+  const key = getPlanStatusKey(status);
+  // variant は従来ロジックをここで内包
+  const variant: PlanStatus["variant"] =
+    status === "active" || status === "trialing"
+      ? "default"
+      : status === null || status === undefined
+      ? "secondary"
+      : status === "incomplete" ||
+        status === "incomplete_expired" ||
+        status === "past_due" ||
+        status === "unpaid" ||
+        status === "canceled"
+      ? "destructive"
+      : "secondary";
+  return { text: t(key), variant };
 };

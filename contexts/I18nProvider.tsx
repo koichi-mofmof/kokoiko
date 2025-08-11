@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 
-type Locale = "ja" | "en";
+import type { Locale } from "@/lib/i18n";
 
 type Messages = Record<string, string>;
 

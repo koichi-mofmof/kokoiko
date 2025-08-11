@@ -1,5 +1,5 @@
 import {
-  getExternalBrowserAdvice,
+  getExternalBrowserAdviceKey,
   isGoogleOAuthBlocked,
   isLineApp,
   isWebView,
@@ -90,31 +90,29 @@ describe("browser-detection", () => {
     });
   });
 
-  describe("getExternalBrowserAdvice", () => {
-    it("LINEアプリの場合適切なアドバイスを返す", () => {
+  describe("getExternalBrowserAdviceKey", () => {
+    it("LINEアプリの場合適切なキーを返す", () => {
       mockUserAgent(
         "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Line/11.10.1"
       );
-      const advice = getExternalBrowserAdvice();
-      expect(advice).toContain(
-        "右下のメニューから「ブラウザで開く」を選択し、標準ブラウザで開いてください"
-      );
+      const key = getExternalBrowserAdviceKey();
+      expect(key).toBe("auth.webview.advice.lineOpen");
     });
 
-    it("他のWebViewの場合一般的なアドバイスを返す", () => {
+    it("他のWebViewの場合一般的なキーを返す", () => {
       mockUserAgent(
         "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 191.0.0.31.124"
       );
-      const advice = getExternalBrowserAdvice();
-      expect(advice).toContain("Safari/Chrome等の標準ブラウザで開いてください");
+      const key = getExternalBrowserAdviceKey();
+      expect(key).toBe("auth.webview.advice.openInStandard");
     });
 
-    it("標準ブラウザの場合一般的なメッセージを返す", () => {
+    it("標準ブラウザの場合一般的なキーを返す", () => {
       mockUserAgent(
         "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Mobile/15E148 Safari/604.1"
       );
-      const advice = getExternalBrowserAdvice();
-      expect(advice).toBe("標準ブラウザで開いてください");
+      const key = getExternalBrowserAdviceKey();
+      expect(key).toBe("auth.webview.advice.openStandardGeneric");
     });
   });
 });

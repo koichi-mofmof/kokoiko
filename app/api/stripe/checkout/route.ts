@@ -5,7 +5,7 @@ interface CheckoutRequestBody {
   userId: string;
   priceId: string;
   returnUrl: string;
-  locale?: "ja" | "en";
+  locale?: string;
 }
 
 export async function POST(req: NextRequest) {

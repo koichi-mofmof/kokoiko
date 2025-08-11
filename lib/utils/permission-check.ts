@@ -103,7 +103,7 @@ export async function canJoinViaToken(
   error?: string;
 }> {
   if (!token || !userId) {
-    return { canJoin: false, error: "パラメータが不正です" };
+    return { canJoin: false, error: "errors.validation.invalidInput" };
   }
 
   const supabase = await createClient();
@@ -119,16 +119,16 @@ export async function canJoinViaToken(
       .single();
 
     if (tokenError || !tokenData) {
-      return { canJoin: false, error: "無効なトークンです" };
+      return { canJoin: false, error: "errors.validation.invalidToken" };
     }
 
     // 2. トークンの状態をチェック
     if (!tokenData.is_active) {
-      return { canJoin: false, error: "このトークンは無効化されています" };
+      return { canJoin: false, error: "errors.common.forbidden" };
     }
 
     if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
-      return { canJoin: false, error: "このトークンは期限切れです" };
+      return { canJoin: false, error: "errors.common.linkExpired" };
     }
 
     if (
@@ -138,7 +138,7 @@ export async function canJoinViaToken(
     ) {
       return {
         canJoin: false,
-        error: "このトークンは使用回数上限に達しています",
+        error: "errors.common.limitReached",
       };
     }
 
@@ -151,13 +151,13 @@ export async function canJoinViaToken(
       .single();
 
     if (shareError && shareError.code !== "PGRST116") {
-      return { canJoin: false, error: "参加チェック中にエラーが発生しました" };
+      return { canJoin: false, error: "errors.unexpected.common" };
     }
 
     if (existingShare) {
       return {
         canJoin: false,
-        error: "既にこのリストに参加しています",
+        error: "errors.common.forbidden",
         listId: tokenData.list_id,
         permission: existingShare.permission,
       };
@@ -170,7 +170,7 @@ export async function canJoinViaToken(
     };
   } catch (error) {
     console.error("予期しないエラー:", error);
-    return { canJoin: false, error: "参加チェック中にエラーが発生しました" };
+    return { canJoin: false, error: "errors.unexpected.common" };
   }
 }
 
@@ -184,15 +184,11 @@ export async function canAccessList(
 ): Promise<{
   canAccess: boolean;
   permission: Permission | null;
-  isPublic: boolean;
-  error?: string;
 }> {
   if (!listId) {
     return {
       canAccess: false,
       permission: null,
-      isPublic: false,
-      error: "リストIDが必要です",
     };
   }
 
@@ -213,7 +209,6 @@ export async function canAccessList(
         return {
           canAccess: true,
           permission: shared.permission as Permission,
-          isPublic: false, // 共有リストは基本的に非公開
         };
       }
     }
@@ -231,16 +226,12 @@ export async function canAccessList(
         return {
           canAccess: false,
           permission: null,
-          isPublic: false,
-          error: "アクセス権限がありません",
         };
       }
 
       return {
         canAccess: false,
         permission: null,
-        isPublic: false,
-        error: "リストが見つかりません",
       };
     }
     const isPublic = list.is_public === true;
@@ -267,7 +258,7 @@ export async function canAccessList(
         }
       }
 
-      return { canAccess: true, permission, isPublic: true };
+      return { canAccess: true, permission };
     }
 
     // プライベートリストの場合は権限チェックが必要
@@ -275,14 +266,12 @@ export async function canAccessList(
       return {
         canAccess: false,
         permission: null,
-        isPublic: false,
-        error: "認証が必要です",
       };
     }
 
     // 所有者チェック
     if (list.created_by === userId) {
-      return { canAccess: true, permission: "manage", isPublic: false };
+      return { canAccess: true, permission: "manage" };
     }
 
     // ここまで来た場合は、認証済みユーザーだが所有者でも共有ユーザーでもない
@@ -290,16 +279,12 @@ export async function canAccessList(
     return {
       canAccess: false,
       permission: null,
-      isPublic: false,
-      error: "アクセス権限がありません",
     };
   } catch (error) {
     console.error("アクセス権限チェック中のエラー:", error);
     return {
       canAccess: false,
       permission: null,
-      isPublic: false,
-      error: "権限チェック中にエラーが発生しました",
     };
   }
 }

@@ -12,8 +12,16 @@ import { ChevronDown, Languages } from "lucide-react";
 
 export default function LanguageSwitcher() {
   const { locale, setLocale, t } = useI18n();
-  const isEnglish = locale?.startsWith("en");
-  const currentLabel = isEnglish ? t("lang.english") : t("lang.japanese");
+  const currentLabel =
+    locale === "en"
+      ? t("lang.english")
+      : locale === "ja"
+      ? t("lang.japanese")
+      : locale === "es"
+      ? t("lang.spanish")
+      : locale === "fr"
+      ? t("lang.french")
+      : t("lang.german");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,6 +45,15 @@ export default function LanguageSwitcher() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setLocale("en")}>
           {t("lang.english")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLocale("es")}>
+          {t("lang.spanish")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLocale("fr")}>
+          {t("lang.french")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLocale("de")}>
+          {t("lang.german")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

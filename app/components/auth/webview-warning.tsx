@@ -3,7 +3,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useI18n } from "@/hooks/use-i18n";
 import {
-  getExternalBrowserAdvice,
+  getExternalBrowserAdviceKey,
   isGoogleOAuthBlocked,
 } from "@/lib/utils/browser-detection";
 import { AlertTriangle } from "lucide-react";
@@ -11,12 +11,12 @@ import { useEffect, useState } from "react";
 
 export function WebViewWarning() {
   const [isBlocked, setIsBlocked] = useState(false);
-  const [advice, setAdvice] = useState("");
+  const [adviceKey, setAdviceKey] = useState("");
   const { t } = useI18n();
 
   useEffect(() => {
     setIsBlocked(isGoogleOAuthBlocked());
-    setAdvice(getExternalBrowserAdvice());
+    setAdviceKey(getExternalBrowserAdviceKey());
   }, []);
 
   if (!isBlocked) {
@@ -31,7 +31,7 @@ export function WebViewWarning() {
       </AlertTitle>
       <AlertDescription className="space-y-3 text-orange-800">
         <p>{t("auth.webview.googleLoginBlocked.desc")}</p>
-        <p>{advice}</p>
+        <p>{t(adviceKey)}</p>
       </AlertDescription>
     </Alert>
   );
