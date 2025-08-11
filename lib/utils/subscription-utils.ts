@@ -1,6 +1,6 @@
 import { BadgeProps } from "@/components/ui/badge";
 import {
-  PRICE_IDS_BY_CURRENCY,
+  getPriceIdsByCurrency,
   type SupportedCurrency,
 } from "@/lib/constants/config/subscription";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -93,7 +93,9 @@ type PlanStatus = {
 
 export const getPlanNameKey = (priceId: string | null | undefined): string => {
   if (!priceId) return "subscription.plan.free";
-  const entries = Object.entries(PRICE_IDS_BY_CURRENCY) as Array<
+  // 実行時に環境変数を解決する（テストでの env 差し替えに追随）
+  const dynamicPriceIds = getPriceIdsByCurrency();
+  const entries = Object.entries(dynamicPriceIds) as Array<
     [
       SupportedCurrency,
       { monthly: string | undefined; yearly: string | undefined }

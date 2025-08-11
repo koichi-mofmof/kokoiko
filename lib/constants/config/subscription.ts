@@ -52,6 +52,28 @@ export const PRICE_IDS_BY_CURRENCY: PriceIdsPerCurrency = {
   },
 };
 
+// 実行時に常に環境変数から解決する関数（テストでの env 差し替えに追随させるため）
+export function getPriceIdsByCurrency(): PriceIdsPerCurrency {
+  return {
+    JPY: {
+      monthly:
+        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY_JPY ||
+        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY,
+      yearly:
+        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY_JPY ||
+        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY,
+    },
+    USD: {
+      monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY_USD,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY_USD,
+    },
+    EUR: {
+      monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY_EUR,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY_EUR,
+    },
+  };
+}
+
 // ロケールから通貨を推定（初期案）。必要に応じてユーザー選択で上書き可能。
 export function inferCurrencyFromLocale(
   locale: string | undefined

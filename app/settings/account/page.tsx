@@ -281,7 +281,7 @@ export default function AccountSettingsPage() {
                 />
                 {clientValidationErrors.currentPassword?.map((error, index) => (
                   <p key={index} className="mt-1 text-sm text-red-500">
-                    {error}
+                    {t(error)}
                   </p>
                 ))}
                 {/* サーバーエラーも表示 */}
@@ -292,7 +292,7 @@ export default function AccountSettingsPage() {
                       key={"server-" + index}
                       className="mt-1 text-sm text-red-500"
                     >
-                      {error.message}
+                      {t(error.message)}
                     </p>
                   ))}
               </div>
@@ -317,7 +317,7 @@ export default function AccountSettingsPage() {
                 />
                 {clientValidationErrors.newPassword?.map((error, index) => (
                   <p key={index} className="mt-1 text-sm text-red-500">
-                    {error}
+                    {t(error)}
                   </p>
                 ))}
                 <p className="mt-1 text-xs text-muted-foreground">
