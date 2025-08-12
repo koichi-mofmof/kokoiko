@@ -241,6 +241,56 @@ export async function getAccessibleLists(
 }
 
 /**
+ * メタデータ生成用の軽量リスト情報取得
+ * - 最小限のカラムのみ取得し、場所数はCOUNTヘッダーで取得
+ * - 公開リストのみ返す（非公開はnull）
+ */
+export async function getListMetadataLite(listId: string): Promise<{
+  id: string;
+  name: string;
+  description: string | null;
+  is_public: boolean | null;
+  created_by: string;
+  placesCount: number;
+} | null> {
+  const supabase = await createClient();
+
+  // リストの基本情報のみ取得
+  const { data: list, error: listError } = await supabase
+    .from("place_lists")
+    .select("id, name, description, is_public, created_by")
+    .eq("id", listId)
+    .single();
+
+  if (listError || !list) {
+    return null;
+  }
+
+  // 公開でない場合はメタデータを返さない
+  if (list.is_public !== true) {
+    return null;
+  }
+
+  // 場所数はCOUNTのみ（データ本体は取得しない）
+  const { count, error: countError } = await supabase
+    .from("list_places")
+    .select("id", { count: "exact", head: true })
+    .eq("list_id", listId);
+
+  if (countError) {
+    return {
+      ...list,
+      placesCount: 0,
+    } as typeof list & { placesCount: number };
+  }
+
+  return {
+    ...list,
+    placesCount: count || 0,
+  } as typeof list & { placesCount: number };
+}
+
+/**
  * フェーズ1修正: アプリケーション層権限チェックを使用してリスト詳細を取得
  * - RLSに依存せず、permission-check.tsの関数を活用
  * - 公開/非公開、認証/未認証を問わず統一的に処理

@@ -63,14 +63,14 @@ export async function getRegisteredPlacesCountTotal(
   supabase: SupabaseClient,
   userId: string
 ): Promise<number> {
-  // 全期間の登録済み地点数を取得
-  const { data, error } = await supabase
+  // COUNTのみ取得（データ本体は返さない）
+  const { count, error } = await supabase
     .from("list_places")
-    .select("created_at, user_id")
+    .select("id", { count: "exact", head: true })
     .eq("user_id", userId);
 
-  if (error || !data) return 0;
-  return data.length;
+  if (error) return 0;
+  return count || 0;
 }
 
 // StripeのSubscription.statusの型

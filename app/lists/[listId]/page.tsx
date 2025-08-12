@@ -6,10 +6,19 @@ import ListDetailView from "@/app/components/lists/ListDetailView";
 import JsonLd from "@/components/seo/JsonLd";
 import { ParticipantAvatars } from "@/components/ui/avatar";
 import NoAccess from "@/components/ui/NoAccess";
-import { logAdaptiveCacheStrategy } from "@/lib/cloudflare/cdn-cache";
 import type { Collaborator, ListForClient } from "@/lib/dal/lists";
-import { getListDetails, getPublicListData } from "@/lib/dal/lists";
+import {
+  getListDetails,
+  getListMetadataLite,
+  getPublicListData,
+} from "@/lib/dal/lists";
 import { getUserProfile } from "@/lib/dal/user-public-lists";
+import {
+  createServerT,
+  loadMessages,
+  normalizeLocale,
+  toOpenGraphLocale,
+} from "@/lib/i18n";
 import {
   generateBreadcrumbSchema,
   generateItemListSchema,
@@ -18,14 +27,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
-import Link from "next/link";
-import {
-  createServerT,
-  loadMessages,
-  normalizeLocale,
-  toOpenGraphLocale,
-} from "@/lib/i18n";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -37,23 +40,10 @@ export async function generateMetadata({
   params,
 }: ListDetailPageProps): Promise<Metadata> {
   const { listId } = await params;
+  // 軽量メタデータ取得（公開リストのみ）
+  const lite = await getListMetadataLite(listId);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // ログインユーザーまたは未ログインかで処理を分岐
-  let listDetails: ListForClient | null = null;
-
-  if (user) {
-    listDetails = await getListDetails(listId, user.id);
-  } else {
-    // 未ログインの場合は公開リストのみ取得
-    listDetails = await getPublicListData(listId);
-  }
-
-  if (!listDetails) {
+  if (!lite) {
     const cookieStore = await cookies();
     const locale = normalizeLocale(cookieStore.get("lang")?.value);
     const msgs = await loadMessages(locale);
@@ -61,30 +51,26 @@ export async function generateMetadata({
     return { title: "ClippyMap", description: t("meta.root.description") };
   }
 
-  const owner = listDetails.collaborators.find((c: Collaborator) => c.isOwner);
-  const placesCount = listDetails.places.length;
+  const placesCount = lite.placesCount;
 
   const cookieStore = await cookies();
   const locale = normalizeLocale(cookieStore.get("lang")?.value);
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
-  const description = listDetails.description
-    ? `${listDetails.description} - ${t("listsDetail.placesCount", {
+  const description = lite.description
+    ? `${lite.description} - ${t("listsDetail.placesCount", {
         n: placesCount,
       })}`
-    : `${owner?.name || t("user.unknown")} ${t("listsDetail.createdBy")} - ${t(
-        "listsDetail.placesCount",
-        { n: placesCount }
-      )}`;
+    : `${t("listsDetail.placesCount", { n: placesCount })}`;
 
   return {
-    title: `${listDetails.name} | ClippyMap`,
+    title: `${lite.name} | ClippyMap`,
     description,
     alternates: {
       canonical: `/lists/${listId}`,
     },
     openGraph: {
-      title: `${listDetails.name} | ClippyMap`,
+      title: `${lite.name} | ClippyMap`,
       description,
       type: "article",
       locale: toOpenGraphLocale(locale),
@@ -93,19 +79,19 @@ export async function generateMetadata({
           url: "/ogp-image.webp",
           width: 1200,
           height: 630,
-          alt: `${listDetails.name} - ClippyMap`,
+          alt: `${lite.name} - ClippyMap`,
           type: "image/webp",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${listDetails.name} | ClippyMap`,
+      title: `${lite.name} | ClippyMap`,
       description,
       images: [
         {
           url: "/ogp-image.webp",
-          alt: `${listDetails.name} - ClippyMap`,
+          alt: `${lite.name} - ClippyMap`,
         },
       ],
     },
@@ -139,16 +125,9 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
   // Creator profile
   const creatorProfile = await getUserProfile(listDetails.created_by);
 
-  // 💡 キャッシュ制御: 適応的キャッシュ戦略を確認・適用
+  // 💡 キャッシュ制御: 非公開はキャッシュしない
   if (!listDetails.is_public) {
     noStore();
-  } else {
-    // 公開リストの場合は適応的キャッシュ戦略をログ出力
-    try {
-      await logAdaptiveCacheStrategy(listId, listDetails.is_public);
-    } catch (error) {
-      console.warn("Failed to log adaptive cache strategy:", error);
-    }
   }
 
   const owner = listDetails.collaborators.find((c: Collaborator) => c.isOwner);
