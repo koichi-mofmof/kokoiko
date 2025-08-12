@@ -40,8 +40,11 @@ export function getCacheStrategy(pathname: string, isPublic?: boolean): string {
     return CACHE_CONTROL.STATIC_ASSETS;
   }
 
-  // サイトマップ・robots.txt
-  if (pathname.match(/\/(sitemap\.xml|robots\.txt|manifest\.json)$/)) {
+  // サイトマップ・robots.txt（分割サイトマップも含む）
+  if (
+    pathname.match(/\/(sitemap\.xml|robots\.txt|manifest\.json)$/) ||
+    pathname.startsWith("/sitemaps/")
+  ) {
     return CACHE_CONTROL.SEO_CONTENT;
   }
 

@@ -1,8 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import { MetadataRoute } from "next";
 
 // CloudFlare Workers + OpenNext環境での環境変数取得ヘルパー関数
-function getBaseUrl(env?: Record<string, string>): string {
+export function getBaseUrl(env?: Record<string, string>): string {
   // 本番環境の確実な判定（最優先）
   const isProduction =
     (env && env.NODE_ENV === "production") ||
@@ -37,7 +36,7 @@ function getBaseUrl(env?: Record<string, string>): string {
 }
 
 // 静的ページの定義
-const staticPages = [
+export const staticPages = [
   {
     url: "",
     lastModified: new Date(),
@@ -65,35 +64,11 @@ const staticPages = [
 ];
 
 // サンプルページの定義
-const samplePages = [
-  {
-    url: "/sample",
-    lastModified: new Date(),
-    changeFrequency: "monthly" as const,
-    priority: 0.8,
-  },
-  {
-    url: "/sample/sample-sunny-day",
-    lastModified: new Date(),
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  },
-  {
-    url: "/sample/sample-osaka-trip",
-    lastModified: new Date(),
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  },
-  {
-    url: "/sample/sample-favorite-saunas",
-    lastModified: new Date(),
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  },
-];
+// sampleページは現在未提供のため空
+export const samplePages: Array<never> = [];
 
 // 認証不要の匿名Supabaseクライアントを作成（静的生成用）
-function createAnonymousClient() {
+export function createAnonymousClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -110,93 +85,56 @@ function createAnonymousClient() {
   });
 }
 
-// 公開リストを取得する関数
-async function getPublicLists() {
+/**
+ * 公開リストの総件数を取得
+ */
+export async function countPublicListsTotal(): Promise<number> {
   try {
     const supabase = createAnonymousClient();
-
-    const { data: publicLists, error } = await supabase
+    const { count, error } = await supabase
       .from("place_lists")
-      .select("id, name, updated_at")
-      .eq("is_public", true)
-      .order("updated_at", { ascending: false })
-      .limit(50); // パフォーマンス向上のため制限を50に調整
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true);
 
     if (error) {
-      console.error("❌ 公開リスト取得エラー:", error);
-      return [];
+      console.error("❌ 公開リスト総数取得エラー:", error);
+      return 0;
     }
 
-    console.log(`✅ ${publicLists?.length || 0}件の公開リストを取得`);
-    return publicLists || [];
+    return count || 0;
   } catch (error) {
-    console.error("❌ getPublicLists実行エラー:", error);
-    return [];
+    console.error("❌ countPublicListsTotal実行エラー:", error);
+    return 0;
   }
 }
 
-export async function generateSitemapEntries(
-  env?: Record<string, string>
-): Promise<MetadataRoute.Sitemap> {
-  // CloudFlare Workers環境での環境変数取得を改善
-  const baseUrl = getBaseUrl(env);
-  console.log(`🌐 サイトマップ生成開始: ${baseUrl}`);
-
-  const entries: MetadataRoute.Sitemap = [];
-
+/**
+ * 公開リストのページング取得
+ */
+export async function getPublicListsPaged(
+  page: number,
+  pageSize: number
+): Promise<{ id: string; updated_at: string | null }[]> {
   try {
-    // 静的ページを追加
-    for (const page of staticPages) {
-      entries.push({
-        url: `${baseUrl}${page.url}`,
-        lastModified: page.lastModified,
-        changeFrequency: page.changeFrequency,
-        priority: page.priority,
-      });
+    const supabase = createAnonymousClient();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error } = await supabase
+      .from("place_lists")
+      .select("id, updated_at")
+      .eq("is_public", true)
+      .order("updated_at", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.error("❌ 公開リストページ取得エラー:", error);
+      return [];
     }
 
-    // サンプルページを追加
-    for (const page of samplePages) {
-      entries.push({
-        url: `${baseUrl}${page.url}`,
-        lastModified: page.lastModified,
-        changeFrequency: page.changeFrequency,
-        priority: page.priority,
-      });
-    }
-
-    // 動的な公開リストページを追加
-    try {
-      const publicLists = await getPublicLists();
-
-      for (const list of publicLists) {
-        entries.push({
-          url: `${baseUrl}/lists/${list.id}`,
-          lastModified: list.updated_at
-            ? new Date(list.updated_at)
-            : new Date(),
-          changeFrequency: "weekly",
-          priority: 0.7,
-        });
-      }
-    } catch (error) {
-      console.error("❌ 公開リスト処理エラー:", error);
-      // エラー時も静的ページは返す
-    }
-
-    console.log(`✅ サイトマップ生成完了: ${entries.length}件のエントリー`);
-    return entries;
+    return (data as { id: string; updated_at: string | null }[]) || [];
   } catch (error) {
-    console.error("❌ サイトマップ生成エラー:", error);
-
-    // 最低限のフォールバック
-    return [
-      {
-        url: baseUrl,
-        lastModified: new Date(),
-        changeFrequency: "monthly",
-        priority: 1,
-      },
-    ];
+    console.error("❌ getPublicListsPaged実行エラー:", error);
+    return [];
   }
 }
