@@ -12,7 +12,8 @@ jest.mock("@/lib/supabase/server", () => ({
 describe("public-lists DAL", () => {
   const mockSupabase = {
     from: jest.fn(),
-  };
+    rpc: jest.fn(),
+  } as any;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -21,23 +22,7 @@ describe("public-lists DAL", () => {
 
   describe("getPublicListsForHome", () => {
     it("should handle empty results", async () => {
-      mockSupabase.from.mockImplementation((table) => {
-        if (table === "place_lists") {
-          return {
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                  }),
-                }),
-              }),
-            }),
-          };
-        }
-        return mockSupabase;
-      });
+      mockSupabase.rpc.mockResolvedValue({ data: [], error: null });
 
       const result = await getPublicListsForHome(8);
 
@@ -45,22 +30,9 @@ describe("public-lists DAL", () => {
     });
 
     it("should handle database errors", async () => {
-      mockSupabase.from.mockImplementation((table) => {
-        if (table === "place_lists") {
-          return {
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: { message: "Database error" },
-                  }),
-                }),
-              }),
-            }),
-          };
-        }
-        return mockSupabase;
+      mockSupabase.rpc.mockResolvedValue({
+        data: null,
+        error: { message: "Database error" },
       });
 
       const result = await getPublicListsForHome(8);

@@ -113,7 +113,64 @@ export async function getPublicListsPaginated(
       .select("*", { count: "exact", head: true })
       .eq("is_public", true);
 
-    // ソート条件の設定
+    // place_countソートはRPCで対応
+    if (sortBy === "place_count") {
+      const { data, error } = await supabase.rpc(
+        "get_public_lists_paginated_by_place_count",
+        {
+          limit_count: limit,
+          offset_count: offset,
+          sort_order: sortOrder,
+        }
+      );
+
+      if (error) {
+        console.error(
+          "Error fetching paginated public lists by place_count:",
+          error
+        );
+        return { lists: [], totalCount: count || 0 };
+      }
+
+      const rpcData = (data || []) as PublicListRPCResult[];
+      const creatorIds = [...new Set(rpcData.map((list) => list.created_by))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .in("id", creatorIds);
+
+      const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+      const lists = rpcData.map((list) => {
+        const profile = profileMap.get(list.created_by);
+
+        let avatarUrl = profile?.avatar_url as string | undefined;
+        if (avatarUrl && !avatarUrl.startsWith("http")) {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          avatarUrl = `${supabaseUrl}/storage/v1/object/public/profile_images/${avatarUrl}`;
+        }
+
+        return {
+          id: list.id,
+          name: list.name,
+          description: list.description,
+          createdBy: list.created_by,
+          creatorUsername: profile?.username || "",
+          creatorDisplayName: profile?.display_name,
+          creatorAvatarUrl: avatarUrl || null,
+          placeCount: Number(list.place_count) || 0,
+          createdAt: list.created_at,
+          updatedAt: list.updated_at,
+        } as PublicListForHome;
+      });
+
+      return {
+        lists,
+        totalCount: count || 0,
+      };
+    }
+
+    // ソート条件の設定（place_count 以外）
     let orderBy = "updated_at";
     let ascending = false;
 
