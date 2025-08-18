@@ -57,7 +57,7 @@ describe("UpgradePlanDialog currency display", () => {
     const [, init] = fetchSpy.mock.calls[0] as any;
     const body = JSON.parse(init.body);
     expect(body.currency).toBe("JPY");
-    expect(body.priceId).toBe("price_test_month_jpy");
+    expect(body.priceId).toBe("price_test_year_jpy"); // デフォルトが年額プランに変更されたため
 
     fetchSpy.mockRestore();
   });

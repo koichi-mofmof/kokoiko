@@ -1,7 +1,10 @@
 import { registerPlaceToListAction } from "@/lib/actions/place-actions";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveSubscription } from "@/lib/dal/subscriptions";
-import { getRegisteredPlacesCountTotal } from "@/lib/utils/subscription-utils";
+import {
+  getRegisteredPlacesCountTotal,
+  getTotalAvailablePlaces,
+} from "@/lib/utils/subscription-utils";
 
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
@@ -24,6 +27,12 @@ describe("registerPlaceToListAction: 地点登録サーバーアクション", (
     // サブスクリプション関連のモックをデフォルト値に設定
     (getActiveSubscription as jest.Mock).mockResolvedValue(null);
     (getRegisteredPlacesCountTotal as jest.Mock).mockResolvedValue(0);
+    (getTotalAvailablePlaces as jest.Mock).mockResolvedValue({
+      totalLimit: 30,
+      usedPlaces: 0,
+      remainingPlaces: 30,
+      sources: [{ type: "free", limit: 30, used: 0 }],
+    });
   });
 
   it("認証されていない場合はエラーを返すこと", async () => {

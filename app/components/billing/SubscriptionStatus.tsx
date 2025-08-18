@@ -28,7 +28,7 @@ export function SubscriptionStatus({
     );
   }
 
-  const isUnlimited = maxValue === null;
+  const isUnlimited = maxValue === null || maxValue === Infinity;
   const progressValue =
     !isUnlimited && maxValue > 0 ? (currentValue / maxValue) * 100 : 0;
   const displayMaxValue = isUnlimited ? "∞" : maxValue;

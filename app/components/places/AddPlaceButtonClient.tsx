@@ -1,16 +1,6 @@
 "use client";
 
 import { UpgradePlanDialog } from "@/app/components/billing/UpgradePlanDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,10 +10,15 @@ import {
 } from "@/components/ui/dialog";
 import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
-import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
-import { Info, Plus } from "lucide-react";
-import { useState } from "react";
+import {
+  inferCurrencyFromLocale,
+  type OneTimePurchaseType,
+} from "@/lib/constants/config/subscription";
+import { createClient } from "@/lib/supabase/client";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import AddPlaceForm from "./AddPlaceForm";
+import { PlaceLimitReachedDialog } from "./PlaceLimitReachedDialog";
 
 interface AddPlaceButtonClientProps {
   listId: string;
@@ -32,18 +27,43 @@ interface AddPlaceButtonClientProps {
 export default function AddPlaceButtonClient({
   listId,
 }: AddPlaceButtonClientProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const currency = inferCurrencyFromLocale(locale);
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(Date.now());
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [showLimitAlert, setShowLimitAlert] = useState(false);
-  const {
-    plan,
-    registeredPlacesTotal, // registeredPlacesThisMonth → registeredPlacesTotal
-    maxPlaces,
-    loading,
-    refreshSubscription,
-  } = useSubscription();
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [placeAvailability, setPlaceAvailability] = useState<{
+    totalLimit: number;
+    usedPlaces: number;
+    remainingPlaces: number;
+    sources: Array<{
+      type: "free" | "subscription" | "one_time_small" | "one_time_regular";
+      limit: number;
+      used: number;
+    }>;
+  } | null>(null);
+  const { plan, remainingPlaces, loading, refreshSubscription } =
+    useSubscription();
+
+  // 購入成功検知：URLパラメータを監視してSubscription状態を更新
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get("success");
+    const sessionId = urlParams.get("session_id");
+
+    if (success === "true" && sessionId) {
+      // 購入成功を検知したら、Subscription状態をリフレッシュ
+      console.log(
+        "Purchase success detected, refreshing subscription state..."
+      );
+      refreshSubscription();
+
+      // URLパラメータをクリア（履歴汚染防止）
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [refreshSubscription]);
 
   const handlePlaceRegistered = () => {
     setOpen(false);
@@ -55,22 +75,83 @@ export default function AddPlaceButtonClient({
     setFormKey(Date.now());
   };
 
-  const handleAddPlaceClick = () => {
-    if (
-      !loading &&
-      plan === "free" &&
-      maxPlaces !== null &&
-      registeredPlacesTotal >= maxPlaces // プロパティ名変更
-    ) {
-      setShowLimitAlert(true);
+  const handleAddPlaceClick = async () => {
+    if (!loading && plan === "free" && remainingPlaces <= 0) {
+      // 詳細な地点利用可能性情報を取得
+      try {
+        const response = await fetch("/api/user/place-limits");
+        if (response.ok) {
+          const data = (await response.json()) as {
+            data: {
+              totalLimit: number;
+              usedPlaces: number;
+              remainingPlaces: number;
+              sources: Array<{
+                type:
+                  | "free"
+                  | "subscription"
+                  | "one_time_small"
+                  | "one_time_regular";
+                limit: number;
+                used: number;
+              }>;
+            };
+          };
+          setPlaceAvailability(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch place limits:", error);
+      }
+      setShowLimitDialog(true);
       return;
     }
     setOpen(true);
   };
 
   const handleUpgradeClick = () => {
-    setShowLimitAlert(false);
+    setShowLimitDialog(false);
     setShowUpgradeDialog(true);
+  };
+
+  const handleOneTimePurchase = async (planType: OneTimePurchaseType) => {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const response = await fetch("/api/stripe/one-time-purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          planType,
+          currency,
+          language: locale,
+          returnUrl: window.location.href,
+        }),
+      });
+
+      const data = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Purchase failed");
+      }
+
+      // Stripe Checkoutにリダイレクト
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("One-time purchase error:", error);
+      // エラートーストなどで通知
+    }
   };
 
   return (
@@ -111,37 +192,16 @@ export default function AddPlaceButtonClient({
           />
         </DialogContent>
       </Dialog>
-      {/* 上限到達時の案内AlertDialog */}
-      <AlertDialog open={showLimitAlert} onOpenChange={setShowLimitAlert}>
-        <AlertDialogContent className="max-w-md border-yellow-300 bg-yellow-50">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center text-yellow-900">
-              <Info className="w-6 h-6 text-primary-500 mr-2" />
-              {t("places.limitReached.title")}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-yellow-900 text-left">
-              {t("places.limitReached.freePlanLimit", {
-                n: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL,
-              })}
-              <br />
-              <span className="block mt-2">
-                {t("places.limitReached.upgradeHint")}
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-            <AlertDialogAction
-              className="w-full sm:w-auto bg-primary-700 hover:bg-primary-800"
-              onClick={handleUpgradeClick}
-            >
-              {t("upgrade.open")}
-            </AlertDialogAction>
-            <AlertDialogCancel className="w-full sm:w-auto">
-              {t("common.close")}
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* 地点制限到達ダイアログ */}
+      {placeAvailability && (
+        <PlaceLimitReachedDialog
+          isOpen={showLimitDialog}
+          onClose={() => setShowLimitDialog(false)}
+          placeAvailability={placeAvailability}
+          onUpgrade={handleUpgradeClick}
+          onOneTimePurchase={handleOneTimePurchase}
+        />
+      )}
 
       {/* アップグレードダイアログ */}
       {showUpgradeDialog && (

@@ -1,9 +1,8 @@
 "use server";
 
-import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { getActiveSubscription } from "@/lib/dal/subscriptions";
 import { createClient } from "@/lib/supabase/server";
-import { getRegisteredPlacesCountTotal } from "@/lib/utils/subscription-utils";
+import { getTotalAvailablePlaces } from "@/lib/utils/subscription-utils";
 import {
   AddCommentInput,
   AddCommentSchema,
@@ -33,6 +32,17 @@ export type RegisterPlaceResult = {
     // フィールドごとのエラーメッセージ
     [key in keyof PlaceToRegisterType]?: string[];
   };
+  placeAvailability?: {
+    // 地点制限情報（制限到達時にUIで使用）
+    totalLimit: number;
+    usedPlaces: number;
+    remainingPlaces: number;
+    sources: Array<{
+      type: "free" | "subscription" | "one_time_small" | "one_time_regular";
+      limit: number;
+      used: number;
+    }>;
+  };
 };
 
 export async function registerPlaceToListAction(
@@ -55,22 +65,22 @@ export async function registerPlaceToListAction(
     };
   }
 
-  // ★追加: サブスクリプション情報取得＆累計の登録数チェック
+  // ★更新: 新しい地点制限チェック（フリープラン基本枠＋買い切りクレジット対応）
   const sub = await getActiveSubscription(user.id);
   const isPremium =
     sub && (sub.status === "active" || sub.status === "trialing");
-  const maxPlaces = isPremium
-    ? SUBSCRIPTION_LIMITS.premium.MAX_PLACES_TOTAL
-    : SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL;
+
   if (!isPremium) {
-    // 累計登録済み地点数をカウント（共通ユーティリティ利用）
-    const count = await getRegisteredPlacesCountTotal(supabase, user.id);
-    if (maxPlaces !== null && count >= maxPlaces) {
+    // 新しい地点制限チェック（買い切りクレジット込み）
+    const placeAvailability = await getTotalAvailablePlaces(supabase, user.id);
+
+    if (placeAvailability.remainingPlaces <= 0) {
       return {
         success: false,
-        errorKey: "places.limitReached.freePlan",
+        errorKey: "places.limitReached.allPlans",
         error:
-          "フリープランの地点登録上限に達しています。プレミアムプランをご検討ください。",
+          "地点登録上限に達しています。追加地点パックまたはプレミアムプランをご検討ください。",
+        placeAvailability, // UI で詳細情報を表示するため
       };
     }
   }

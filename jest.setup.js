@@ -29,8 +29,12 @@ if (!global.URL.createObjectURL) {
 // MSWのセットアップ
 // import { server } from "./mocks/server";
 
-// window.alert のモック
-global.window.alert = jest.fn();
+// window.alert のモック（Node.js環境でも安全に動作）
+if (typeof global.window !== 'undefined') {
+  global.window.alert = jest.fn();
+} else {
+  global.alert = jest.fn();
+}
 
 // next/headers の cookies をモック
 jest.mock("next/headers", () => ({
@@ -294,20 +298,22 @@ jest.mock("next/navigation", () => ({
   revalidatePath: jest.fn(),
 }));
 
-// matchMediaのポリフィル
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // 非推奨
-    removeListener: jest.fn(), // 非推奨
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+// matchMediaのポリフィル（Node.js環境でも安全に動作）
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // 非推奨
+      removeListener: jest.fn(), // 非推奨
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+}
 
 jest.mock("nanoid", () => require("nanoid/non-secure"));
 

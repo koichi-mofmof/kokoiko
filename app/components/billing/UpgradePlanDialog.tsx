@@ -40,7 +40,7 @@ export function UpgradePlanDialog({
 }: UpgradePlanDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [plan, setPlan] = useState<BillingInterval>("monthly");
+  const [plan, setPlan] = useState<BillingInterval>("yearly");
   const { t, locale } = useI18n();
   const currency: SupportedCurrency = inferCurrencyFromLocale(locale);
 
@@ -92,7 +92,30 @@ export function UpgradePlanDialog({
           currency,
         }),
       });
-      const data = (await res.json()) as { url?: string; error?: string };
+
+      // レートリミット制限の場合は特別なハンドリング
+      if (res.status === 429) {
+        const retryAfter = res.headers.get("Retry-After") || "60";
+        setError(t("errors.stripe.rateLimitExceeded", { seconds: retryAfter }));
+        setLoading(false);
+        return;
+      }
+
+      // レスポンスがJSONでない可能性を考慮
+      let data: { url?: string; error?: string; errorKey?: string };
+      try {
+        data = await res.json();
+      } catch {
+        // JSONパースに失敗した場合（レートリミット等）
+        const text = await res.text();
+        console.error("JSON parse failed, raw response:", text);
+        setError(
+          t("errors.stripe.invalidResponse") || "サーバーエラーが発生しました"
+        );
+        setLoading(false);
+        return;
+      }
+
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -135,17 +158,6 @@ export function UpgradePlanDialog({
         >
           <TabsList className="flex mb-4 border-b bg-transparent p-0">
             <TabsTrigger
-              value="monthly"
-              data-testid="plan-tab-monthly"
-              className={`flex-1 py-2 text-center text-sm font-medium border-b-2 transition-colors ${
-                plan === "monthly"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t("upgrade.month")}
-            </TabsTrigger>
-            <TabsTrigger
               value="yearly"
               data-testid="plan-tab-yearly"
               className={`flex-1 py-2 text-center text-sm font-medium border-b-2 transition-colors ${
@@ -157,9 +169,20 @@ export function UpgradePlanDialog({
               {t("upgrade.year")}
               <span className="ml-2 align-middle">
                 <Badge className="font-bold px-2 py-0.5 text-xs">
-                  {t("upgrade.save30")}
+                  {t("upgrade.save")}
                 </Badge>
               </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="monthly"
+              data-testid="plan-tab-monthly"
+              className={`flex-1 py-2 text-center text-sm font-medium border-b-2 transition-colors ${
+                plan === "monthly"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("upgrade.month")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="monthly">
@@ -215,7 +238,7 @@ export function UpgradePlanDialog({
               <CardHeader className="p-4 pb-2">
                 <div className="flex justify-center mb-2">
                   <Badge className="font-bold px-2 py-0.5 text-xs">
-                    {t("upgrade.save30")}
+                    {t("upgrade.save")}
                   </Badge>
                 </div>
                 <div className="text-base font-bold text-primary-700 mb-1 text-center">
@@ -224,7 +247,7 @@ export function UpgradePlanDialog({
                 <div className="text-2xl font-extrabold text-neutral-900 mb-1 text-center">
                   {planInfo.yearly.price}
                 </div>
-                <div className="text-xs text-neutral-900 text-center mb-1 font-bold">
+                <div className="text-lg text-primary-600 text-center mb-1 font-extrabold bg-primary-50 py-2 px-4 rounded-md border border-primary-200">
                   {t("upgrade.perMonthNoteDynamic", {
                     price: formatMonthlyFromYearly(
                       DISPLAY_PRICES[currency].yearly,

@@ -86,14 +86,33 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         const subscriptionId = session.subscription as string;
         const userId = session.metadata?.user_id as string;
+        const purchaseType = session.metadata?.type;
 
+        console.log(`[${requestId}] Checkout session completed`, {
+          sessionId: session.id,
+          userId: !!userId,
+          subscriptionId: !!subscriptionId,
+          purchaseType,
+          paymentStatus: session.payment_status,
+        });
+
+        // 買い切りプランの場合はpayment_intent.succeededで処理するためスキップ
+        if (purchaseType === "one_time_purchase") {
+          console.log(
+            `[${requestId}] One-time purchase checkout completed, waiting for payment_intent.succeeded event`
+          );
+          break;
+        }
+
+        // サブスクリプションの場合の処理
         if (!userId || !subscriptionId) {
           console.error(
-            `[${requestId}] Missing user_id or subscriptionId in session.metadata`,
+            `[${requestId}] Missing user_id or subscriptionId in session.metadata for subscription`,
             {
               userId: !!userId,
               subscriptionId: !!subscriptionId,
               sessionId: session.id,
+              purchaseType,
             }
           );
           break;
@@ -603,6 +622,100 @@ export async function POST(req: NextRequest) {
           console.error(
             `[${requestId}] Error processing customer.deleted:`,
             error
+          );
+        }
+        break;
+      }
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+        console.log(
+          `[${requestId}] PaymentIntent succeeded: ${paymentIntent.id}`,
+          {
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            metadata: paymentIntent.metadata,
+          }
+        );
+
+        // 買い切り購入の場合のみ処理
+        if (paymentIntent.metadata?.type === "one_time_purchase") {
+          const userId = paymentIntent.metadata.user_id;
+          const planType = paymentIntent.metadata.plan_type as
+            | "small_pack"
+            | "regular_pack";
+          const placesCount = parseInt(
+            paymentIntent.metadata.places_count || "0"
+          );
+
+          if (!userId || !planType || !placesCount) {
+            console.error(
+              `[${requestId}] Missing metadata in payment_intent for one_time_purchase`,
+              {
+                userId: !!userId,
+                planType: !!planType,
+                placesCount: !!placesCount,
+                paymentIntentId: paymentIntent.id,
+                fullMetadata: paymentIntent.metadata,
+              }
+            );
+            break;
+          }
+
+          console.log(
+            `[${requestId}] Processing one_time_purchase for user ${userId}`,
+            {
+              planType,
+              placesCount,
+              paymentIntentId: paymentIntent.id,
+            }
+          );
+
+          try {
+            // place_creditsテーブルにクレジットを追加
+            const { error: insertError } = await supabase
+              .from("place_credits")
+              .insert({
+                user_id: userId,
+                credit_type:
+                  planType === "small_pack"
+                    ? "one_time_small"
+                    : "one_time_regular",
+                places_purchased: placesCount,
+                places_consumed: 0,
+                stripe_payment_intent_id: paymentIntent.id,
+                purchased_at: new Date().toISOString(),
+                is_active: true,
+                metadata: {
+                  payment_intent_id: paymentIntent.id,
+                  amount: paymentIntent.amount,
+                  currency: paymentIntent.currency,
+                },
+              });
+
+            if (insertError) {
+              console.error(
+                `[${requestId}] Failed to insert place credit:`,
+                insertError
+              );
+            } else {
+              console.log(
+                `[${requestId}] Successfully added ${placesCount} place credits for user ${userId} (${planType})`
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[${requestId}] Error processing payment_intent.succeeded for one_time_purchase:`,
+              error
+            );
+          }
+        } else {
+          console.log(
+            `[${requestId}] PaymentIntent succeeded but not one_time_purchase type`,
+            {
+              paymentIntentId: paymentIntent.id,
+              metadataType: paymentIntent.metadata?.type,
+            }
           );
         }
         break;

@@ -1,7 +1,7 @@
 // サブスクリプションプランごとの機能制限定数
 export const SUBSCRIPTION_LIMITS = {
   free: {
-    MAX_PLACES_TOTAL: 20, // 累計地点登録制限
+    MAX_PLACES_TOTAL: 30, // 累計地点登録制限（20→30に緩和）
     MAX_SHARED_LISTS: 1,
   },
   premium: {
@@ -126,4 +126,32 @@ export function formatMonthlyFromYearly(
   locale: string | undefined
 ): string {
   return formatPrice(monthlyFromYearly(yearlyAmount), currency, locale);
+}
+
+// --- 買い切りプラン定義 ---
+
+export type OneTimePurchaseType = "small_pack" | "regular_pack";
+
+export const ONE_TIME_PURCHASE_PLANS = {
+  small_pack: {
+    places: 10,
+    prices: { JPY: 110, USD: 1, EUR: 1 },
+  },
+  regular_pack: {
+    places: 50,
+    prices: { JPY: 440, USD: 4, EUR: 4 },
+  },
+};
+
+// Stripe Price ID 定義（プランごと - 通貨はパラメータで指定）
+export const ONE_TIME_PRICE_IDS = {
+  small_pack: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_SMALL_PACK,
+  regular_pack: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_REGULAR_PACK,
+};
+
+// 買い切りプランのPrice IDを取得する関数
+export function getOneTimePriceId(
+  planType: OneTimePurchaseType
+): string | undefined {
+  return ONE_TIME_PRICE_IDS[planType];
 }

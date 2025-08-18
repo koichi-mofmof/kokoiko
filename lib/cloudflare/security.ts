@@ -10,10 +10,11 @@ export const SECURITY_CONFIG = {
   RATE_LIMITS: {
     DEFAULT: 120,
     STRICT: 60,
-    API: 60,
+    API: 120, // 60 → 120 に緩和（決済系API考慮）
     AUTH: 60,
     HEAVY_PAGE: 150,
     HOME_PAGE: 100,
+    PAYMENT: 180, // 決済系API専用のより緩い制限
   },
   SECURITY_HEADERS: {
     HSTS_MAX_AGE: 31536000, // 1年
@@ -76,7 +77,12 @@ export function getPageRateLimit(pathname: string): number {
     return SECURITY_CONFIG.RATE_LIMITS.HEAVY_PAGE;
   }
 
-  // API エンドポイント
+  // 決済系 API エンドポイント
+  if (pathname.startsWith("/api/stripe/")) {
+    return SECURITY_CONFIG.RATE_LIMITS.PAYMENT;
+  }
+
+  // その他の API エンドポイント
   if (pathname.startsWith("/api/")) {
     return SECURITY_CONFIG.RATE_LIMITS.API;
   }

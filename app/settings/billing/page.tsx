@@ -23,6 +23,7 @@ import { format } from "date-fns";
 // date-fns locale は i18nユーティリティ経由で取得するため直接のimportは不要
 import { cookies } from "next/headers";
 import { ManagePlanButton } from "./_components/ManagePlanButton";
+import { PlaceUsageCard } from "./_components/PlaceUsageCard";
 
 export default async function BillingSettingsPage() {
   const cookieStore = await cookies();
@@ -97,6 +98,10 @@ export default async function BillingSettingsPage() {
 
   return (
     <div className="space-y-6 px-0 sm:px-4">
+      {/* 地点利用状況カード */}
+      <PlaceUsageCard />
+
+      {/* サブスクリプション詳細カード */}
       <Card>
         <CardHeader>
           <CardTitle>{t("settings.billing.title")}</CardTitle>

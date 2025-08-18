@@ -38,8 +38,8 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
   const [isClient, setIsClient] = useState(false);
   const {
     plan: subscriptionPlan,
-    registeredPlacesTotal, // registeredPlacesThisMonth → registeredPlacesTotal
-    maxPlaces,
+    totalLimit,
+    usedPlaces,
     sharedListCount,
     loading: planLoading,
     isPremium,
@@ -161,8 +161,8 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                 <div className="w-36">
                   <SubscriptionStatus
                     label={t("header.stat.totalPlaces")}
-                    currentValue={registeredPlacesTotal} // プロパティ名変更
-                    maxValue={maxPlaces}
+                    currentValue={usedPlaces}
+                    maxValue={totalLimit}
                     loading={planLoading}
                   />
                 </div>
@@ -246,8 +246,8 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                         <div className="space-y-2">
                           <SubscriptionStatus
                             label={t("header.stat.totalPlaces")}
-                            currentValue={registeredPlacesTotal} // プロパティ名変更
-                            maxValue={maxPlaces}
+                            currentValue={usedPlaces}
+                            maxValue={totalLimit}
                             loading={planLoading}
                           />
                           <SubscriptionStatus

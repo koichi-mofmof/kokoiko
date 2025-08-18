@@ -12,7 +12,7 @@ import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { getActiveSubscription } from "@/lib/dal/subscriptions";
 import { createClient } from "@/lib/supabase/client";
 import {
-  getRegisteredPlacesCountTotal,
+  getTotalAvailablePlaces,
   getSharedListCount,
 } from "@/lib/utils/subscription-utils";
 
@@ -23,8 +23,10 @@ export interface SubscriptionState {
   isPremium: boolean;
   isTrial: boolean;
   trialEnd: string | null;
-  maxPlaces: number | null; // null=無制限
-  registeredPlacesTotal: number; // 名前変更：registeredPlacesThisMonth → registeredPlacesTotal
+  totalLimit: number; // 総利用可能地点数（買い切りクレジット含む）
+  usedPlaces: number; // 使用済み地点数
+  remainingPlaces: number; // 残り地点数
+  registeredPlacesTotal: number; // 名前変更：registeredPlacesThisMonth → registeredPlacesTotal（後方互換性）
   sharedListCount: number;
   isSharedListLimitExceeded: boolean;
   loading: boolean;
@@ -40,8 +42,10 @@ const initialState: SubscriptionState = {
   isPremium: false,
   isTrial: false,
   trialEnd: null,
-  maxPlaces: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL, // 定数名変更
-  registeredPlacesTotal: 0, // プロパティ名変更
+  totalLimit: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL!, // 総利用可能地点数
+  usedPlaces: 0, // 使用済み地点数
+  remainingPlaces: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL!, // 残り地点数
+  registeredPlacesTotal: 0, // 後方互換性のため保持
   sharedListCount: 0,
   isSharedListLimitExceeded: false,
   loading: true,
@@ -65,11 +69,12 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const supabase = createClient();
-      const [sub, placesCount, { count: sharedCount }] = await Promise.all([
-        getActiveSubscription(user.id),
-        getRegisteredPlacesCountTotal(supabase, user.id), // 関数名変更
-        getSharedListCount(supabase, user.id),
-      ]);
+      const [sub, placeAvailability, { count: sharedCount }] =
+        await Promise.all([
+          getActiveSubscription(user.id),
+          getTotalAvailablePlaces(supabase, user.id), // 買い切りクレジット対応
+          getSharedListCount(supabase, user.id),
+        ]);
 
       const premium =
         sub && (sub.status === "active" || sub.status === "trialing");
@@ -81,10 +86,10 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         isPremium: !!premium,
         isTrial: !!trial,
         trialEnd: sub?.trial_end || null,
-        maxPlaces: premium
-          ? SUBSCRIPTION_LIMITS.premium.MAX_PLACES_TOTAL
-          : SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL,
-        registeredPlacesTotal: placesCount, // プロパティ名変更
+        totalLimit: placeAvailability.totalLimit, // 買い切りクレジット含む総制限
+        usedPlaces: placeAvailability.usedPlaces, // 使用済み地点数
+        remainingPlaces: placeAvailability.remainingPlaces, // 残り地点数
+        registeredPlacesTotal: placeAvailability.usedPlaces, // 後方互換性
         sharedListCount: sharedCount,
         isSharedListLimitExceeded:
           !premium && sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS,
