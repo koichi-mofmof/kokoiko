@@ -54,7 +54,7 @@ export function PricingSection() {
               <CardContent className="flex-1 flex flex-col gap-2 mt-2 border-t border-neutral-100 pt-4 pb-6 px-4 sm:px-6">
                 <ul className="space-y-2 text-sm text-neutral-700">
                   <li className="flex items-center">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
                     {t("home.pricing.free.limitPlacesLabel")}：
@@ -74,6 +74,12 @@ export function PricingSection() {
                         n: SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS,
                       })}
                     </span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
+                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    </div>
+                    {t("home.pricing.free.adsIncluded")}
                   </li>
                 </ul>
 
@@ -228,6 +234,12 @@ export function PricingSection() {
                     <span className="font-semibold ml-1">
                       {t("common.unlimited")}
                     </span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
+                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    </div>
+                    {t("home.pricing.premium.noAds")}
                   </li>
                   <li className="flex items-center">
                     <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">

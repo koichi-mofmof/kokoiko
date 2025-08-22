@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/contexts/I18nProvider";
 import { SubscriptionProvider } from "@/contexts/SubscriptionProvider";
 import { logoutUser } from "@/lib/actions/auth";
+import { getActiveSubscription } from "@/lib/dal/subscriptions";
 import type { ProfileSettingsData } from "@/lib/dal/users";
 import {
   createServerT,
@@ -133,6 +134,15 @@ export default async function RootLayout({
   // nonceを取得
   const nonce = (await headers()).get("x-nonce");
 
+  // サブスクリプション状態を確認（プレミアムユーザーには広告を表示しない）
+  let isPremium = false;
+  if (user) {
+    const subscription = await getActiveSubscription(user.id);
+    isPremium =
+      subscription &&
+      (subscription.status === "active" || subscription.status === "trialing");
+  }
+
   let profileData: ProfileSettingsData | null = null;
   if (user) {
     // profilesテーブルから直接データを取得
@@ -179,17 +189,32 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://images.pexels.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        {/* Google AdSense用プリコネクト - フリープランユーザーのみ */}
+        {!isPremium && (
+          <>
+            <link
+              rel="preconnect"
+              href="https://pagead2.googlesyndication.com"
+            />
+            <link
+              rel="dns-prefetch"
+              href="https://pagead2.googlesyndication.com"
+            />
+          </>
+        )}
 
         <GoogleSearchConsole />
         <JsonLd data={generateOrganizationSchema()} />
         <JsonLd data={generateWebSiteSchema()} />
-        {/* Google AdSense */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9713366549691329"
-          crossOrigin="anonymous"
-          nonce={nonce ?? undefined}
-        />
+        {/* Google AdSense - フリープランユーザーのみ */}
+        {!isPremium && (
+          <script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9713366549691329"
+            crossOrigin="anonymous"
+            nonce={nonce ?? undefined}
+          />
+        )}
       </head>
       <body
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}
