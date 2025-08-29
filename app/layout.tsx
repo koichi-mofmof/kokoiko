@@ -26,6 +26,7 @@ import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
 import { cookies, headers } from "next/headers";
+import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -137,11 +138,21 @@ export default async function RootLayout({
   // サブスクリプション状態を確認（プレミアムユーザーには広告を表示しない）
   let isPremium = false;
   if (user) {
-    const subscription = await getActiveSubscription(user.id);
-    isPremium =
-      subscription &&
-      (subscription.status === "active" || subscription.status === "trialing");
+    try {
+      const subscription = await getActiveSubscription(user.id);
+      isPremium =
+        subscription &&
+        (subscription.status === "active" ||
+          subscription.status === "trialing");
+    } catch (error) {
+      console.error("Subscription check failed:", error);
+      // エラー時は安全側（広告非表示）にフォールバック
+      isPremium = true;
+    }
   }
+
+  // 本番環境かつ非プレミアムユーザーの場合のみ広告表示
+  const shouldShowAds = !isPremium && process.env.NODE_ENV === "production";
 
   let profileData: ProfileSettingsData | null = null;
   if (user) {
@@ -190,7 +201,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {/* Google AdSense用プリコネクト - フリープランユーザーのみ */}
-        {!isPremium && (
+        {shouldShowAds && (
           <>
             <link
               rel="preconnect"
@@ -206,15 +217,6 @@ export default async function RootLayout({
         <GoogleSearchConsole />
         <JsonLd data={generateOrganizationSchema()} />
         <JsonLd data={generateWebSiteSchema()} />
-        {/* Google AdSense - フリープランユーザーのみ */}
-        {!isPremium && (
-          <script
-            async
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9713366549691329"
-            crossOrigin="anonymous"
-            nonce={nonce ?? undefined}
-          />
-        )}
       </head>
       <body
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}
@@ -252,6 +254,16 @@ export default async function RootLayout({
         </AuthSyncProvider>
         <Toaster />
         <GoogleAnalytics nonce={nonce ?? undefined} />
+
+        {/* Google AdSense自動広告スクリプト - Next.js最適化版 */}
+        {shouldShowAds && (
+          <Script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9713366549691329"
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );
