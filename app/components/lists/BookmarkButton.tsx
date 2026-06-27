@@ -5,6 +5,7 @@ import { useI18n } from "@/hooks/use-i18n";
 import { bookmarkList, unbookmarkList } from "@/lib/actions/lists";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import type { Place } from "@/types";
 import type { User } from "@supabase/supabase-js";
 import { Bookmark } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ type BookmarkButtonProps = {
   initialIsBookmarked: boolean;
   className?: string;
   listName?: string;
+  places?: Place[];
 };
 
 export function BookmarkButton({
@@ -21,6 +23,7 @@ export function BookmarkButton({
   initialIsBookmarked,
   className,
   listName,
+  places,
 }: BookmarkButtonProps) {
   const [isPending, setIsPending] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
@@ -87,6 +90,7 @@ export function BookmarkButton({
         onClose={() => setShowSignupModal(false)}
         listId={listId}
         listName={listName}
+        places={places}
       />
     </>
   );

@@ -5,11 +5,11 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useI18n } from "@/hooks/use-i18n";
 import { trackConversionEvents } from "@/lib/analytics/events";
 import type { Place } from "@/types";
-import { Bookmark, Check, MapPin } from "lucide-react";
+import { Check, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
-interface BookmarkSignupModalProps {
+interface CopySignupModalProps {
   isOpen: boolean;
   onClose: () => void;
   listId?: string;
@@ -18,40 +18,41 @@ interface BookmarkSignupModalProps {
 }
 
 /**
- * 非ログインユーザーがブックマークを押した際に表示するサインアップ訴求モーダル
- * （リストプレビュー型 / CopySignupModal とデザイン統一・アクセントはアンバー）。
+ * 非ログインユーザーが「このマップをベースに自分用に編集」を押した際に表示する
+ * サインアップ訴求モーダル（リストプレビュー型）。
+ * コピーで手に入る中身を具体的に見せて転換を促す。
+ * サインアップ/ログイン後は元のリストに戻り、そのままコピーできる。
  */
-export function BookmarkSignupModal({
+export function CopySignupModal({
   isOpen,
   onClose,
   listId,
   listName,
   places = [],
-}: BookmarkSignupModalProps) {
+}: CopySignupModalProps) {
   const { t } = useI18n();
 
-  // ポップアップ表示時のGAイベント送信
+  // 表示時のGAイベント送信（ブックマークと同じ conversion イベントを再利用）
   useEffect(() => {
     if (isOpen && listId) {
-      trackConversionEvents.promptShown(listId);
+      trackConversionEvents.promptShown(listId, "copy");
     }
   }, [isOpen, listId]);
 
+  const returnTo = listId ? `/lists/${listId}` : "/lists";
   const previewPlaces = places.slice(0, 3);
   const remainingCount = Math.max(0, places.length - previewPlaces.length);
 
-  // CTAクリック時のイベント処理
   const handleCtaClick = () => {
     if (listId) {
-      trackConversionEvents.promptClicked(listId);
+      trackConversionEvents.promptClicked(listId, "copy");
     }
     onClose();
   };
 
-  // 閉じる時のイベント処理
   const handleClose = () => {
     if (listId) {
-      trackConversionEvents.promptDismissed(listId);
+      trackConversionEvents.promptDismissed(listId, "copy");
     }
     onClose();
   };
@@ -67,35 +68,30 @@ export function BookmarkSignupModal({
           className="px-6 pb-8 pt-7 text-center"
           style={{
             backgroundImage:
-              "linear-gradient(to bottom right, #d97706, #b45309)",
+              "linear-gradient(to bottom right, #577045, #3c4732)",
           }}
         >
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-            <Bookmark className="h-6 w-6 text-white fill-white" />
-          </div>
           {/* 最重要メッセージ：問いかけを大きく。リスト名は文脈として一段小さく */}
           <DialogTitle className="text-white">
             <span className="block text-sm font-medium text-white/85">
               {listName
-                ? t("conversion.bookmark.title.prefixWithName", {
-                    name: listName,
-                  })
-                : t("conversion.bookmark.title.prefixGeneric")}
+                ? t("conversion.copy.title.prefixWithName", { name: listName })
+                : t("conversion.copy.title.prefixGeneric")}
             </span>
             <span className="mt-1 block text-xl font-extrabold leading-snug">
-              {t("conversion.bookmark.title.highlight")}
-              {t("conversion.bookmark.title.suffix")}
+              {t("conversion.copy.title.highlight")}
+              {t("conversion.copy.title.suffix")}
             </span>
           </DialogTitle>
         </div>
 
         {/* 本文 */}
         <div className="space-y-4 px-6 pb-6 pt-5">
-          {/* リストプレビュー（保存する対象を具体化） */}
+          {/* リストプレビュー（コピーで手に入る中身を具体化） */}
           {previewPlaces.length > 0 && (
             <div className="-mt-9 rounded-xl border border-neutral-200 bg-white p-3 shadow-md">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
-                {t("conversion.bookmark.preview.title")}
+                {t("conversion.copy.preview.title")}
               </p>
               <ul className="space-y-1.5">
                 {previewPlaces.map((place) => (
@@ -103,10 +99,10 @@ export function BookmarkSignupModal({
                     key={place.id}
                     className="flex items-center gap-2 text-sm text-neutral-800"
                   >
-                    <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500" />
+                    <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-primary-500" />
                     <span className="truncate">{place.name}</span>
                     {place.tags[0] && (
-                      <span className="ml-auto flex-shrink-0 rounded-full bg-yellow-50 px-2 py-0.5 text-[10px] text-yellow-700">
+                      <span className="ml-auto flex-shrink-0 rounded-full bg-primary-50 px-2 py-0.5 text-[10px] text-primary-700">
                         {place.tags[0].name}
                       </span>
                     )}
@@ -115,9 +111,7 @@ export function BookmarkSignupModal({
               </ul>
               {remainingCount > 0 && (
                 <p className="mt-2 text-xs text-neutral-400">
-                  {t("conversion.bookmark.preview.more", {
-                    count: remainingCount,
-                  })}
+                  {t("conversion.copy.preview.more", { count: remainingCount })}
                 </p>
               )}
             </div>
@@ -126,12 +120,12 @@ export function BookmarkSignupModal({
           {/* 価値訴求（左寄せ） */}
           <ul className="space-y-2.5">
             {[
-              t("conversion.bookmark.value.pro1"),
-              t("conversion.bookmark.value.pro2"),
+              t("conversion.copy.value.pro1"),
+              t("conversion.copy.value.pro2"),
             ].map((text, index) => (
               <li key={index} className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
-                  <Check className="h-3 w-3 text-yellow-600" />
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-100">
+                  <Check className="h-3 w-3 text-primary-600" />
                 </span>
                 <span className="text-sm leading-snug text-neutral-700">
                   {text}
@@ -142,27 +136,24 @@ export function BookmarkSignupModal({
 
           {/* CTA */}
           <div className="space-y-2 pt-1">
-            <Link
-              href={`/signup?bookmark=${listId}&returnTo=/lists`}
-              className="block"
-            >
+            <Link href={`/signup?returnTo=${returnTo}`} className="block">
               <Button
                 onClick={handleCtaClick}
-                className="h-12 w-full text-base font-bold bg-yellow-600 shadow-lg transition-all duration-200 hover:bg-yellow-700 hover:shadow-xl"
+                className="h-12 w-full text-base font-bold shadow-lg transition-all duration-200 hover:shadow-xl"
               >
-                {t("conversion.bookmark.cta")}
+                {t("conversion.copy.cta")}
               </Button>
             </Link>
             <p className="text-center text-[10px] leading-relaxed text-neutral-400">
-              {t("conversion.bookmark.note")}
+              {t("conversion.copy.note")}
             </p>
             <div className="text-center">
               <Link
-                href={`/login?bookmark=${listId}&returnTo=/lists`}
-                className="text-xs font-medium text-yellow-700 underline hover:text-yellow-800"
+                href={`/login?returnTo=${returnTo}`}
+                className="text-xs font-medium text-primary-600 underline hover:text-primary-700"
                 onClick={handleCtaClick}
               >
-                {t("conversion.bookmark.alreadyHaveAccount")}
+                {t("conversion.copy.alreadyHaveAccount")}
               </Link>
             </div>
           </div>

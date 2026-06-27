@@ -24,7 +24,7 @@ import {
   type SupportedCurrency,
 } from "@/lib/constants/config/subscription";
 import { createClient } from "@/lib/supabase/client";
-import { Check } from "lucide-react";
+import { Check, Crown, ShieldCheck } from "lucide-react";
 import { ReactNode, useState } from "react";
 
 type UpgradePlanDialogProps = {
@@ -46,6 +46,13 @@ export function UpgradePlanDialog({
 
   // 通貨×プランに応じた Price ID
   const priceId = getPriceId(currency, plan);
+
+  // 年額のお得感アンカー：月額プランで1年使った場合の金額（= 月額×12）
+  const yearlyOriginalPrice = formatPrice(
+    DISPLAY_PRICES[currency].monthly * 12,
+    currency,
+    locale
+  );
 
   // プランごとの表示内容
   const planInfo = {
@@ -136,7 +143,8 @@ export function UpgradePlanDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger ? (
         <div onClick={() => onOpenChange?.(true)}>{trigger}</div>
-      ) : (
+      ) : open === undefined ? (
+        // 外部から open を制御していない場合のみ、既定のトリガーを表示する
         <DialogTrigger asChild>
           <Button
             variant="secondary"
@@ -146,108 +154,103 @@ export function UpgradePlanDialog({
             {t("upgrade.open")}
           </Button>
         </DialogTrigger>
-      )}
+      ) : null}
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("upgrade.title")}</DialogTitle>
-          <DialogDescription>{t("upgrade.desc")}</DialogDescription>
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 shadow-md">
+            <Crown className="h-6 w-6 text-white" />
+          </div>
+          <DialogTitle className="text-center text-lg">
+            {t("upgrade.title")}
+          </DialogTitle>
+          <DialogDescription className="text-center">
+            {t("upgrade.desc")}
+          </DialogDescription>
         </DialogHeader>
         <Tabs
           value={plan}
           onValueChange={(v) => setPlan(v as "monthly" | "yearly")}
         >
-          <TabsList className="flex mb-4 border-b bg-transparent p-0">
+          <TabsList className="mb-5 grid h-auto w-full grid-cols-2 gap-1 rounded-full bg-neutral-100 p-1">
             <TabsTrigger
               value="yearly"
               data-testid="plan-tab-yearly"
-              className={`flex-1 py-2 text-center text-sm font-medium border-b-2 transition-colors ${
-                plan === "yearly"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className="flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold text-neutral-500 transition-all data-[state=active]:bg-white data-[state=active]:text-primary-700 data-[state=active]:shadow-sm"
             >
               {t("upgrade.year")}
-              <span className="ml-2 align-middle">
-                <Badge className="font-bold px-2 py-0.5 text-xs">
-                  {t("upgrade.save")}
-                </Badge>
-              </span>
+              <Badge className="px-1.5 py-0 text-[10px] font-bold leading-tight">
+                {t("upgrade.save")}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger
               value="monthly"
               data-testid="plan-tab-monthly"
-              className={`flex-1 py-2 text-center text-sm font-medium border-b-2 transition-colors ${
-                plan === "monthly"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className="rounded-full py-2 text-sm font-semibold text-neutral-500 transition-all data-[state=active]:bg-white data-[state=active]:text-primary-700 data-[state=active]:shadow-sm"
             >
               {t("upgrade.month")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="monthly">
             {/* 月額プラン内容 */}
-            <Card className="my-4 p-0 border rounded-xl bg-neutral-50 shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <div className="text-base font-bold text-primary-700 mb-1 text-center">
+            <Card className="mt-1 mb-5 overflow-hidden rounded-2xl border border-primary-100 bg-white p-0 shadow-md">
+              <CardHeader className="p-5 pb-3">
+                <div className="mb-1 text-center text-sm font-semibold text-neutral-500">
                   {planInfo.monthly.label}
                 </div>
-                <div className="text-2xl font-extrabold text-neutral-900 mb-1 text-center">
-                  {planInfo.monthly.price}
-                </div>
-                <div className="text-xs text-neutral-500 text-center mb-1">
-                  {planInfo.monthly.sub}
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className="text-3xl font-extrabold tracking-tight text-neutral-900">
+                    {planInfo.monthly.price}
+                  </span>
+                  <span className="text-sm text-neutral-500">
+                    {t("upgrade.perMonthSuffix")}
+                  </span>
                 </div>
               </CardHeader>
-              <CardContent className="pt-2 pb-4 border-t border-neutral-200">
+              <CardContent className="border-t border-neutral-100 pt-3 pb-5">
                 <ul className="mb-0 mt-2 text-sm text-neutral-700 space-y-2 px-2">
                   <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-500">
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                     {t("upgrade.features.unlimitedPlaces")}
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-500">
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                     {t("upgrade.features.unlimitedSharedLinks")}
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-500">
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                     {t("upgrade.features.noAds")}
                   </li>
-                  <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
-                    </div>
-                    {t("upgrade.features.freeTrial14Days")}
-                  </li>
                 </ul>
-                <div className="text-xs text-neutral-500 text-center mt-2">
-                  {planInfo.monthly.note}
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="yearly">
             {/* 年額プラン内容 */}
-            <Card className="my-4 p-0 border rounded-xl bg-neutral-50 shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <div className="flex justify-center mb-2">
-                  <Badge className="font-bold px-2 py-0.5 text-xs">
-                    {t("upgrade.save")}
-                  </Badge>
-                </div>
-                <div className="text-base font-bold text-primary-700 mb-1 text-center">
+            <Card className="mt-1 mb-5 overflow-hidden rounded-2xl border border-primary-100 bg-white p-0 shadow-md">
+              <CardHeader className="p-5 pb-3">
+                <div className="mb-1 text-center text-sm font-semibold text-neutral-500">
                   {planInfo.yearly.label}
                 </div>
-                <div className="text-2xl font-extrabold text-neutral-900 mb-1 text-center">
-                  {planInfo.yearly.price}
+                {/* 主役の価格（取り消し線アンカー → 実価格） */}
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className="text-base font-medium text-neutral-400 line-through">
+                    {yearlyOriginalPrice}
+                  </span>
+                  <span className="text-3xl font-extrabold tracking-tight text-neutral-900">
+                    {planInfo.yearly.price}
+                  </span>
+                  <span className="text-sm text-neutral-500">
+                    {t("upgrade.perYearSuffix")}
+                  </span>
                 </div>
-                <div className="text-lg text-primary-600 text-center mb-1 font-extrabold bg-primary-50 py-2 px-4 rounded-md border border-primary-200">
+                {/* 1か月あたりの手頃感（箱なしのクリーンなサブ） */}
+                <div className="mt-1.5 text-center text-sm font-semibold text-primary-600">
                   {t("upgrade.perMonthNoteDynamic", {
                     price: formatMonthlyFromYearly(
                       DISPLAY_PRICES[currency].yearly,
@@ -256,56 +259,47 @@ export function UpgradePlanDialog({
                     ),
                   })}
                 </div>
-                <div className="text-xs text-neutral-500 text-center mb-1">
-                  {planInfo.yearly.sub}
-                </div>
               </CardHeader>
-              <CardContent className="pt-2 pb-4 border-t border-neutral-200">
+              <CardContent className="border-t border-neutral-100 pt-3 pb-5">
                 <ul className="mb-0 mt-2 text-sm text-neutral-700 space-y-2 px-2">
                   <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-500">
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                     {t("upgrade.features.unlimitedPlaces")}
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-500">
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                     {t("upgrade.features.unlimitedSharedLinks")}
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-500">
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                     {t("upgrade.features.noAds")}
                   </li>
-                  <li className="flex items-center gap-2">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
-                    </div>
-                    {t("upgrade.features.freeTrial14Days")}
-                  </li>
                 </ul>
-                <div className="text-xs text-neutral-500 text-center mt-2">
-                  {planInfo.yearly.note}
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-col">
           <Button
             variant="default"
-            className="w-full"
+            className="w-full h-12 text-base font-bold"
             onClick={handleCheckout}
             disabled={loading}
             data-testid="checkout-button"
           >
-            {loading
-              ? t("upgrade.redirecting")
-              : t("upgrade.apply", { plan: planInfo[plan].label })}
+            {loading ? t("upgrade.redirecting") : t("upgrade.startFreeTrial")}
           </Button>
+          {/* リスクリバーサル：今は課金されない・いつでも解約OK */}
+          <p className="mt-2 flex items-center justify-center gap-1 text-xs text-neutral-500">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary-500" />
+            {t("upgrade.riskReversal")}
+          </p>
         </DialogFooter>
         {error && (
           <div className="text-red-500 text-xs text-center mt-2">{error}</div>

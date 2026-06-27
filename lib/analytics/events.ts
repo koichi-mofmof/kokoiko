@@ -125,6 +125,19 @@ export const trackSearchEvents = {
   },
 };
 
+// テンプレコピー関連のイベント
+export const trackTemplateCopyEvents = {
+  // コピー開始（モーダルでコピー実行）
+  copyStart: (sourceListId: string) => {
+    sendGAEvent("copy_list_start", "template_copy", sourceListId);
+  },
+
+  // コピー完了（コピーできた地点数を value として送信）
+  copyComplete: (sourceListId: string, copiedCount: number) => {
+    sendGAEvent("copy_list_complete", "template_copy", sourceListId, copiedCount);
+  },
+};
+
 // コンバージョン関連のイベント
 export const trackConversionEvents = {
   // ポップアップ表示

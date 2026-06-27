@@ -3,6 +3,7 @@ import { BookmarkButton } from "@/app/components/lists/BookmarkButton";
 import { CreatorInfoCard } from "@/app/components/lists/CreatorInfoCard";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
+import { TemplateCopyButton } from "@/app/components/lists/TemplateCopyButton";
 import JsonLd from "@/components/seo/JsonLd";
 import { ParticipantAvatars } from "@/components/ui/avatar";
 import NoAccess from "@/components/ui/NoAccess";
@@ -206,6 +207,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
                 listId={listDetails.id}
                 initialIsBookmarked={listDetails.isBookmarked}
                 listName={listDetails.name}
+                places={listDetails.places}
               />
             )}
             <ListCardActions list={listDetails} variant="inline" />
@@ -217,9 +219,21 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           </p>
         )}
 
-        <div className="my-4">
+        <div className="mt-1 mb-3">
           <CreatorInfoCard creator={creatorProfile} />
         </div>
+
+        {/* 目玉機能のCTA（公開リストかつ非所有者のみ）。スマホでもラベルを明確に表示 */}
+        {listDetails.created_by !== user?.id && listDetails.is_public && (
+          <div className="mb-4">
+            <TemplateCopyButton
+              sourceListId={listDetails.id}
+              sourceListName={listDetails.name}
+              places={listDetails.places}
+              isLoggedIn={!!user}
+            />
+          </div>
+        )}
 
         <div className="mb-4 flex justify-between">
           <ParticipantAvatars
