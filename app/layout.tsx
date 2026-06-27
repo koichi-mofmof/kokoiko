@@ -222,7 +222,7 @@ export default async function RootLayout({
         className={`${inter.variable} ${notoSansJP.variable} ${quicksand.variable} font-sans min-h-screen bg-neutral-50 flex flex-col`}
       >
         <AuthSyncProvider>
-          <SubscriptionProvider>
+          <SubscriptionProvider serverUserId={user?.id ?? null}>
             <I18nProvider initialLocale={locale} messages={messages}>
               {user && profileData ? (
                 <ProfileSetupProvider profileData={profileData}>

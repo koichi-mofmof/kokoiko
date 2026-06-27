@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -56,7 +57,18 @@ export const SubscriptionContext = createContext<
   SubscriptionContextType | undefined
 >(undefined);
 
-export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
+export const SubscriptionProvider = ({
+  children,
+  serverUserId = null,
+}: {
+  children: ReactNode;
+  /**
+   * サーバー側で把握しているログインユーザーID。
+   * サーバーアクションによるログイン/ログアウト後はクライアントの
+   * onAuthStateChange が発火しないため、この値の変化を再取得トリガーにする。
+   */
+  serverUserId?: string | null;
+}) => {
   const [state, setState] = useState<SubscriptionState>(initialState);
 
   const fetchSubscriptionData = useCallback(async (user: User | null) => {
@@ -96,10 +108,10 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         loading: false,
         error: null,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setState((prevState) => ({
         ...prevState,
-        error: e.message || "不明なエラーが発生しました",
+        error: e instanceof Error ? e.message : "不明なエラーが発生しました",
         loading: false,
       }));
     }
@@ -124,6 +136,22 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       authListener?.unsubscribe();
     };
   }, [fetchSubscriptionData]);
+
+  // サーバーアクションによるログイン/ログアウトでは onAuthStateChange が
+  // 発火しないため、サーバー既知のユーザーID変化を再取得トリガーにする。
+  // 初回マウントは上の onAuthStateChange(INITIAL_SESSION) に任せ、二重取得を避ける。
+  const lastUserIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const normalized = serverUserId ?? null;
+    if (lastUserIdRef.current === undefined) {
+      lastUserIdRef.current = normalized;
+      return;
+    }
+    if (lastUserIdRef.current !== normalized) {
+      lastUserIdRef.current = normalized;
+      refreshSubscription();
+    }
+  }, [serverUserId, refreshSubscription]);
 
   return (
     <SubscriptionContext.Provider value={{ ...state, refreshSubscription }}>
