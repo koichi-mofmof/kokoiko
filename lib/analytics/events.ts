@@ -182,24 +182,4 @@ export const trackConversionEvents = {
     const eventValue = variant ? `${listId}_${variant}` : listId;
     sendGAEvent("signup_prompt_dismissed", "conversion", eventValue);
   },
-
-  // バナーCTAボタン（サインアップ）クリック
-  bannerCtaClicked: (listId: string) => {
-    sendGAEvent("banner_cta_clicked", "conversion", listId);
-  },
-
-  // バナー詳細ボタンクリック
-  bannerDetailClicked: (listId: string) => {
-    sendGAEvent("banner_detail_clicked", "conversion", listId);
-  },
-
-  // バナー表示
-  bannerShown: (listId: string) => {
-    sendGAEvent("banner_shown", "conversion", listId);
-  },
-
-  // バナー閉じる
-  bannerDismissed: (listId: string) => {
-    sendGAEvent("banner_dismissed", "conversion", listId);
-  },
 };

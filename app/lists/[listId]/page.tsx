@@ -1,4 +1,3 @@
-import { SignupPromptWrapper } from "@/app/components/conversion/SignupPromptWrapper";
 import { BookmarkButton } from "@/app/components/lists/BookmarkButton";
 import { CreatorInfoCard } from "@/app/components/lists/CreatorInfoCard";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
@@ -171,9 +170,6 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
             {user ? t("noAccess.backToLists") : t("noAccess.backToHome")}
           </Link>
         </div>
-
-        {/* サインアップ誘導バナー（非ログインユーザーのみ） */}
-        <SignupPromptWrapper listId={listId} showBanner={true} />
 
         <h1 className="flex items-start justify-between gap-4 text-lg sm:text-xl font-semibold text-neutral-900">
           <span className="flex items-center gap-2">
