@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Place, DisplayOrderedPlace } from "@/types";
 import PlaceCard from "@/app/components/places/PlaceCard";
+import { trackMapEvents } from "@/lib/analytics/events";
 import { X } from "lucide-react";
 import ReactDOMServer from "react-dom/server";
 import Image from "next/image";
@@ -216,6 +217,9 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
                     setSelectedPlace(place);
                     if (onPlaceSelect) {
                       onPlaceSelect(place);
+                    }
+                    if (!isSample) {
+                      trackMapEvents.clickPlace(place.id);
                     }
                     console.log(`[LeafletMap] Marker clicked: ${place.name}`);
                   },

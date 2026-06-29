@@ -7,16 +7,6 @@ export const trackMapEvents = {
     sendGAEvent("view_map", "map_interaction", listId);
   },
 
-  // 地図スタイル変更
-  changeMapStyle: (style: "roadmap" | "satellite" | "hybrid" | "terrain") => {
-    sendGAEvent("change_map_style", "map_interaction", style);
-  },
-
-  // ズーム操作
-  zoom: (zoomLevel: number) => {
-    sendGAEvent("map_zoom", "map_interaction", zoomLevel.toString());
-  },
-
   // 地点クリック
   clickPlace: (placeId: string) => {
     sendGAEvent("click_place", "map_interaction", placeId);
@@ -127,6 +117,15 @@ export const trackSearchEvents = {
 
 // テンプレコピー関連のイベント
 export const trackTemplateCopyEvents = {
+  // CTAボタン押下（モーダルを開く前）。ログイン状態で区別しファネル離脱を計測
+  buttonClick: (sourceListId: string, isLoggedIn: boolean) => {
+    sendGAEvent(
+      "copy_button_click",
+      "template_copy",
+      `${sourceListId}_${isLoggedIn ? "member" : "guest"}`
+    );
+  },
+
   // コピー開始（モーダルでコピー実行）
   copyStart: (sourceListId: string) => {
     sendGAEvent("copy_list_start", "template_copy", sourceListId);
@@ -137,6 +136,32 @@ export const trackTemplateCopyEvents = {
     sendGAEvent("copy_list_complete", "template_copy", sourceListId, copiedCount);
   },
 };
+
+// 認証イベントの計測
+// サーバーアクション/OAuthコールバックは成功時にサーバー側 redirect で遷移するため、
+// フォーム内ではGA（window.gtag）を撃てない。リダイレクト先URLに付与した
+// `auth_event` クエリパラメータをクライアント側で拾ってここで発火させる。
+export function trackAuthEventFromParam(code: string): boolean {
+  switch (code) {
+    case "signup_email":
+      trackUserEvents.signup("email");
+      return true;
+    case "signup_google":
+      trackUserEvents.signup("google");
+      return true;
+    case "login_email":
+      trackUserEvents.login("email");
+      return true;
+    case "login_google":
+      trackUserEvents.login("google");
+      return true;
+    case "logout":
+      trackUserEvents.logout();
+      return true;
+    default:
+      return false;
+  }
+}
 
 // コンバージョン関連のイベント
 export const trackConversionEvents = {

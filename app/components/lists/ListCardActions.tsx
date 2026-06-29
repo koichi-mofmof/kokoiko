@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
+import { trackListEvents } from "@/lib/analytics/events";
 import {
   createShareLink,
   deleteList,
@@ -158,12 +159,14 @@ export function ListCardActions({
           text,
           url,
         });
+        trackListEvents.shareList(list.id, "social");
       } catch (error) {
         console.error("Share failed:", error);
       }
     } else {
       try {
         await navigator.clipboard.writeText(url);
+        trackListEvents.shareList(list.id, "link");
         toast({ title: "リンクをコピーしました" });
       } catch (err) {
         toast({
@@ -266,6 +269,7 @@ export function ListCardActions({
             setIsDeleteDialogOpen(true);
             const result = await deleteList(list.id);
             if (result.success) {
+              trackListEvents.deleteList(list.id);
               toast({
                 title: t("lists.delete.successTitle"),
                 description: t("lists.delete.successDesc", { name: list.name }),

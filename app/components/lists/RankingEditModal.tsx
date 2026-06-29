@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { trackPlaceEvents } from "@/lib/analytics/events";
 import { saveRankingViewData } from "@/lib/actions/rankings";
 import { PlaceListGroup } from "@/types";
 import {
@@ -127,6 +128,10 @@ export default function RankingEditModal({
         rankedPlaces: finalRankedPlaces,
       });
       if (result && result.success) {
+        // 保存されたランキングの各地点を計測
+        finalRankedPlaces.forEach((rp) => {
+          trackPlaceEvents.rankPlace(rp.placeId, rp.rank);
+        });
         onRankingUpdate(list); // UIリロード用
         onOpenChange(false);
       } else {

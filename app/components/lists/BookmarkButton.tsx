@@ -2,6 +2,7 @@
 
 import { BookmarkSignupModal } from "@/app/components/conversion/BookmarkSignupModal";
 import { useI18n } from "@/hooks/use-i18n";
+import { trackListEvents } from "@/lib/analytics/events";
 import { bookmarkList, unbookmarkList } from "@/lib/actions/lists";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -60,6 +61,9 @@ export function BookmarkButton({
       setIsBookmarked(!newBookmarkedState);
       // TODO: エラーのtoastを表示する
       console.error(result.error);
+    } else if (newBookmarkedState) {
+      // ブックマーク追加の成功時のみ計測（解除は対象外）
+      trackListEvents.bookmarkList(listId);
     }
     setIsPending(false);
   };

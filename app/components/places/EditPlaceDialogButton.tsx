@@ -25,6 +25,7 @@ import {
 import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useToast } from "@/hooks/use-toast";
+import { trackPlaceEvents } from "@/lib/analytics/events";
 import { deleteListPlaceAction } from "@/lib/actions/place-actions";
 import { Place } from "@/types";
 import { Edit, MoreVertical, Trash2 } from "lucide-react";
@@ -69,6 +70,7 @@ export default function EditPlaceDialogButton({
       const result = await deleteListPlaceAction(formData);
 
       if (result?.success) {
+        trackPlaceEvents.deletePlace(place.id);
         toast({ title: t("common.success"), description: result.success });
         await refreshSubscription();
         setOpen(false);

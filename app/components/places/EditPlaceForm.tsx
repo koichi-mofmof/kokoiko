@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
+import { trackPlaceEvents } from "@/lib/analytics/events";
 import { updatePlaceDetailsAction } from "@/lib/actions/place-actions";
 import { getListTags } from "@/lib/dal/lists";
 import { MapPin } from "lucide-react";
@@ -92,6 +93,7 @@ export default function EditPlaceForm({
     if (toastShownRef.current) return;
     if (updateState?.success) {
       toastShownRef.current = true;
+      trackPlaceEvents.editPlace(place.id);
       toast({ title: t("common.success"), description: updateState.success });
       if (onCancel) onCancel();
     } else if (updateState?.error) {
@@ -103,7 +105,7 @@ export default function EditPlaceForm({
       });
       // console.error(updateState.fieldErrors);
     }
-  }, [updateState, onCancel, toast, t]);
+  }, [updateState, onCancel, toast, t, place.id]);
 
   return (
     <Card className="w-full max-w-lg mx-auto">

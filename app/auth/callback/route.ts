@@ -20,6 +20,9 @@ export async function GET(request: Request) {
         data: { user },
       } = await supabase.auth.getUser();
 
+      // プロファイル未作成 = 初回ログイン（= 新規登録）とみなしてGAイベントを撃ち分ける
+      let isNewUser = false;
+
       if (user) {
         // プロファイルの存在確認
         const { data: profile, error: profileError } = await supabase
@@ -30,6 +33,7 @@ export async function GET(request: Request) {
 
         // プロファイルが存在しない場合、作成する
         if (profileError || !profile) {
+          isNewUser = true;
           console.log("プロファイルが存在しません。作成します:", user.id);
 
           // Googleアカウントの情報を取得
@@ -84,7 +88,13 @@ export async function GET(request: Request) {
       revalidatePath("/", "layout");
       revalidatePath("/lists");
 
-      return NextResponse.redirect(`${origin}${redirectUrl}`);
+      // クライアント側（use-auth-sync）で sign_up / login を発火させるための計測パラメータを付与
+      // （元コードと同じ文字列連結方式。new URL() による例外リスクを避ける）
+      const authEvent = isNewUser ? "signup_google" : "login_google";
+      const separator = redirectUrl.includes("?") ? "&" : "?";
+      const destination = `${origin}${redirectUrl}${separator}auth_event=${authEvent}`;
+
+      return NextResponse.redirect(destination);
     }
   }
 

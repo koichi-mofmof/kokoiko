@@ -19,6 +19,13 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { bookmarkList } from "./lists";
 
+// リダイレクト先パスに認証イベント計測用パラメータを安全に付与する。
+// クライアント側（use-auth-sync）でこのパラメータを拾ってGAイベントを発火する。
+function withAuthEvent(path: string, event: string): string {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}auth_event=${event}`;
+}
+
 // 認証状態の型定義 (useFormState用)
 export interface AuthState {
   message: string | null;
@@ -151,7 +158,7 @@ export async function loginWithCredentials(
     revalidatePath("/", "layout");
     revalidatePath("/lists"); // マイリストページのキャッシュも無効化
 
-    redirect(returnTo);
+    redirect(withAuthEvent(returnTo, "login_email"));
   } else if (signInData.user) {
     // メール確認が必要な場合
     return {
@@ -277,7 +284,7 @@ export async function signupWithCredentials(
     revalidatePath("/", "layout");
     revalidatePath("/lists");
 
-    redirect(returnTo);
+    redirect(withAuthEvent(returnTo, "signup_email"));
   } else if (signUpData.user) {
     // メール確認が必要な場合
     return {
@@ -386,8 +393,8 @@ export async function logoutUser() {
   // キャッシュをクリア
   revalidatePath("/", "layout");
 
-  // ホームページにリダイレクト
-  redirect("/");
+  // ホームページにリダイレクト（クライアント側で logout イベントを発火させる）
+  redirect(withAuthEvent("/", "logout"));
 }
 
 // パスワードバリデーションスキーマ (クライアントと共通化も検討)

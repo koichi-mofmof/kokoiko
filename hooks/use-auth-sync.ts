@@ -1,5 +1,6 @@
 "use client";
 
+import { trackAuthEventFromParam } from "@/lib/analytics/events";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -46,6 +47,36 @@ export function useAuthSync() {
 
     return () => clearTimeout(timer);
   }, [router]);
+
+  // 認証成功時のGAイベント（sign_up / login）を発火する。
+  // サーバー側 redirect で付与された `auth_event` パラメータを拾い、
+  // gtag のロードを待ってからイベントを送信、その後パラメータを除去する。
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("auth_event");
+    if (!code) return;
+
+    let attempts = 0;
+    let timerId: ReturnType<typeof setTimeout>;
+
+    const fireWhenReady = () => {
+      if (typeof window.gtag === "function") {
+        trackAuthEventFromParam(code);
+        // 再発火・URL共有による誤計測を防ぐためパラメータを除去
+        url.searchParams.delete("auth_event");
+        window.history.replaceState({}, "", url.toString());
+        return;
+      }
+      // gtag 未ロードのときは最大 ~3 秒リトライ
+      if (attempts++ < 20) {
+        timerId = setTimeout(fireWhenReady, 150);
+      }
+    };
+
+    fireWhenReady();
+
+    return () => clearTimeout(timerId);
+  }, []);
 }
 
 /**

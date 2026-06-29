@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { useI18n } from "@/hooks/use-i18n";
 import { toast } from "@/hooks/use-toast";
+import { trackListEvents } from "@/lib/analytics/events";
 import { updateList } from "@/lib/actions/lists";
 import { ListForClient } from "@/lib/dal/lists";
 import { useState } from "react";
@@ -48,6 +49,7 @@ export function EditListDialog({
       });
 
       if (result.success) {
+        trackListEvents.editList(list.id);
         toast({
           title: t("lists.edit.successTitle"),
           description: t("lists.edit.successDesc"),

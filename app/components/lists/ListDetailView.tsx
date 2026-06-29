@@ -5,6 +5,7 @@ import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/components/ui/FilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
 import { useI18n } from "@/hooks/use-i18n";
+import { trackListEvents, trackMapEvents } from "@/lib/analytics/events";
 import { getDisplayOrdersForList } from "@/lib/actions/place-display-orders";
 import { DisplayOrderedPlace, FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
@@ -51,6 +52,13 @@ export default function ListDetailView({
     dateRange: null,
     hierarchicalRegion: {},
   });
+
+  // リスト閲覧の計測（サンプルリストは除外）
+  useEffect(() => {
+    if (!listId.startsWith("sample-")) {
+      trackListEvents.viewList(listId);
+    }
+  }, [listId]);
 
   // 表示順序データの取得
   useEffect(() => {
@@ -148,8 +156,12 @@ export default function ListDetailView({
   useEffect(() => {
     if (viewMode === "map" && !hasMapBeenViewed) {
       setHasMapBeenViewed(true);
+      // 地図ビューの初回表示を計測（サンプルリストは除外）
+      if (!listId.startsWith("sample-")) {
+        trackMapEvents.viewMap(listId);
+      }
     }
-  }, [viewMode, hasMapBeenViewed]);
+  }, [viewMode, hasMapBeenViewed, listId]);
 
   const handlePlaceSelect = (place: Place) => {
     setSelectedPlace(place);

@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/hooks/use-i18n";
+import { trackPlaceEvents } from "@/lib/analytics/events";
 import { Place } from "@/types";
 import { Check, Circle, MapPin, Tag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -41,6 +42,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   const handleDetailClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!listId) return;
+    if (!isSample) {
+      trackPlaceEvents.viewPlaceDetail(place.id);
+    }
     const url = isSample
       ? `/sample/${listId}/place/${place.id}`
       : `/lists/${listId}/place/${place.id}`;

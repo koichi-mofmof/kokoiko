@@ -3,6 +3,7 @@
 import { CopySignupModal } from "@/app/components/conversion/CopySignupModal";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/hooks/use-i18n";
+import { trackTemplateCopyEvents } from "@/lib/analytics/events";
 import type { Place } from "@/types";
 import { Copy } from "lucide-react";
 import { useState } from "react";
@@ -31,6 +32,8 @@ export function TemplateCopyButton({
   const [showSignup, setShowSignup] = useState(false);
 
   const handleClick = () => {
+    // ボタン押下を計測（モーダルを開く前。ログイン状態で区別）
+    trackTemplateCopyEvents.buttonClick(sourceListId, isLoggedIn);
     if (!isLoggedIn) {
       setShowSignup(true);
       return;

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
+import { trackListEvents } from "@/lib/analytics/events";
 import { createList } from "@/lib/actions/lists";
 import { ListPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -46,6 +47,7 @@ export function CreateListModal() {
       const result = await createList(data);
 
       if (result.success) {
+        trackListEvents.createList();
         toast({
           title: t("lists.create.successTitle"),
           description: t("lists.create.successDesc"),

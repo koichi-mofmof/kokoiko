@@ -66,5 +66,8 @@ node_modules/
 # tools
 tools/
 
+# MCP (local config, may contain machine-specific paths)
+.mcp.json
+
 load-test-report*
 stripe.exe

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
+import { trackUserEvents } from "@/lib/analytics/events";
 import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -160,6 +161,8 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
       if (error) {
         throw new Error(`プロフィールの更新に失敗しました: ${error.message}`);
       }
+
+      trackUserEvents.updateProfile();
 
       // 成功メッセージを表示
       toast({

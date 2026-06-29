@@ -11,6 +11,7 @@ import {
   getAvailableCountries,
   getAvailableStates,
 } from "@/lib/actions/hierarchical-filter-actions";
+import { trackSearchEvents } from "@/lib/analytics/events";
 import { FilterOptions } from "@/types";
 import { ArrowLeftRight, Filter } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -191,6 +192,7 @@ export default function FilterBar({
     const newFilters = { ...filters, tags: newTags };
     setFilters(newFilters);
     onFilterChange(newFilters);
+    trackSearchEvents.useFilter("tag", tag);
   };
 
   const handleTagsConditionToggle = () => {
@@ -199,12 +201,14 @@ export default function FilterBar({
     const newFilters = { ...filters, tagsCondition: newCondition };
     setFilters(newFilters);
     onFilterChange(newFilters);
+    trackSearchEvents.useFilter("tags_condition", newCondition);
   };
 
   const handleVisitedChange = (value: "visited" | "not_visited" | null) => {
     const newFilters = { ...filters, visited: value };
     setFilters(newFilters);
     onFilterChange(newFilters);
+    trackSearchEvents.useFilter("visited", String(value));
   };
 
   const handleHierarchicalRegionChange = (
@@ -213,6 +217,7 @@ export default function FilterBar({
     const newFilters = { ...filters, hierarchicalRegion };
     setFilters(newFilters);
     onFilterChange(newFilters);
+    trackSearchEvents.useFilter("region", hierarchicalRegion.country || "all");
   };
 
   useEffect(() => {

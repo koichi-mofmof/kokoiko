@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
+import { trackPlaceEvents, trackSearchEvents } from "@/lib/analytics/events";
 import {
   getPlaceDetails,
   searchPlaces,
@@ -255,6 +256,7 @@ export default function AddPlaceForm({
 
   useEffect(() => {
     if (registerState?.success && registerState.message) {
+      trackPlaceEvents.addPlace(listId);
       toast({
         title: t("place.register.successTitle"),
         description: registerState.message,
@@ -278,7 +280,7 @@ export default function AddPlaceForm({
         variant: "destructive",
       });
     }
-  }, [registerState, toast, onPlaceRegistered, t]);
+  }, [registerState, toast, onPlaceRegistered, t, listId]);
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -293,6 +295,7 @@ export default function AddPlaceForm({
     const formData = new FormData(event.currentTarget);
     formData.set("sessionToken", sessionToken);
     formData.set("languageCode", languageCode);
+    trackSearchEvents.searchPlace(searchTerm.trim());
     setSearchAttempted(true);
     startTransition(() => {
       searchFormAction(formData);
@@ -308,6 +311,11 @@ export default function AddPlaceForm({
       });
       return;
     }
+    const resultIndex =
+      autocompleteState?.predictions?.findIndex(
+        (p) => p.place_id === prediction.place_id
+      ) ?? -1;
+    trackSearchEvents.clickSearchResult(resultIndex);
     setSelectedPredictionForDisplay(prediction);
     setIsFetchingDetails(true);
 

@@ -10,6 +10,7 @@ import {
   loginWithGoogle,
   signupWithCredentials,
 } from "@/lib/actions/auth";
+import { trackUserEvents } from "@/lib/analytics/events";
 import { isGoogleOAuthBlocked } from "@/lib/utils/browser-detection";
 import { getCSRFTokenFromCookie } from "@/lib/utils/csrf-client";
 import Link from "next/link";
@@ -101,6 +102,14 @@ export function SignupForm() {
     // WebViewからのアクセスかチェック
     setIsWebViewBlocked(isGoogleOAuthBlocked());
   }, []);
+
+  // メール確認フローの登録（サーバー側リダイレクトが発生せず success ステートで返る）は
+  // ここで sign_up を計測する。自動確認でリダイレクトされるケースは auth_event 経由で計測。
+  useEffect(() => {
+    if (state.success && state.message?.includes("確認メール")) {
+      trackUserEvents.signup("email");
+    }
+  }, [state.success, state.message]);
 
   const googleLoginAction = async () => {
     // 認証コールバック待機状態をマーク
