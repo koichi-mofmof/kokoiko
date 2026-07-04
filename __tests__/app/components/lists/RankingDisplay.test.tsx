@@ -48,9 +48,7 @@ describe("RankingDisplay", () => {
       <RankingDisplay
         rankedPlaces={rankedPlaces}
         places={places}
-        listId="list-1"
-        isSample={false}
-      />
+        listId="list-1"      />
     );
     const cards = screen.getAllByTestId(/ranking-card-/);
     expect(cards[0]).toHaveTextContent("Aカフェ"); // rank:1
@@ -67,9 +65,7 @@ describe("RankingDisplay", () => {
       <RankingDisplay
         rankedPlaces={brokenRanked}
         places={places}
-        listId="list-1"
-        isSample={false}
-      />
+        listId="list-1"      />
     );
     expect(warnSpy).toHaveBeenCalledWith(
       "Place with id notfound not found in places list."
@@ -77,13 +73,12 @@ describe("RankingDisplay", () => {
     warnSpy.mockRestore();
   });
 
-  it("isSample=trueでも正常に表示される", () => {
+  it("別のlistIdでも正常に表示される", () => {
     render(
       <RankingDisplay
         rankedPlaces={rankedPlaces}
         places={places}
         listId="sample-1"
-        isSample={true}
       />
     );
     expect(screen.getAllByTestId(/ranking-card-/).length).toBe(2);

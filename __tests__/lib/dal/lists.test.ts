@@ -106,7 +106,6 @@ beforeEach(() => {
   jest.spyOn(permissionCheck, "canAccessList").mockResolvedValue({
     canAccess: true,
     permission: "view",
-    isPublic: true,
   });
 });
 

@@ -1,7 +1,8 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BookmarkSignupModal } from "@/app/components/conversion/BookmarkSignupModal";
+import { trackConversionEvents } from "@/lib/analytics/events";
 
-// lib/analytics/eventsのモック
+// lib/analytics/events のモック
 jest.mock("@/lib/analytics/events", () => ({
   trackConversionEvents: {
     promptShown: jest.fn(),
@@ -10,10 +11,29 @@ jest.mock("@/lib/analytics/events", () => ({
   },
 }));
 
-// Dialog関連のモック
+// useI18n のモック: キー(+パラメータ値)をそのまま返し、文言の変更に強いテストにする
+jest.mock("@/hooks/use-i18n", () => ({
+  __esModule: true,
+  useI18n: () => ({
+    t: (key: string, params?: Record<string, string | number>) =>
+      params && Object.keys(params).length
+        ? `${key}|${Object.values(params).join(",")}`
+        : key,
+    locale: "ja",
+    setLocale: jest.fn(),
+  }),
+}));
+
+// Dialog 関連のモック
+// 実コンポーネントは Dialog の onOpenChange / DialogContent の onInteractOutside で
+// 閉じる処理を行うため、閉じる操作を発火できるボタンを用意する。
 jest.mock("@/components/ui/dialog", () => ({
   Dialog: ({ children, open, onOpenChange }: any) => (
     <div data-testid="dialog" style={{ display: open ? "block" : "none" }}>
+      <button
+        data-testid="mock-close-via-openchange"
+        onClick={() => onOpenChange?.(false)}
+      />
       {children}
     </div>
   ),
@@ -21,31 +41,54 @@ jest.mock("@/components/ui/dialog", () => ({
     <div data-testid="dialog-content" {...props}>
       {children}
       <button
-        data-testid="mock-internal-close-dialog-btn"
+        data-testid="mock-close-via-interact-outside"
         onClick={onInteractOutside}
-        style={{ display: "none" }}
       />
     </div>
   ),
   DialogTitle: ({ children, ...props }: any) => (
-    <h2 {...props} role="heading" aria-level="2" id="dialog-title">
+    <h2 {...props} role="heading" aria-level={2}>
       {children}
     </h2>
   ),
 }));
 
-// lucide-reactのモック
-jest.mock("lucide-react", () => ({
-  Bookmark: ({ className, ...props }: any) => (
-    <div className={className} data-testid="icon-bookmark" {...props} />
-  ),
-  Share2: ({ className, ...props }: any) => (
-    <div className={className} data-testid="icon-share2" {...props} />
-  ),
-  X: ({ className, ...props }: any) => (
-    <div className={className} data-testid="icon-x" {...props} />
+// button のモック（Button は children と onClick をそのまま透過）
+jest.mock("@/components/ui/button", () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
+
+// next/link のモック（href 検証のため素朴な <a> に）
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
+
+// lucide-react のモック: Proxy で任意のアイコンを自動 stub 化し、
+// 実装側のアイコン追加でテストが壊れないようにする。
+jest.mock("lucide-react", () => {
+  const React = require("react");
+  return new Proxy(
+    {},
+    {
+      get: (_target, iconName: string) => {
+        if (iconName === "__esModule") return true;
+        const Icon = ({ className, ...props }: any) =>
+          React.createElement("div", {
+            className,
+            "data-testid": `icon-${String(iconName)}`,
+            ...props,
+          });
+        Icon.displayName = String(iconName);
+        return Icon;
+      },
+    }
+  );
+});
 
 describe("BookmarkSignupModal", () => {
   const defaultProps = {
@@ -55,68 +98,91 @@ describe("BookmarkSignupModal", () => {
     listName: "テストリスト",
   };
 
+  const samplePlaces = [
+    { id: "p1", name: "場所A", tags: [{ id: "t1", name: "カフェ" }] },
+    { id: "p2", name: "場所B", tags: [] },
+    { id: "p3", name: "場所C", tags: [] },
+    { id: "p4", name: "場所D", tags: [] },
+  ] as any;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("モーダルが開いている時、正しい内容が表示される", () => {
+  it("モーダルが開いている時、タイトル・価値訴求・CTA が表示される", () => {
     render(<BookmarkSignupModal {...defaultProps} />);
 
-    // タイトルの確認（複数要素に分割されているため正規表現を使用）
-    expect(screen.getByText(/テストリスト/)).toBeInTheDocument();
-    expect(screen.getByText("ブックマーク")).toBeInTheDocument();
-    expect(screen.getByText(/しませんか？/)).toBeInTheDocument();
-
-    // 価値提案の確認
+    // リスト名付きタイトル（prefixWithName にリスト名が渡る）
     expect(
-      screen.getByText("気になるリストをいつでも見返せる")
+      screen.getByText(/conversion\.bookmark\.title\.prefixWithName\|テストリスト/)
     ).toBeInTheDocument();
+    // highlight と suffix は同一 span 内で連結されて描画される
     expect(
-      screen.getByText("保存したリストを友達とも簡単シェア")
+      screen.getByText(
+        /conversion\.bookmark\.title\.highlightconversion\.bookmark\.title\.suffix/
+      )
     ).toBeInTheDocument();
 
-    // 簡単さアピールの確認
+    // 価値訴求
     expect(
-      screen.getByText("登録は30秒で完了 • 無料で使える • いつでも退会OK")
+      screen.getByText("conversion.bookmark.value.pro1")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("conversion.bookmark.value.pro2")
     ).toBeInTheDocument();
 
-    // CTAボタンの確認
+    // 注釈・CTA
+    expect(screen.getByText("conversion.bookmark.note")).toBeInTheDocument();
+    expect(screen.getByText("conversion.bookmark.cta")).toBeInTheDocument();
     expect(
-      screen.getByText("無料で始めてブックマーク保存")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("すでにアカウントをお持ちの方はこちら")
+      screen.getByText("conversion.bookmark.alreadyHaveAccount")
     ).toBeInTheDocument();
   });
 
-  it("リスト名が提供されていない場合、汎用的なタイトルが表示される", () => {
-    const propsWithoutListName = {
-      ...defaultProps,
-      listName: undefined,
-    };
+  it("リスト名が無い場合は汎用タイトルキーを表示する", () => {
+    render(<BookmarkSignupModal {...defaultProps} listName={undefined} />);
 
-    render(<BookmarkSignupModal {...propsWithoutListName} />);
-
-    expect(screen.getByText(/このリストを/)).toBeInTheDocument();
-    expect(screen.getByText("ブックマーク")).toBeInTheDocument();
-    expect(screen.getByText(/しませんか？/)).toBeInTheDocument();
+    expect(
+      screen.getByText("conversion.bookmark.title.prefixGeneric")
+    ).toBeInTheDocument();
+    // prefixWithName は使われない
+    expect(
+      screen.queryByText(/conversion\.bookmark\.title\.prefixWithName/)
+    ).not.toBeInTheDocument();
   });
 
-  it("閉じるボタンをクリックするとonCloseが呼ばれる", () => {
-    const mockOnClose = jest.fn();
-    render(<BookmarkSignupModal {...defaultProps} onClose={mockOnClose} />);
-
-    const closeButton = screen.getByLabelText("閉じる");
-    fireEvent.click(closeButton);
-
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  it("開いた時に promptShown が listId 付きで送信される", () => {
+    render(<BookmarkSignupModal {...defaultProps} />);
+    expect(trackConversionEvents.promptShown).toHaveBeenCalledWith("list-123");
   });
 
-  it("サインアップリンクが正しいhrefを持つ", () => {
+  it("CTA クリックで promptClicked と onClose が呼ばれる", () => {
+    const onClose = jest.fn();
+    render(<BookmarkSignupModal {...defaultProps} onClose={onClose} />);
+
+    fireEvent.click(screen.getByText("conversion.bookmark.cta"));
+
+    expect(trackConversionEvents.promptClicked).toHaveBeenCalledWith("list-123");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("モーダルを閉じると promptDismissed と onClose が呼ばれる", () => {
+    const onClose = jest.fn();
+    render(<BookmarkSignupModal {...defaultProps} onClose={onClose} />);
+
+    fireEvent.click(screen.getByTestId("mock-close-via-openchange"));
+
+    expect(trackConversionEvents.promptDismissed).toHaveBeenCalledWith(
+      "list-123"
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("サインアップリンクが正しい href を持つ", () => {
     render(<BookmarkSignupModal {...defaultProps} />);
 
     const signupLink = screen
-      .getByText("無料で始めてブックマーク保存")
+      .getByText("conversion.bookmark.cta")
       .closest("a");
     expect(signupLink).toHaveAttribute(
       "href",
@@ -124,29 +190,54 @@ describe("BookmarkSignupModal", () => {
     );
   });
 
-  it("ログインリンクが正しいhrefを持つ", () => {
+  it("ログインリンクが正しい href を持つ", () => {
     render(<BookmarkSignupModal {...defaultProps} />);
 
-    const loginLink = screen.getByText("すでにアカウントをお持ちの方はこちら");
+    const loginLink = screen.getByText(
+      "conversion.bookmark.alreadyHaveAccount"
+    );
     expect(loginLink).toHaveAttribute(
       "href",
       "/login?bookmark=list-123&returnTo=/lists"
     );
   });
 
-  it("モーダルが閉じている時は何も表示されない", () => {
+  it("モーダルが閉じている時は dialog が非表示になる", () => {
     render(<BookmarkSignupModal {...defaultProps} isOpen={false} />);
-
-    const dialog = screen.getByTestId("dialog");
-    expect(dialog).toHaveStyle({ display: "none" });
+    expect(screen.getByTestId("dialog")).toHaveStyle({ display: "none" });
   });
 
-  it("アイコンが正しく表示される", () => {
+  it("places が無い場合はプレビューを表示しない", () => {
     render(<BookmarkSignupModal {...defaultProps} />);
+    expect(
+      screen.queryByText("conversion.bookmark.preview.title")
+    ).not.toBeInTheDocument();
+  });
 
-    // 複数のbookmarkアイコンが存在するためgetAllByTestIdを使用
-    expect(screen.getAllByTestId("icon-bookmark")).toHaveLength(2);
-    expect(screen.getByTestId("icon-share2")).toBeInTheDocument();
-    expect(screen.getByTestId("icon-x")).toBeInTheDocument();
+  it("places がある場合は先頭3件のプレビューと残数を表示する", () => {
+    render(<BookmarkSignupModal {...defaultProps} places={samplePlaces} />);
+
+    expect(
+      screen.getByText("conversion.bookmark.preview.title")
+    ).toBeInTheDocument();
+    expect(screen.getByText("場所A")).toBeInTheDocument();
+    expect(screen.getByText("場所B")).toBeInTheDocument();
+    expect(screen.getByText("場所C")).toBeInTheDocument();
+    // 4件目はプレビュー対象外
+    expect(screen.queryByText("場所D")).not.toBeInTheDocument();
+    // 残数表示（4 - 3 = 1）
+    expect(
+      screen.getByText(/conversion\.bookmark\.preview\.more\|1/)
+    ).toBeInTheDocument();
+  });
+
+  it("主要アイコンが表示される", () => {
+    render(<BookmarkSignupModal {...defaultProps} places={samplePlaces} />);
+
+    expect(screen.getByTestId("icon-Bookmark")).toBeInTheDocument();
+    // 価値訴求の各項目に Check アイコン
+    expect(screen.getAllByTestId("icon-Check").length).toBeGreaterThanOrEqual(2);
+    // プレビュー各行に MapPin アイコン
+    expect(screen.getAllByTestId("icon-MapPin").length).toBe(3);
   });
 });

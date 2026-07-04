@@ -65,6 +65,7 @@ describe("UserProfileView", () => {
       places: [],
       collaborators: [],
       permission: "owner",
+      isBookmarked: false,
     },
     {
       id: "list-2",
@@ -78,6 +79,7 @@ describe("UserProfileView", () => {
       places: [],
       collaborators: [],
       permission: "owner",
+      isBookmarked: false,
     },
   ];
 

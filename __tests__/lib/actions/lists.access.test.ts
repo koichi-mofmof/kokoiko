@@ -1,527 +1,274 @@
 import { getListDetails } from "@/lib/dal/lists";
+import { canAccessList } from "@/lib/utils/permission-check";
 
-// Supabase client のモックを作成
-const mockSupabaseClient = {
-  from: jest.fn(),
-  auth: {
-    getUser: jest.fn(),
-  },
-};
+/**
+ * テーブルごとに結果を返す Supabase クライアントのモックを生成する。
+ * チェーン（select/eq/in/order）は自身を返し、await・single・maybeSingle 時に
+ * そのテーブル用の結果を解決する thenable として振る舞う。
+ */
+type TableResults = Record<string, { data: any; error: any }>;
 
-// lib/supabase/server のモック
+function makeSupabaseClient(results: TableResults) {
+  return {
+    auth: { getUser: jest.fn() },
+    from: jest.fn((table: string) => {
+      const result = results[table] ?? { data: null, error: null };
+      const builder: any = {
+        select: jest.fn(() => builder),
+        eq: jest.fn(() => builder),
+        in: jest.fn(() => builder),
+        neq: jest.fn(() => builder),
+        order: jest.fn(() => builder),
+        single: jest.fn(() => Promise.resolve(result)),
+        maybeSingle: jest.fn(() => Promise.resolve(result)),
+        then: (resolve: (v: any) => any) => resolve(result),
+      };
+      return builder;
+    }),
+  };
+}
+
+// 各テストで差し替えられるよう、可変の参照を保持する
+let currentClient: ReturnType<typeof makeSupabaseClient>;
+
 jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => Promise.resolve(mockSupabaseClient)),
+  createClient: jest.fn(() => Promise.resolve(currentClient)),
 }));
 
-// lib/supabase/storage のモック
 jest.mock("@/lib/supabase/storage", () => ({
   getStoragePublicUrl: jest
     .fn()
     .mockResolvedValue("https://example.com/avatar.png"),
 }));
 
-// 理由: getListDetails関数の複雑なPromise/非同期モックが困難なため
-// 実際のアプリケーションではSupabaseクライアントが正常に動作していることは統合テストで確認済み
-describe.skip("getListDetailsのアクセス制御 - スキップ（モック環境での非同期処理が困難）", () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
-  });
+// getListDetails のアクセス判定は canAccessList に委譲されるためモックする
+jest.mock("@/lib/utils/permission-check", () => {
+  const actual = jest.requireActual("@/lib/utils/permission-check");
+  return {
+    ...actual,
+    canAccessList: jest.fn(),
+  };
+});
 
-  // Helper function for common table mock setup
-  const createTableMock = (tableName: string, mockData: any) => {
-    const chain = {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: mockData, error: null }),
-    };
-    return chain;
+const mockCanAccessList = canAccessList as jest.Mock;
+
+// =============================================================
+// canAccessList: アクセス制御ロジック本体（実装をそのまま検証）
+// =============================================================
+describe("canAccessList（アクセス制御ロジック）", () => {
+  // 実装を検証するため、このブロックだけ本物の canAccessList を使う
+  const realCanAccessList = jest.requireActual(
+    "@/lib/utils/permission-check"
+  ).canAccessList as typeof canAccessList;
+
+  const setClient = (results: TableResults) => {
+    currentClient = makeSupabaseClient(results);
   };
 
-  describe("公開リストのアクセス制御", () => {
-    it("公開リストは誰でもアクセスできる（正常系）", async () => {
-      const mockListData = {
-        id: "list-public",
-        name: "公開リスト",
-        description: "テスト用公開リスト",
-        is_public: true,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "owner-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return {
-              ...createTableMock(tableName, null),
-              single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            };
-          case "list_places":
-            return {
-              ...createTableMock(tableName, []),
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            };
-          case "profiles_decrypted":
-            return createTableMock(tableName, {
-              id: "owner-1",
-              display_name: "オーナー",
-              avatar_url: null,
-            });
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-public", "any-user");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("list-public");
-      expect(result?.is_public).toBe(true);
-      expect(result?.permission).toBe("view");
+  it("公開リストは未ログインユーザーでも view 権限でアクセスできる", async () => {
+    setClient({
+      place_lists: {
+        data: { created_by: "owner-1", is_public: true },
+        error: null,
+      },
     });
 
-    it("公開リストでもRLS拒否時はnullを返す（異常系）", async () => {
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        if (tableName === "place_lists") {
-          return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
-              data: null,
-              error: { code: "PGRST116", message: "No rows returned" },
-            }),
-          };
-        }
-        return createTableMock(tableName, null);
-      });
-
-      const result = await getListDetails("list-rls-denied", "any-user");
-      expect(result).toBeNull();
-    });
+    const result = await realCanAccessList("list-public");
+    expect(result).toEqual({ canAccess: true, permission: "view" });
   });
 
-  describe("非公開リストの閲覧権限", () => {
-    it("作成者は非公開リストにアクセスできる", async () => {
-      const mockListData = {
-        id: "list-private",
-        name: "非公開リスト",
-        description: "テスト用非公開リスト",
-        is_public: false,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "user-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return {
-              ...createTableMock(tableName, null),
-              single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            };
-          case "list_places":
-            return {
-              ...createTableMock(tableName, []),
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            };
-          case "profiles_decrypted":
-            return createTableMock(tableName, {
-              id: "user-1",
-              display_name: "ユーザー1",
-              avatar_url: null,
-            });
-          case "profiles":
-            return createTableMock(tableName, {
-              id: "user-1",
-              display_name: "ユーザー1",
-              avatar_url: null,
-            });
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-private", "user-1");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("list-private");
-      expect(result?.is_public).toBe(false);
-      expect(result?.permission).toBe("owner");
+  it("公開リストの作成者は manage 権限を持つ", async () => {
+    setClient({
+      shared_lists: { data: null, error: null },
+      place_lists: {
+        data: { created_by: "owner-1", is_public: true },
+        error: null,
+      },
     });
 
-    it("共有ユーザー（閲覧権限）は非公開リストを閲覧できる", async () => {
-      const mockListData = {
-        id: "list-private",
-        name: "非公開リスト",
-        description: "テスト用非公開リスト",
-        is_public: false,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "user-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return createTableMock(tableName, {
-              permission: "view",
-            });
-          case "list_places":
-            return {
-              ...createTableMock(tableName, []),
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            };
-          case "profiles_decrypted":
-            return createTableMock(tableName, {
-              id: "user-1",
-              display_name: "ユーザー1",
-              avatar_url: null,
-            });
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-private", "user-2");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("list-private");
-      expect(result?.permission).toBe("view");
-    });
-
-    it("共有ユーザー（編集権限）は非公開リストを閲覧・編集できる", async () => {
-      const mockListData = {
-        id: "list-private",
-        name: "非公開リスト",
-        description: "テスト用非公開リスト",
-        is_public: false,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "user-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return createTableMock(tableName, {
-              permission: "edit",
-            });
-          case "list_places":
-            return {
-              ...createTableMock(tableName, []),
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            };
-          case "profiles_decrypted":
-            return createTableMock(tableName, {
-              id: "user-1",
-              display_name: "ユーザー1",
-              avatar_url: null,
-            });
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-private", "user-3");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("list-private");
-      expect(result?.permission).toBe("edit");
-    });
-
-    it("権限のないユーザーは非公開リストにアクセスできない", async () => {
-      const mockListData = {
-        id: "list-private",
-        name: "非公開リスト",
-        description: "テスト用非公開リスト",
-        is_public: false,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "user-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return {
-              ...createTableMock(tableName, null),
-              single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            };
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-private", "unauthorized-user");
-      expect(result).toBeNull();
-    });
-
-    it("非公開リストでもRLS拒否時はnullを返す", async () => {
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        if (tableName === "place_lists") {
-          return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
-              data: null,
-              error: { code: "PGRST116", message: "No rows returned" },
-            }),
-          };
-        }
-        return createTableMock(tableName, null);
-      });
-
-      const result = await getListDetails("list-private-rls-denied", "user-1");
-      expect(result).toBeNull();
-    });
+    const result = await realCanAccessList("list-public", "owner-1");
+    expect(result).toEqual({ canAccess: true, permission: "manage" });
   });
 
-  describe("リスト編集権限の検証", () => {
-    it("オーナーは編集権限を持つ", async () => {
-      const mockListData = {
-        id: "list-edit",
-        name: "編集テストリスト",
-        description: "編集権限テスト用リスト",
-        is_public: true,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "owner-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return {
-              ...createTableMock(tableName, null),
-              single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            };
-          case "list_places":
-            return {
-              ...createTableMock(tableName, []),
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            };
-          case "profiles_decrypted":
-            return createTableMock(tableName, {
-              id: "owner-1",
-              display_name: "オーナー1",
-              avatar_url: null,
-            });
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-edit", "owner-1");
-      expect(result?.permission).toBe("owner");
+  it("共有ユーザー（編集権限）は edit 権限でアクセスできる", async () => {
+    setClient({
+      shared_lists: { data: { permission: "edit", list_id: "l" }, error: null },
+      place_lists: {
+        data: { created_by: "owner-1", is_public: false },
+        error: null,
+      },
     });
 
-    it("編集権限ユーザーは編集権限を持つ", async () => {
-      const mockListData = {
-        id: "list-edit",
-        name: "編集テストリスト",
-        description: "編集権限テスト用リスト",
-        is_public: true,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "owner-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return createTableMock(tableName, {
-              permission: "edit",
-            });
-          case "list_places":
-            return {
-              ...createTableMock(tableName, []),
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            };
-          case "profiles_decrypted":
-            return createTableMock(tableName, {
-              id: "owner-1",
-              display_name: "オーナー1",
-              avatar_url: null,
-            });
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-edit", "user-5");
-      expect(result?.permission).toBe("edit");
-    });
-
-    it("閲覧権限ユーザーは編集権限を持たない", async () => {
-      const mockListData = {
-        id: "list-edit",
-        name: "編集テストリスト",
-        description: "編集権限テスト用リスト",
-        is_public: true,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "owner-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return createTableMock(tableName, {
-              permission: "view",
-            });
-          case "list_places":
-            return {
-              ...createTableMock(tableName, []),
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            };
-          case "profiles_decrypted":
-            return createTableMock(tableName, {
-              id: "owner-1",
-              display_name: "オーナー1",
-              avatar_url: null,
-            });
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-edit", "user-6");
-      expect(result?.permission).toBe("view");
-    });
-
-    it("権限のないユーザーは編集権限を持たない", async () => {
-      const mockListData = {
-        id: "list-edit",
-        name: "編集テストリスト",
-        description: "編集権限テスト用リスト",
-        is_public: false,
-        created_at: "2023-01-01T00:00:00Z",
-        updated_at: "2023-01-01T00:00:00Z",
-        created_by: "owner-1",
-      };
-
-      mockSupabaseClient.from.mockImplementation((tableName: string) => {
-        switch (tableName) {
-          case "place_lists":
-            return createTableMock(tableName, mockListData);
-          case "shared_lists":
-            return {
-              ...createTableMock(tableName, null),
-              single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            };
-          default:
-            return createTableMock(tableName, null);
-        }
-      });
-
-      const result = await getListDetails("list-edit", "unauthorized-user");
-      expect(result).toBeNull();
-    });
+    const result = await realCanAccessList("list-private", "user-2");
+    expect(result).toEqual({ canAccess: true, permission: "edit" });
   });
 
-  describe("適切なRLSポリシーの動作確認（統合テスト的）", () => {
-    it("複数の権限パターンが正しく処理される", async () => {
-      // これは統合テスト的なケースで、複数のシナリオを組み合わせて確認
-      const testCases = [
-        {
-          listData: {
-            id: "public-list",
-            is_public: true,
-            created_by: "owner-1",
-          },
-          userId: "random-user",
-          sharedData: null,
-          expectedPermission: "view",
-        },
-        {
-          listData: {
-            id: "private-list",
-            is_public: false,
-            created_by: "owner-1",
-          },
-          userId: "owner-1",
-          sharedData: null,
-          expectedPermission: "owner",
-        },
-      ];
-
-      for (const testCase of testCases) {
-        mockSupabaseClient.from.mockImplementation((tableName: string) => {
-          switch (tableName) {
-            case "place_lists":
-              return createTableMock(tableName, {
-                ...testCase.listData,
-                name: "テストリスト",
-                description: "説明",
-                created_at: "2023-01-01T00:00:00Z",
-                updated_at: "2023-01-01T00:00:00Z",
-              });
-            case "shared_lists":
-              return testCase.sharedData
-                ? createTableMock(tableName, testCase.sharedData)
-                : {
-                    ...createTableMock(tableName, null),
-                    single: jest
-                      .fn()
-                      .mockResolvedValue({ data: null, error: null }),
-                  };
-            case "list_places":
-              return {
-                ...createTableMock(tableName, []),
-                select: jest.fn().mockReturnValue({
-                  eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-                }),
-              };
-            case "profiles_decrypted":
-              return createTableMock(tableName, {
-                id: testCase.listData.created_by,
-                display_name: "オーナー",
-                avatar_url: null,
-              });
-            case "profiles":
-              return createTableMock(tableName, {
-                id: testCase.userId,
-                display_name: "ユーザー",
-                avatar_url: null,
-              });
-            default:
-              return createTableMock(tableName, null);
-          }
-        });
-
-        const result = await getListDetails(
-          testCase.listData.id,
-          testCase.userId
-        );
-        expect(result?.permission).toBe(testCase.expectedPermission);
-      }
+  it("非公開リストの作成者は manage 権限を持つ", async () => {
+    setClient({
+      shared_lists: { data: null, error: null },
+      place_lists: {
+        data: { created_by: "user-1", is_public: false },
+        error: null,
+      },
     });
+
+    const result = await realCanAccessList("list-private", "user-1");
+    expect(result).toEqual({ canAccess: true, permission: "manage" });
+  });
+
+  it("権限のないユーザーは非公開リストにアクセスできない", async () => {
+    setClient({
+      shared_lists: { data: null, error: null },
+      place_lists: {
+        data: { created_by: "owner-1", is_public: false },
+        error: null,
+      },
+    });
+
+    const result = await realCanAccessList("list-private", "stranger");
+    expect(result).toEqual({ canAccess: false, permission: null });
+  });
+
+  it("未ログインユーザーは非公開リストにアクセスできない", async () => {
+    setClient({
+      place_lists: {
+        data: { created_by: "owner-1", is_public: false },
+        error: null,
+      },
+    });
+
+    const result = await realCanAccessList("list-private");
+    expect(result).toEqual({ canAccess: false, permission: null });
+  });
+
+  it("存在しない/RLS 拒否のリストはアクセス不可", async () => {
+    setClient({
+      shared_lists: { data: null, error: null },
+      place_lists: {
+        data: null,
+        error: { code: "PGRST116", message: "No rows returned" },
+      },
+    });
+
+    const result = await realCanAccessList("missing-list", "user-1");
+    expect(result).toEqual({ canAccess: false, permission: null });
+  });
+
+  it("listId が空ならアクセス不可", async () => {
+    const result = await realCanAccessList("");
+    expect(result).toEqual({ canAccess: false, permission: null });
+  });
+});
+
+// =============================================================
+// getListDetails: canAccessList への委譲・owner 上書き・組み立て
+// =============================================================
+describe("getListDetails（アクセス制御の委譲と結果組み立て）", () => {
+  const baseList = {
+    id: "list-1",
+    name: "テストリスト",
+    description: "説明",
+    is_public: false,
+    created_at: "2023-01-01T00:00:00Z",
+    updated_at: "2023-01-01T00:00:00Z",
+    created_by: "owner-1",
+  };
+
+  /** getListDetails が辿る各テーブルの既定モックを用意する */
+  const setClientForList = (
+    list: any,
+    opts: { listError?: any; isBookmarked?: boolean } = {}
+  ) => {
+    currentClient = makeSupabaseClient({
+      place_lists: { data: opts.listError ? null : list, error: opts.listError ?? null },
+      list_places: { data: [], error: null },
+      list_bookmarks: {
+        data: opts.isBookmarked ? { id: "bm-1" } : null,
+        error: null,
+      },
+      profiles: {
+        data: { id: list?.created_by, display_name: "オーナー", avatar_url: null },
+        error: null,
+      },
+      shared_lists: { data: [], error: null },
+    });
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("canAccessList が拒否したら null を返す", async () => {
+    mockCanAccessList.mockResolvedValue({ canAccess: false, permission: null });
+    setClientForList(baseList);
+
+    const result = await getListDetails("list-1", "stranger");
+    expect(result).toBeNull();
+  });
+
+  it("アクセス許可でもリスト取得に失敗したら null を返す", async () => {
+    mockCanAccessList.mockResolvedValue({ canAccess: true, permission: "view" });
+    setClientForList(baseList, {
+      listError: { code: "PGRST116", message: "No rows returned" },
+    });
+
+    const result = await getListDetails("list-1", "user-1");
+    expect(result).toBeNull();
+  });
+
+  it("作成者は permission が owner に上書きされる", async () => {
+    // canAccessList が manage を返しても、作成者なら owner になる
+    mockCanAccessList.mockResolvedValue({
+      canAccess: true,
+      permission: "manage",
+    });
+    setClientForList({ ...baseList, created_by: "user-1" });
+
+    const result = await getListDetails("list-1", "user-1");
+    expect(result).not.toBeNull();
+    expect(result?.permission).toBe("owner");
+  });
+
+  it("共有（編集権限）ユーザーは edit がそのまま反映される", async () => {
+    mockCanAccessList.mockResolvedValue({ canAccess: true, permission: "edit" });
+    setClientForList(baseList); // created_by: owner-1
+
+    const result = await getListDetails("list-1", "user-2");
+    expect(result?.permission).toBe("edit");
+  });
+
+  it("共有（閲覧権限）ユーザーは view がそのまま反映される", async () => {
+    mockCanAccessList.mockResolvedValue({ canAccess: true, permission: "view" });
+    setClientForList(baseList);
+
+    const result = await getListDetails("list-1", "user-3");
+    expect(result?.permission).toBe("view");
+  });
+
+  it("公開リストは未ログインでも取得でき view 権限になる", async () => {
+    mockCanAccessList.mockResolvedValue({ canAccess: true, permission: "view" });
+    setClientForList({ ...baseList, is_public: true });
+
+    const result = await getListDetails("list-1");
+    expect(result).not.toBeNull();
+    expect(result?.is_public).toBe(true);
+    expect(result?.permission).toBe("view");
+  });
+
+  it("ブックマーク済みなら isBookmarked が true になる", async () => {
+    mockCanAccessList.mockResolvedValue({ canAccess: true, permission: "view" });
+    setClientForList(baseList, { isBookmarked: true });
+
+    const result = await getListDetails("list-1", "user-2");
+    expect(result?.isBookmarked).toBe(true);
+  });
+
+  it("place_count は取得した地点数を反映する", async () => {
+    mockCanAccessList.mockResolvedValue({ canAccess: true, permission: "view" });
+    setClientForList(baseList);
+
+    const result = await getListDetails("list-1", "user-2");
+    expect(result?.place_count).toBe(0);
+    expect(result?.places).toEqual([]);
   });
 });

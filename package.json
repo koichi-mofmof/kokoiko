@@ -12,6 +12,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "quality": "npm run type-check && npm run lint && npm test",
+    "quality:fix": "npm run lint:fix && npm run type-check && npm test",
     "preview": "cross-env NODE_ENV=production opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "dotenv -e .env.production -- opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",

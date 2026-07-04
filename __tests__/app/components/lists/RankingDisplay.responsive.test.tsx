@@ -70,9 +70,7 @@ describe("RankingDisplay: レスポンシブデザイン", () => {
       <RankingDisplay
         rankedPlaces={rankedPlaces}
         places={places}
-        listId="list-1"
-        isSample={false}
-      />
+        listId="list-1"      />
     );
     const grid = container.querySelector(".grid");
     expect(grid).toHaveClass("grid-cols-1");
@@ -85,9 +83,7 @@ describe("RankingDisplay: レスポンシブデザイン", () => {
       <RankingDisplay
         rankedPlaces={rankedPlaces}
         places={places}
-        listId="list-1"
-        isSample={false}
-      />
+        listId="list-1"      />
     );
     const grid = container.querySelector(".md\\:grid-cols-2");
     expect(grid || container.querySelector(".grid")).toBeInTheDocument();
@@ -100,9 +96,7 @@ describe("RankingDisplay: レスポンシブデザイン", () => {
       <RankingDisplay
         rankedPlaces={rankedPlaces}
         places={places}
-        listId="list-1"
-        isSample={false}
-      />
+        listId="list-1"      />
     );
     const grid = container.querySelector(".lg\\:grid-cols-3");
     expect(grid || container.querySelector(".grid")).toBeInTheDocument();

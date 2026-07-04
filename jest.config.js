@@ -17,6 +17,25 @@ const customJestConfig = {
   },
   // ESMパッケージ（nanoid等）もtransform対象にする
   transformIgnorePatterns: ["/node_modules/(?!(nanoid)/)"],
+  // カバレッジ計測の対象（テストから未参照のファイルも母数に含め、実態を可視化する）
+  collectCoverageFrom: [
+    "app/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "contexts/**/*.{ts,tsx}",
+    "middleware.ts",
+    // 計測対象から除外するもの
+    "!**/*.d.ts",
+    "!**/__tests__/**",
+    "!**/node_modules/**",
+    "!app/**/layout.tsx",
+    "!app/**/loading.tsx",
+    "!app/**/not-found.tsx",
+    "!app/**/error.tsx",
+    "!app/**/global-error.tsx",
+    "!**/*.stories.{ts,tsx}",
+  ],
   // Playwrightテストを無視
   testPathIgnorePatterns: [
     "/node_modules/",

@@ -59,15 +59,18 @@ jest.mock("lucide-react", () => ({
 }));
 
 // ファイルセキュリティ関数をモック
+// validateFileUpload は同期的に { isValid } を返す（コンポーネントは await しない）
 jest.mock("@/lib/utils/file-security", () => ({
-  validateFileUpload: jest.fn().mockResolvedValue({
-    success: true,
-    validatedFile: { name: "test.png", type: "image/png" },
-  }),
+  validateFileUpload: jest.fn().mockReturnValue({ isValid: true }),
   validateFileContent: jest.fn().mockResolvedValue(true),
   generateSecureFilePath: jest
     .fn()
     .mockReturnValue("profile_images/user123/avatar_secure.jpg"),
+}));
+
+// 画像リサイズは canvas に依存し jsdom で動かないため、入力ファイルをそのまま返す
+jest.mock("@/lib/utils/image-optimization", () => ({
+  resizeImage: jest.fn((file) => Promise.resolve(file)),
 }));
 
 describe("プロフィール管理フロー結合テスト", () => {
@@ -239,7 +242,7 @@ describe("プロフィール管理フロー結合テスト", () => {
     });
   });
 
-  it.skip("プロフィール画像のアップロードが正しく処理されること - スキップ（複雑なFileReader非同期モック）", async () => {
+  it("プロフィール画像のアップロードが正しく処理されること", async () => {
     // プロフィール設定コンポーネントを描画
     const mockProfileData = {
       userId: "user-123",
@@ -346,7 +349,7 @@ describe("プロフィール管理フロー結合テスト", () => {
 
   // 理由: ファイルアップロード失敗時のエラーハンドリングが複雑で、モック環境では実際のエラー状態を再現困難
   // 実際のアプリケーションではファイルアップロード機能とエラーハンドリングは手動テストで確認済み
-  it.skip("画像アップロード失敗時にエラートーストが表示されること - スキップ（ストレージエラーモック困難）", async () => {
+  it("画像アップロード失敗時にエラートーストが表示されること", async () => {
     const mockProfileData = {
       userId: "user-123",
       username: "testuser",
@@ -369,6 +372,11 @@ describe("プロフィール管理フロー結合テスト", () => {
     const file = new File(["dummy content"], "test.png", { type: "image/png" });
     const fileInput = screen.getByLabelText(/プロフィール画像をアップロード/i);
     fireEvent.change(fileInput, { target: { files: [file] } });
+
+    // 画像処理（リサイズ→プレビュー）が完了し imageFile が設定されるのを待つ
+    await waitFor(() => {
+      expect(screen.getByTestId("avatar-image")).toBeInTheDocument();
+    });
 
     // 保存ボタンをクリック
     const saveButton = screen.getByRole("button", { name: /変更を保存/i });
@@ -417,9 +425,8 @@ describe("プロフィール管理フロー結合テスト", () => {
     // API呼び出し有無は問わない
   });
 
-  // 理由: 変更なしでの保存動作は実装仕様によるもので、テスト環境での期待値設定が困難
-  // 実際のアプリケーションでは動作に問題がないことを確認済み
-  it.skip("変更なしで保存ボタンを押した場合の動作を確認する - スキップ（実装仕様とテスト期待値の不一致）", async () => {
+  // 変更がなくても保存処理は実行され、成功トーストが表示される（現行仕様）
+  it("変更なしで保存ボタンを押した場合は成功トーストが表示される", async () => {
     const mockProfileData = {
       userId: "user-123",
       username: "testuser",

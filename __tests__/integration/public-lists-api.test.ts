@@ -49,7 +49,7 @@ describe("Public Lists API Integration", () => {
 
   describe("getPublicListsPaginated", () => {
     it("should handle empty results", async () => {
-      mockSupabase.from.mockImplementation((table) => {
+      mockSupabase.from.mockImplementation((table: string) => {
         if (table === "place_lists") {
           return {
             select: jest.fn().mockImplementation((fields) => {
@@ -79,7 +79,7 @@ describe("Public Lists API Integration", () => {
     });
 
     it("should handle database errors gracefully", async () => {
-      mockSupabase.from.mockImplementation((table) => {
+      mockSupabase.from.mockImplementation((table: string) => {
         if (table === "place_lists") {
           return {
             select: jest.fn().mockResolvedValue({

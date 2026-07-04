@@ -3,7 +3,14 @@ import {
   getPlanStatusKey,
   getTotalAvailablePlaces,
 } from "../../lib/utils/subscription-utils";
-import { createClient } from "../../lib/supabase/server";
+import { getActiveSubscription } from "../../lib/dal/subscriptions";
+
+// getActiveSubscription は dal/subscriptions からインポートされるため明示的にモックする
+jest.mock("../../lib/dal/subscriptions", () => ({
+  getActiveSubscription: jest.fn(),
+}));
+
+const mockGetActiveSubscription = getActiveSubscription as jest.Mock;
 
 describe("getPlanName (multi-currency)", () => {
   const originalEnv = { ...process.env };
@@ -74,9 +81,44 @@ describe("getPlanStatus", () => {
   });
 });
 
-// Mock Supabase client
-jest.mock("../../lib/supabase/server");
-jest.mock("../../lib/dal/subscriptions");
+/**
+ * Supabase クエリビルダーのモック。
+ * チェーン（select/eq/order...）はすべて自身を返し、await 時に result を解決する
+ * thenable として振る舞うため、`getRegisteredPlacesCountTotal`（list_places の count 取得）や
+ * `getPlaceCredits`（place_credits の order まで連結）といった実装をそのまま通せる。
+ */
+function makeQueryBuilder(result: any) {
+  const builder: any = {
+    select: jest.fn(() => builder),
+    eq: jest.fn(() => builder),
+    in: jest.fn(() => builder),
+    neq: jest.fn(() => builder),
+    order: jest.fn(() => builder),
+    maybeSingle: jest.fn(() => Promise.resolve(result)),
+    single: jest.fn(() => Promise.resolve(result)),
+    then: (resolve: (v: any) => any) => resolve(result),
+  };
+  return builder;
+}
+
+/**
+ * テーブルごとに異なる結果を返す Supabase クライアントのモックを生成する。
+ * @param placesCount list_places の count（累計登録地点数）
+ * @param credits place_credits.data として返すクレジット配列
+ */
+function makeSupabaseMock(placesCount: number, credits: any[] = []) {
+  return {
+    from: jest.fn((table: string) => {
+      if (table === "list_places") {
+        return makeQueryBuilder({ count: placesCount, error: null });
+      }
+      if (table === "place_credits") {
+        return makeQueryBuilder({ data: credits, error: null });
+      }
+      return makeQueryBuilder({ data: null, error: null });
+    }),
+  };
+}
 
 describe("getTotalAvailablePlaces", () => {
   const mockUserId = "test-user-123";
@@ -86,27 +128,8 @@ describe("getTotalAvailablePlaces", () => {
   });
 
   it("フリープランユーザーの基本利用可能地点数を正しく計算する", async () => {
-    const mockSupabase = {
-      from: jest.fn().mockImplementation(() => ({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-      })),
-    };
-
-    (createClient as jest.Mock).mockReturnValue(mockSupabase);
-
-    // Mock getActiveSubscription to return null (free plan)
-    const { getActiveSubscription } = await import(
-      "../../lib/dal/subscriptions"
-    );
-    (getActiveSubscription as jest.Mock).mockResolvedValue(null);
-
-    // Mock getRegisteredPlacesCountTotal
-    jest.doMock("../../lib/utils/subscription-utils", () => ({
-      ...jest.requireActual("../../lib/utils/subscription-utils"),
-      getRegisteredPlacesCountTotal: jest.fn().mockResolvedValue(15),
-    }));
+    const mockSupabase = makeSupabaseMock(15, []);
+    mockGetActiveSubscription.mockResolvedValue(null);
 
     const result = await getTotalAvailablePlaces(
       mockSupabase as any,
@@ -123,30 +146,11 @@ describe("getTotalAvailablePlaces", () => {
   });
 
   it("プレミアムプランユーザーは無制限の地点数を取得する", async () => {
-    const mockSupabase = {
-      from: jest.fn().mockImplementation(() => ({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-      })),
-    };
-
-    (createClient as jest.Mock).mockReturnValue(mockSupabase);
-
-    // Mock getActiveSubscription to return active subscription
-    const { getActiveSubscription } = await import(
-      "../../lib/dal/subscriptions"
-    );
-    (getActiveSubscription as jest.Mock).mockResolvedValue({
+    const mockSupabase = makeSupabaseMock(100, []);
+    mockGetActiveSubscription.mockResolvedValue({
       status: "active",
-      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
-
-    // Mock getRegisteredPlacesCountTotal
-    jest.doMock("../../lib/utils/subscription-utils", () => ({
-      ...jest.requireActual("../../lib/utils/subscription-utils"),
-      getRegisteredPlacesCountTotal: jest.fn().mockResolvedValue(100),
-    }));
 
     const result = await getTotalAvailablePlaces(
       mockSupabase as any,
@@ -163,83 +167,44 @@ describe("getTotalAvailablePlaces", () => {
   });
 
   it("フリープラン + 買い切りクレジットの地点数を正しく計算する", async () => {
-    const mockSupabase = {
-      from: jest.fn().mockImplementation((table: string) => {
-        if (table === "place_credits") {
-          return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn((field, value) => {
-              // 1つ目のeq呼び出し（user_id）
-              return {
-                eq: jest.fn((field2, value2) => {
-                  // 2つ目のeq呼び出し（is_active）
-                  return {
-                    order: jest.fn().mockResolvedValue({
-                      data: [
-                        {
-                          credit_type: "one_time_small",
-                          places_purchased: 10,
-                          places_consumed: 5,
-                        },
-                        {
-                          credit_type: "one_time_regular",
-                          places_purchased: 50,
-                          places_consumed: 20,
-                        },
-                      ],
-                      error: null,
-                    }),
-                  };
-                }),
-              };
-            }),
-          };
-        }
-        return {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-        };
-      }),
-    };
-
-    (createClient as jest.Mock).mockReturnValue(mockSupabase);
-
-    // Mock getActiveSubscription to return null (free plan)
-    const { getActiveSubscription } = await import(
-      "../../lib/dal/subscriptions"
-    );
-    (getActiveSubscription as jest.Mock).mockResolvedValue(null);
-
-    // Mock getRegisteredPlacesCountTotal
-    jest.doMock("../../lib/utils/subscription-utils", () => ({
-      ...jest.requireActual("../../lib/utils/subscription-utils"),
-      getRegisteredPlacesCountTotal: jest.fn().mockResolvedValue(40), // 30 + 10 (超過分)
-    }));
+    // 累計40件 = フリー枠30 + 超過10件。超過分はクレジットへ古い順に按分される。
+    const mockSupabase = makeSupabaseMock(40, [
+      {
+        credit_type: "one_time_small",
+        places_purchased: 10,
+        places_consumed: 5,
+      },
+      {
+        credit_type: "one_time_regular",
+        places_purchased: 50,
+        places_consumed: 20,
+      },
+    ]);
+    mockGetActiveSubscription.mockResolvedValue(null);
 
     const result = await getTotalAvailablePlaces(
       mockSupabase as any,
       mockUserId
     );
 
-    expect(result.totalLimit).toBe(65); // 30 (free) + 35 (available from credits: 10-5 + 50-20)
+    expect(result.totalLimit).toBe(65); // 30 (free) + 35 (利用可能クレジット: 10-5 + 50-20)
     expect(result.usedPlaces).toBe(40);
     expect(result.remainingPlaces).toBe(25);
     expect(result.sources).toHaveLength(3); // free + small_pack + regular_pack
 
-    // フリープランソース
+    // フリープランソース（30件まで使用済み扱い）
     expect(result.sources[0].type).toBe("free");
     expect(result.sources[0].limit).toBe(30);
     expect(result.sources[0].used).toBe(30);
 
-    // スモールパッククレジット
+    // スモールパッククレジット: consumed 5 + 超過按分 5 = 10（枠を使い切る）
     expect(result.sources[1].type).toBe("one_time_small");
     expect(result.sources[1].limit).toBe(10);
-    expect(result.sources[1].used).toBe(10); // 5 (consumed) + 5 (additional used)
+    expect(result.sources[1].used).toBe(10);
 
-    // レギュラーパッククレジット
+    // レギュラーパッククレジット: consumed 20 + 残りの超過按分 5 = 25
     expect(result.sources[2].type).toBe("one_time_regular");
     expect(result.sources[2].limit).toBe(50);
-    expect(result.sources[2].used).toBe(20);
+    expect(result.sources[2].used).toBe(25);
   });
 });
