@@ -70,29 +70,6 @@ export default async function HelpPage() {
       ),
     },
     {
-      question: t("help.faq.q8"),
-      answer: (
-        <>
-          <p className="mb-1">{t("help.faq.q8.a1")}</p>
-          <p className="mb-1">{t("help.faq.q8.a2")}</p>
-          <p className="mb-1">{t("help.faq.q8.a3")}</p>
-        </>
-      ),
-    },
-    {
-      question: t("help.faq.q9"),
-      answer: (
-        <>
-          <p className="mb-1">{t("help.faq.q9.a1")}</p>
-          <p className="mb-1">{t("help.faq.q9.a2")}</p>
-        </>
-      ),
-    },
-    {
-      question: t("help.faq.q10"),
-      answer: t("help.faq.q10.a1"),
-    },
-    {
       question: t("help.faq.q11"),
       answer: (
         <>

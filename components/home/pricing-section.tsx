@@ -8,7 +8,6 @@ import {
   formatMonthlyFromYearly,
   inferCurrencyFromLocale,
   SUBSCRIPTION_LIMITS,
-  ONE_TIME_PURCHASE_PLANS,
 } from "@/lib/constants/config/subscription";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
@@ -82,81 +81,6 @@ export function PricingSection() {
                     {t("home.pricing.free.adsIncluded")}
                   </li>
                 </ul>
-
-                {/* 買い切りプラン案内 */}
-                <div className="mt-4 pt-4 border-t border-neutral-200">
-                  <div className="text-center mb-3">
-                    <h4 className="text-sm font-semibold text-neutral-600 mb-2">
-                      {t("home.pricing.oneTime.additionalPlacesTitle")}
-                    </h4>
-                    <p className="text-xs text-neutral-500">
-                      {t("home.pricing.oneTime.additionalPlacesDescription")}
-                    </p>
-                  </div>
-
-                  {/* 50件パック（おすすめ） */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3 relative">
-                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-amber-500 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
-                        {t("home.pricing.oneTime.recommended")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-sm font-semibold text-amber-700">
-                          {t("home.pricing.oneTime.regular.title")}
-                        </div>
-                        <div className="text-xs text-amber-600">
-                          {t("home.pricing.oneTime.addPlaces", {
-                            n: ONE_TIME_PURCHASE_PLANS.regular_pack.places,
-                          })}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-amber-700">
-                          {formatPrice(
-                            ONE_TIME_PURCHASE_PLANS.regular_pack.prices[
-                              currency
-                            ],
-                            currency,
-                            locale
-                          )}
-                        </div>
-                        <div className="text-xs text-amber-600">
-                          {t("home.pricing.oneTime.oneTimePayment")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 10件パック */}
-                  <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-sm font-semibold text-neutral-700">
-                          {t("home.pricing.oneTime.small.title")}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          {t("home.pricing.oneTime.addPlaces", {
-                            n: ONE_TIME_PURCHASE_PLANS.small_pack.places,
-                          })}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-neutral-700">
-                          {formatPrice(
-                            ONE_TIME_PURCHASE_PLANS.small_pack.prices[currency],
-                            currency,
-                            locale
-                          )}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          {t("home.pricing.oneTime.oneTimePayment")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -240,12 +164,6 @@ export function PricingSection() {
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
                     {t("home.pricing.premium.noAds")}
-                  </li>
-                  <li className="flex items-center">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
-                    </div>
-                    {t("upgrade.freeTrial")}
                   </li>
                 </ul>
               </CardContent>

@@ -10,11 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
-import {
-  inferCurrencyFromLocale,
-  type OneTimePurchaseType,
-} from "@/lib/constants/config/subscription";
-import { createClient } from "@/lib/supabase/client";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import AddPlaceForm from "./AddPlaceForm";
@@ -27,8 +22,7 @@ interface AddPlaceButtonClientProps {
 export default function AddPlaceButtonClient({
   listId,
 }: AddPlaceButtonClientProps) {
-  const { t, locale } = useI18n();
-  const currency = inferCurrencyFromLocale(locale);
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(Date.now());
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
@@ -113,47 +107,6 @@ export default function AddPlaceButtonClient({
     setShowUpgradeDialog(true);
   };
 
-  const handleOneTimePurchase = async (planType: OneTimePurchaseType) => {
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
-      const response = await fetch("/api/stripe/one-time-purchase", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          planType,
-          currency,
-          language: locale,
-          returnUrl: window.location.href,
-        }),
-      });
-
-      const data = (await response.json()) as { url?: string; error?: string };
-
-      if (!response.ok) {
-        throw new Error(data.error || "Purchase failed");
-      }
-
-      // Stripe Checkoutにリダイレクト
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error("One-time purchase error:", error);
-      // エラートーストなどで通知
-    }
-  };
-
   return (
     <>
       {/* スマートフォン表示用のフローティングボタン */}
@@ -199,7 +152,6 @@ export default function AddPlaceButtonClient({
           onClose={() => setShowLimitDialog(false)}
           placeAvailability={placeAvailability}
           onUpgrade={handleUpgradeClick}
-          onOneTimePurchase={handleOneTimePurchase}
         />
       )}
 

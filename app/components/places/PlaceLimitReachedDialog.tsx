@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/hooks/use-i18n";
-import {
-  formatPrice,
-  inferCurrencyFromLocale,
-  ONE_TIME_PURCHASE_PLANS,
-  type OneTimePurchaseType,
-} from "@/lib/constants/config/subscription";
 import { useSubscription } from "@/hooks/use-subscription";
 import { Info } from "lucide-react";
 
@@ -34,7 +28,6 @@ interface PlaceLimitReachedDialogProps {
     }>;
   };
   onUpgrade: () => void;
-  onOneTimePurchase: (planType: OneTimePurchaseType) => void;
 }
 
 export function PlaceLimitReachedDialog({
@@ -42,12 +35,9 @@ export function PlaceLimitReachedDialog({
   onClose,
   placeAvailability,
   onUpgrade,
-  onOneTimePurchase,
 }: PlaceLimitReachedDialogProps) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { refreshSubscription } = useSubscription();
-  const currency = inferCurrencyFromLocale(locale);
-  const [loading, setLoading] = useState<string | null>(null);
 
   // 購入成功検知：URLパラメータを監視してSubscription状態を更新
   useEffect(() => {
@@ -57,9 +47,6 @@ export function PlaceLimitReachedDialog({
 
     if (success === "true" && sessionId) {
       // 購入成功を検知したら、Subscription状態をリフレッシュしてダイアログを閉じる
-      console.log(
-        "Purchase success detected, refreshing subscription and closing dialog..."
-      );
       refreshSubscription();
       onClose(); // ダイアログを自動で閉じる
 
@@ -69,22 +56,8 @@ export function PlaceLimitReachedDialog({
     }
   }, [refreshSubscription, onClose]);
 
-  const handleOneTimePurchase = async (planType: OneTimePurchaseType) => {
-    setLoading(planType);
-    try {
-      await onOneTimePurchase(planType);
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const handleUpgrade = async () => {
-    setLoading("premium");
-    try {
-      await onUpgrade();
-    } finally {
-      setLoading(null);
-    }
+  const handleUpgrade = () => {
+    onUpgrade();
   };
 
   return (
@@ -119,98 +92,28 @@ export function PlaceLimitReachedDialog({
             ))}
           </div>
 
-          {/* 追加オプション */}
+          {/* プレミアムプランへのアップグレード */}
           <div className="space-y-3">
             <h4 className="font-medium text-sm">
               {t("places.limitReached.upgradeOptions")}
             </h4>
 
-            {/* プレミアムプラン（おすすめ） */}
             <Button
               onClick={handleUpgrade}
-              disabled={loading !== null}
               variant="outline"
-              className="w-full justify-between p-4 h-auto border-primary-300 bg-primary-50 hover:bg-primary-100 relative"
+              className="w-full justify-between p-4 h-auto border-primary-300 bg-primary-50 hover:bg-primary-100"
             >
-              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                <span className="bg-primary-500 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
-                  {t("home.pricing.oneTime.recommended")}
-                </span>
-              </div>
               <div className="text-left">
                 <div className="font-semibold text-primary-700">
                   {t("home.pricing.premium.title")}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {t("common.unlimited")} • {t("upgrade.freeTrial")}
+                  {t("common.unlimited")}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-xs text-primary-600">
                   {t("upgrade.viewDetails")}
-                </div>
-              </div>
-            </Button>
-
-            {/* 50件パック */}
-            <Button
-              onClick={() => handleOneTimePurchase("regular_pack")}
-              disabled={loading !== null}
-              variant="outline"
-              className="w-full justify-between p-4 h-auto"
-            >
-              <div className="text-left">
-                <div className="font-semibold">
-                  {t("home.pricing.oneTime.regular.title")}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {t("home.pricing.oneTime.addPlaces", {
-                    n: ONE_TIME_PURCHASE_PLANS.regular_pack.places,
-                  })}{" "}
-                  • {t("home.pricing.oneTime.savePlaces", { n: 10 })}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="font-bold">
-                  {formatPrice(
-                    ONE_TIME_PURCHASE_PLANS.regular_pack.prices[currency],
-                    currency,
-                    locale
-                  )}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {t("home.pricing.oneTime.oneTimePayment")}
-                </div>
-              </div>
-            </Button>
-
-            {/* 10件パック */}
-            <Button
-              onClick={() => handleOneTimePurchase("small_pack")}
-              disabled={loading !== null}
-              variant="outline"
-              className="w-full justify-between p-4 h-auto"
-            >
-              <div className="text-left">
-                <div className="font-semibold">
-                  {t("home.pricing.oneTime.small.title")}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {t("home.pricing.oneTime.addPlaces", {
-                    n: ONE_TIME_PURCHASE_PLANS.small_pack.places,
-                  })}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="font-bold">
-                  {formatPrice(
-                    ONE_TIME_PURCHASE_PLANS.small_pack.prices[currency],
-                    currency,
-                    locale
-                  )}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {t("home.pricing.oneTime.oneTimePayment")}
                 </div>
               </div>
             </Button>
