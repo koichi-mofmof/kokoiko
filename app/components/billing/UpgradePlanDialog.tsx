@@ -59,14 +59,10 @@ export function UpgradePlanDialog({
     monthly: {
       label: t("upgrade.monthly"),
       price: formatPrice(DISPLAY_PRICES[currency].monthly, currency, locale),
-      sub: t("upgrade.freeTrial"),
-      note: t("upgrade.note"),
     },
     yearly: {
       label: t("upgrade.yearly"),
       price: formatPrice(DISPLAY_PRICES[currency].yearly, currency, locale),
-      sub: t("upgrade.freeTrial"),
-      note: t("upgrade.note"),
     },
   } as const;
 
@@ -293,7 +289,7 @@ export function UpgradePlanDialog({
             disabled={loading}
             data-testid="checkout-button"
           >
-            {loading ? t("upgrade.redirecting") : t("upgrade.startFreeTrial")}
+            {loading ? t("upgrade.redirecting") : t("upgrade.subscribeCta")}
           </Button>
           {/* リスクリバーサル：今は課金されない・いつでも解約OK */}
           <p className="mt-2 flex items-center justify-center gap-1 text-xs text-neutral-500">

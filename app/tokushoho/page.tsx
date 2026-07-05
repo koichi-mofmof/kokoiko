@@ -131,15 +131,6 @@ export default async function TokushohoPage() {
                         price: yearlyPrice,
                       })}
                     </div>
-                    <div className="text-sm sm:text-base font-medium">
-                      {t("tokushoho.value.oneTimePurchases")}
-                    </div>
-                    <div className="text-sm sm:text-base">
-                      {t("tokushoho.value.oneTimeSmallPack")}
-                    </div>
-                    <div className="text-sm sm:text-base">
-                      {t("tokushoho.value.oneTimeRegularPack")}
-                    </div>
                     <div className="text-xs text-neutral-500">
                       {t("tokushoho.value.priceNote")}
                     </div>
@@ -169,9 +160,6 @@ export default async function TokushohoPage() {
                     <div className="text-sm sm:text-base">
                       {t("tokushoho.value.paymentYearly")}
                     </div>
-                    <div className="text-sm sm:text-base">
-                      {t("tokushoho.value.paymentOneTime")}
-                    </div>
                     <div className="text-xs text-neutral-500">
                       {t("tokushoho.value.stripeNote")}
                     </div>
@@ -196,16 +184,6 @@ export default async function TokushohoPage() {
                       <li>
                         <strong>{t("tokushoho.value.noRefundTitle")}</strong>
                         {t("tokushoho.value.noRefundBody")}
-                      </li>
-                      <li>
-                        <strong>
-                          {t("tokushoho.value.oneTimeRefundTitle")}
-                        </strong>
-                        {t("tokushoho.value.oneTimeRefundBody")}
-                      </li>
-                      <li>
-                        <strong>{t("tokushoho.value.freeTrialTitle")}</strong>
-                        {t("tokushoho.value.freeTrialBody")}
                       </li>
                       <li>
                         <strong>

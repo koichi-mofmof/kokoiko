@@ -65,7 +65,7 @@ export async function registerPlaceToListAction(
     };
   }
 
-  // ★更新: 新しい地点制限チェック（フリープラン基本枠＋買い切りクレジット対応）
+  // 地点制限チェック（フリープラン基本枠＋既存の買い切りクレジット）
   const sub = await getActiveSubscription(user.id);
   const isPremium =
     sub && (sub.status === "active" || sub.status === "trialing");
@@ -79,7 +79,7 @@ export async function registerPlaceToListAction(
         success: false,
         errorKey: "places.limitReached.allPlans",
         error:
-          "地点登録上限に達しています。追加地点パックまたはプレミアムプランをご検討ください。",
+          "地点登録上限に達しています。プレミアムプランをご検討ください。",
         placeAvailability, // UI で詳細情報を表示するため
       };
     }

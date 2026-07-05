@@ -66,10 +66,10 @@ export async function createCheckoutSession({
     }
     const userEmail = userData.user.email;
 
-    // 1. ユーザーのstripe_customer_idと過去のトライアル利用履歴を取得
+    // 1. ユーザーのstripe_customer_idを取得
     let { data: sub, error: subError } = await supabase
       .from("subscriptions")
-      .select("stripe_customer_id, trial_start")
+      .select("stripe_customer_id")
       .eq("user_id", userId)
       .single();
 
@@ -83,14 +83,13 @@ export async function createCheckoutSession({
       // 再取得
       ({ data: sub, error: subError } = await supabase
         .from("subscriptions")
-        .select("stripe_customer_id, trial_start")
+        .select("stripe_customer_id")
         .eq("user_id", userId)
         .single());
     }
     if (subError) return { errorKey: "errors.stripe.dbFetchFailed" };
 
     let stripeCustomerId = sub?.stripe_customer_id;
-    const alreadyTrialed = !!sub?.trial_start;
 
     // 2. 顧客IDがなければStripeで新規作成し、DBに保存
     if (!stripeCustomerId) {
@@ -211,7 +210,6 @@ export async function createCheckoutSession({
       locale: stripeLocale,
       subscription_data: {
         metadata: { user_id: userId },
-        ...(alreadyTrialed ? {} : { trial_period_days: 14 }),
       },
       metadata: { user_id: userId, currency: currency || "" },
       allow_promotion_codes: true,

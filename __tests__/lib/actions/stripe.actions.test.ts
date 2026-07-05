@@ -176,12 +176,14 @@ describe("createCheckoutSession", () => {
     const result = await createCheckoutSession(baseParams);
 
     expect(result).toEqual({ url: "https://checkout.stripe.com/s" });
-    // 過去トライアルが無いため trial_period_days が付与される
+    // トライアルは廃止したため trial_period_days は付与されない（即時課金）
     expect(stripeInstance.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         customer: "cus_1",
         mode: "subscription",
-        subscription_data: expect.objectContaining({ trial_period_days: 14 }),
+        subscription_data: expect.not.objectContaining({
+          trial_period_days: expect.anything(),
+        }),
       })
     );
   });
