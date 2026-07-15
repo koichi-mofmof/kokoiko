@@ -15,7 +15,7 @@ import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
-import { profileSchema } from "@/lib/validators/profile";
+import { createProfileSchemaT } from "@/lib/validators/profile";
 import { Upload, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -68,7 +68,7 @@ export function FirstTimeProfileDialog({
     setIsLoading(true);
     setValidationErrors({});
 
-    const validationResult = profileSchema
+    const validationResult = createProfileSchemaT(t)
       .pick({ display_name: true })
       .safeParse({ display_name: nickname });
 

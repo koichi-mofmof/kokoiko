@@ -8,7 +8,6 @@ import {
 } from "@/lib/utils/csrf-server";
 import { recordCSRFViolation } from "@/lib/utils/security-monitor";
 import {
-  deleteAccountSchema,
   loginSchema,
   signupSchema,
 } from "@/lib/validators/auth";
@@ -212,7 +211,6 @@ export async function signupWithCredentials(
 
   // バリデーション失敗
   if (!validatedFields.success) {
-    console.log("Validation Errors:", validatedFields.error.flatten());
     return {
       message: "入力内容を確認してください。",
       messageKey: "errors.validation.checkInput",
@@ -245,6 +243,21 @@ export async function signupWithCredentials(
       details: signUpError,
       timestamp: new Date().toISOString(),
     });
+
+    // 既に登録済みのメールアドレス: 「再度お試しを」ではなくログインへ誘導する
+    const alreadyRegistered =
+      (signUpError as { code?: string }).code === "user_already_exists" ||
+      signUpError.status === 422 ||
+      /already registered/i.test(signUpError.message);
+    if (alreadyRegistered) {
+      // 表示は messageKey の1本に集約する（general/generalKey も入れると重複表示になる）
+      return {
+        message: "このメールアドレスは既に登録されています。",
+        messageKey: "auth.signup.emailAlreadyRegistered",
+        errors: {},
+        success: false,
+      };
+    }
 
     return {
       message: "ユーザー登録に失敗しました。",
@@ -616,10 +629,7 @@ export async function checkUserSubscriptionStatus(): Promise<{
 /**
  * アカウント削除処理を行うサーバーアクション
  */
-export async function deleteUserAccount(
-  prevState: ActionResult | undefined,
-  formData: FormData
-): Promise<ActionResult> {
+export async function deleteUserAccount(): Promise<ActionResult> {
   const supabase = await createClient();
 
   // 1. 認証ユーザー情報を取得
@@ -636,53 +646,13 @@ export async function deleteUserAccount(
     };
   }
 
-  // 2. フォームデータの検証
-  const validatedFields = deleteAccountSchema.safeParse({
-    password: formData.get("password"),
-    confirmText: formData.get("confirmText"),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      message: "入力内容を確認してください。",
-      messageKey: "errors.validation.checkInput",
-      errors:
-        validatedFields.error.flatten().fieldErrors.password?.map((e) => ({
-          field: "password",
-          message: e,
-        })) ||
-        validatedFields.error.flatten().fieldErrors.confirmText?.map((e) => ({
-          field: "confirmText",
-          message: e,
-        })),
-    };
-  }
-
-  const { password } = validatedFields.data;
-
-  // 3. パスワードで再認証
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
-    password,
-  });
-
-  if (signInError) {
-    return {
-      success: false,
-      message: "パスワードが正しくありません。",
-      messageKey: "auth.password.currentIncorrect",
-      errors: [
-        {
-          field: "password",
-          message: "パスワードが正しくありません。",
-        },
-      ],
-    };
-  }
+  // 追加のパスワード/確認テキスト入力は求めない。
+  // ユーザーは上記 getUser でセッション認証済みであり、削除の意思確認は
+  // クライアントの確認ダイアログで行う。パスワード再認証を撤廃することで、
+  // Googleログイン等でパスワード未設定のユーザーもアカウント削除できるようにする。
 
   try {
-    // 4. 環境変数の確認
+    // 2. 環境変数の確認
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return {
         success: false,

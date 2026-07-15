@@ -158,7 +158,7 @@ export function LoginForm() {
             {state.errors?.email &&
               state.errors.email.map((error: string) => (
                 <p className="text-sm text-red-500" key={error}>
-                  {error}
+                  {t(error)}
                 </p>
               ))}
           </div>
@@ -177,7 +177,7 @@ export function LoginForm() {
             {state.errors?.password &&
               state.errors.password.map((error: string) => (
                 <p className="text-sm text-red-500" key={error}>
-                  {error}
+                  {t(error)}
                 </p>
               ))}
           </div>

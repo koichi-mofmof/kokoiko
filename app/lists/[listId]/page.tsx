@@ -2,6 +2,7 @@ import { BookmarkButton } from "@/app/components/lists/BookmarkButton";
 import { CreatorInfoCard } from "@/app/components/lists/CreatorInfoCard";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
+import { ResumeCopy } from "@/app/components/lists/ResumeCopy";
 import { TemplateCopyButton } from "@/app/components/lists/TemplateCopyButton";
 import JsonLd from "@/components/seo/JsonLd";
 import { ParticipantAvatars } from "@/components/ui/avatar";
@@ -225,6 +226,12 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
             <TemplateCopyButton
               sourceListId={listDetails.id}
               sourceListName={listDetails.name}
+              places={listDetails.places}
+              isLoggedIn={!!user}
+            />
+            {/* 登録後、ゲスト時に選んだ内容を復元しワンタップでコピー完遂させる */}
+            <ResumeCopy
+              sourceListId={listDetails.id}
               places={listDetails.places}
               isLoggedIn={!!user}
             />

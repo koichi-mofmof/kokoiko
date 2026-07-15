@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthSync } from "@/hooks/use-auth-sync";
+import { usePendingCopyRedirect } from "@/hooks/use-pending-copy-redirect";
 
 interface AuthSyncProviderProps {
   children: React.ReactNode;
@@ -11,6 +12,8 @@ interface AuthSyncProviderProps {
  */
 export function AuthSyncProvider({ children }: AuthSyncProviderProps) {
   useAuthSync();
+  // 着地ページに依存せず、保存済みのコピー意図があればソースリストへ誘導
+  usePendingCopyRedirect();
 
   return <>{children}</>;
 }

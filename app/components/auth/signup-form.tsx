@@ -200,7 +200,7 @@ export function SignupForm() {
             {state.errors?.email &&
               state.errors.email.map((error: string) => (
                 <p className="text-sm text-red-500" key={error}>
-                  {error}
+                  {t(error)}
                 </p>
               ))}
           </div>
@@ -224,7 +224,7 @@ export function SignupForm() {
             {state.errors?.password &&
               state.errors.password.map((error: string) => (
                 <p className="text-sm text-red-500" key={error}>
-                  {error}
+                  {t(error)}
                 </p>
               ))}
           </div>
@@ -247,7 +247,7 @@ export function SignupForm() {
             {state.errors?.confirmPassword &&
               state.errors.confirmPassword.map((error: string) => (
                 <p className="text-sm text-red-500" key={error}>
-                  {error}
+                  {t(error)}
                 </p>
               ))}
           </div>
@@ -285,7 +285,7 @@ export function SignupForm() {
               {state.errors?.termsAccepted &&
                 state.errors.termsAccepted.map((error: string) => (
                   <p className="text-sm text-red-500" key={error}>
-                    {error}
+                    {t(error)}
                   </p>
                 ))}
             </div>

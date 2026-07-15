@@ -556,6 +556,7 @@
   "auth.email.confirmationSent": "A confirmation email has been sent. Please click the link in the email to complete registration.",
   "auth.signup.failed": "Sign-up failed.",
   "auth.signup.retryLater": "Sign-up failed. Please try again later.",
+  "auth.signup.emailAlreadyRegistered": "This email is already registered. Please sign in using “Log in” below.",
   "auth.google.startFailed": "Failed to start Google login.",
   "auth.google.urlAcquireFailed": "Failed to acquire Google login URL.",
   "place.errors.checkExistingFailed": "An error occurred while checking existing place in the list.",
@@ -615,6 +616,10 @@
   "templateCopy.errors.limitReached": "You've reached the place limit",
   "templateCopy.errors.permissionDenied": "This list cannot be copied",
   "templateCopy.errors.copyFailed": "Failed to copy",
+  "templateCopy.guest.gateNote": "Saving requires a free account. Sign up on the next screen and the places you just picked will be copied automatically.",
+  "templateCopy.guest.saveButton": "Sign up free & copy",
+  "templateCopy.resume.restored": "We restored what you selected before signing up",
+  "templateCopy.resume.hint": "Review the details and tap “Copy” to finish.",
 
   "lists.edit.successTitle": "Updated",
   "lists.edit.successDesc": "The list has been updated.",

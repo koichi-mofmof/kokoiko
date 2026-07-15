@@ -47,10 +47,3 @@ export const passwordClientSchema = z
     path: ["newPassword"],
   });
 
-// アカウント削除用バリデーションスキーマ
-export const deleteAccountSchema = z.object({
-  password: z.string().min(1, { message: "validation.auth.password.required" }),
-  confirmText: z.string().refine((val) => val === "delete", {
-    message: "validation.auth.delete.confirmWord",
-  }),
-});

@@ -50,7 +50,10 @@ export default async function MyPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <ErrorMessageToast errorMessage={error} />
+      {/* 生のDB/サーバエラーは出さず、汎用の翻訳済みメッセージに寄せる（詳細はサーバログ） */}
+      <ErrorMessageToast
+        errorMessage={error ? "common.unexpectedError" : undefined}
+      />
 
       <header className="mb-4 flex flex-row flex-wrap items-center justify-between">
         <h1 className="text-xl font-bold text-neutral-900 flex items-center">

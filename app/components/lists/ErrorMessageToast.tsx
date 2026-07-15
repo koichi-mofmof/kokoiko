@@ -17,7 +17,7 @@ export function ErrorMessageToast({ errorMessage }: ErrorMessageToastProps) {
       toast({
         variant: "destructive",
         title: t("common.error"),
-        description: errorMessage,
+        description: t(errorMessage),
       });
     }
   }, [errorMessage, toast, t]);
