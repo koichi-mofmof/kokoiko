@@ -31,6 +31,7 @@ import {
   getOwnedListsForCopy,
 } from "@/lib/actions/template-copy.actions";
 import {
+  armPendingCopyResume,
   savePendingCopyIntent,
   type PendingCopyIntent,
 } from "@/lib/utils/pending-copy";
@@ -159,6 +160,8 @@ export function TemplateCopyModal({
           isPublic,
         },
       });
+      // 登録後の自動誘導を「このセッションで一度だけ」有効化
+      armPendingCopyResume();
       trackTemplateCopyEvents.gatedSignup(sourceListId);
       router.push(`/signup?returnTo=/lists/${sourceListId}&pendingCopy=1`);
       return;

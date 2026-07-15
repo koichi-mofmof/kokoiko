@@ -10,6 +10,10 @@
  */
 
 const STORAGE_KEY = "kokoiko:pendingCopy";
+// 「登録後にソースリストへ誘導してよい」状態を表すセッション限定フラグ。
+// ゲストが保存→サインアップへ進んだ時のみ武装し、復帰を一度処理したら解除する。
+// これにより、古い localStorage の意図が残っていても平常時のナビゲーションを妨げない。
+const ARM_KEY = "kokoiko:pendingCopyArmed";
 const TTL_MS = 30 * 60 * 1000; // 30分
 
 export interface PendingCopyIntent {
@@ -84,11 +88,42 @@ export function peekPendingCopyIntent(
   return intent;
 }
 
-/** 保存済みのコピー意図を削除する。 */
+/** 保存済みのコピー意図を削除する（誘導フラグも合わせて解除）。 */
 export function clearPendingCopyIntent(): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+  disarmPendingCopyResume();
+}
+
+/** 登録後の自動誘導を「武装」する（保存→サインアップ導線に進む時に呼ぶ）。 */
+export function armPendingCopyResume(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(ARM_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
+/** 自動誘導が武装中かどうか。 */
+export function isPendingCopyResumeArmed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(ARM_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** 自動誘導の武装を解除する。 */
+export function disarmPendingCopyResume(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(ARM_KEY);
   } catch {
     // ignore
   }

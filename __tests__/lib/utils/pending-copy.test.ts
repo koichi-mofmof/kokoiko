@@ -3,8 +3,11 @@
  */
 import { afterEach, describe, expect, jest, test } from "@jest/globals";
 import {
+  armPendingCopyResume,
   clearPendingCopyIntent,
   consumePendingCopyIntent,
+  disarmPendingCopyResume,
+  isPendingCopyResumeArmed,
   peekAnyPendingCopyIntent,
   peekPendingCopyIntent,
   savePendingCopyIntent,
@@ -18,6 +21,7 @@ const INTENT = {
 
 afterEach(() => {
   window.localStorage.clear();
+  window.sessionStorage.clear();
   jest.restoreAllMocks();
 });
 
@@ -88,5 +92,21 @@ describe("pending-copy intent storage", () => {
 
   test("peekAny returns null when nothing saved", () => {
     expect(peekAnyPendingCopyIntent()).toBeNull();
+  });
+
+  test("resume arm flag: arm / isArmed / disarm", () => {
+    expect(isPendingCopyResumeArmed()).toBe(false);
+    armPendingCopyResume();
+    expect(isPendingCopyResumeArmed()).toBe(true);
+    disarmPendingCopyResume();
+    expect(isPendingCopyResumeArmed()).toBe(false);
+  });
+
+  test("clearing the intent also disarms the resume flag", () => {
+    savePendingCopyIntent(INTENT);
+    armPendingCopyResume();
+    expect(isPendingCopyResumeArmed()).toBe(true);
+    clearPendingCopyIntent();
+    expect(isPendingCopyResumeArmed()).toBe(false);
   });
 });

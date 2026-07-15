@@ -1,50 +1,69 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { peekAnyPendingCopyIntent } from "@/lib/utils/pending-copy";
+import {
+  disarmPendingCopyResume,
+  isPendingCopyResumeArmed,
+  peekAnyPendingCopyIntent,
+} from "@/lib/utils/pending-copy";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 /**
  * 体験先行コピー導線の「着地ズレ」保険。
  *
- * サインアップ後にどのページへ着地しても、保存済みのコピー意図があり
- * ログイン済みであれば、ソースリストのページへ一度だけ誘導する。
- * （そこで ResumeCopy がモーダルを開き、ワンタップで完遂できる。）
+ * ゲストが保存してサインアップへ進んだ時だけ「武装(arm)」され、登録後に
+ * どのページへ着地しても、保存済みのコピー意図があればソースリストへ
+ * 一度だけ誘導する（そこで ResumeCopy がモーダルを開く）。処理したら即解除。
  *
- * 背景: OAuth では Supabase の Redirect URL 設定次第で、クエリ付き
+ * 背景: OAuth では Supabase の Redirect URL 設定次第で、クエリ付きの
  * `redirect_url` が許可リストに一致せず Site URL（TOP）へフォールバック
- * することがある。localStorage の意図は残るため、着地ページに依存せず
- * クライアント側で復帰させることで堅牢化する。
+ * することがある。着地ページに依存せずクライアント側で復帰させる。
+ *
+ * 重要: 武装中のときだけ動作するため、古い意図が localStorage に残っていても
+ * 平常時のナビゲーション（ログイン遷移など）を一切妨げない。
  */
 export function usePendingCopyRedirect() {
   const router = useRouter();
   const pathname = usePathname();
-  // 1マウントにつき誘導は一度だけ（意図せぬ引き戻しループを防ぐ）
-  const redirectedRef = useRef(false);
+  const handlingRef = useRef(false);
 
   useEffect(() => {
-    if (redirectedRef.current) return;
+    if (handlingRef.current) return;
+    // 武装していない＝この導線のセッションではない → 何もしない
+    if (!isPendingCopyResumeArmed()) return;
 
     const intent = peekAnyPendingCopyIntent();
-    if (!intent) return;
+    if (!intent) {
+      disarmPendingCopyResume();
+      return;
+    }
 
     const target = `/lists/${intent.sourceListId}`;
-    if (pathname === target) return; // 既に対象ページ（ResumeCopyが処理）
+    if (pathname === target) {
+      // 既に対象ページ（ResumeCopy が処理）。以降の引き戻しを防ぐため解除。
+      disarmPendingCopyResume();
+      return;
+    }
 
+    handlingRef.current = true;
     let cancelled = false;
     (async () => {
-      // ログイン済みのときだけ誘導（登録未完了のゲストは対象外）
       try {
         const supabase = createClient();
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (cancelled || !user) return;
-        redirectedRef.current = true;
+        if (cancelled) return;
+        if (!user) {
+          // まだ登録/ログインが完了していない → 武装は維持し、次の遷移で再判定
+          handlingRef.current = false;
+          return;
+        }
+        disarmPendingCopyResume();
         router.replace(target);
       } catch {
-        /* セッション確認に失敗した場合は何もしない */
+        handlingRef.current = false;
       }
     })();
 
