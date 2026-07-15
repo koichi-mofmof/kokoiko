@@ -29,7 +29,7 @@ export function CreatorInfoCard({ creator }: CreatorInfoCardProps) {
       {/* カード全体を作成者プロフィールへのリンクに（「他のリストを見る」ボタンは廃止） */}
       <Link
         href={`/users/${creator.id}`}
-        className="group flex items-center gap-3 rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-neutral-50 dark:hover:bg-gray-800/50"
+        className="group flex w-fit max-w-full items-center gap-3 rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-neutral-50 dark:hover:bg-gray-800/50"
         aria-label={t("lists.creator.viewMore")}
       >
         <Avatar className="h-12 w-12 flex-shrink-0">
