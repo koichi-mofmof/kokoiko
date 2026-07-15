@@ -30,8 +30,12 @@ import {
   copyPlacesToList,
   getOwnedListsForCopy,
 } from "@/lib/actions/template-copy.actions";
+import {
+  savePendingCopyIntent,
+  type PendingCopyIntent,
+} from "@/lib/utils/pending-copy";
 import type { Place } from "@/types";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -39,7 +43,11 @@ interface TemplateCopyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sourceListId: string;
+  sourceListName?: string;
   places: Place[];
+  isLoggedIn: boolean;
+  /** 登録後の復元時に渡す。値入り・target ステップで開き、ワンタップでコピーさせる。 */
+  resumeIntent?: PendingCopyIntent | null;
 }
 
 type Step = "select" | "target";
@@ -49,20 +57,29 @@ export function TemplateCopyModal({
   open,
   onOpenChange,
   sourceListId,
+  sourceListName,
   places,
+  isLoggedIn,
+  resumeIntent = null,
 }: TemplateCopyModalProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const router = useRouter();
 
-  const [step, setStep] = useState<Step>("select");
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(places.map((p) => p.id))
+  const [step, setStep] = useState<Step>(resumeIntent ? "target" : "select");
+  const [selected, setSelected] = useState<Set<string>>(() =>
+    resumeIntent
+      ? new Set(resumeIntent.placeIds)
+      : new Set(places.map((p) => p.id))
   );
   const [targetType, setTargetType] = useState<TargetType>("new");
-  const [newName, setNewName] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
+  const [newName, setNewName] = useState(
+    resumeIntent?.target.name ?? sourceListName ?? ""
+  );
+  const [newDescription, setNewDescription] = useState(
+    resumeIntent?.target.description ?? ""
+  );
+  const [isPublic, setIsPublic] = useState(resumeIntent?.target.isPublic ?? false);
   const [existingListId, setExistingListId] = useState<string>("");
   const [ownedLists, setOwnedLists] = useState<{ id: string; name: string }[]>(
     []
@@ -87,7 +104,7 @@ export function TemplateCopyModal({
       setStep("select");
       setSelected(new Set(places.map((p) => p.id)));
       setTargetType("new");
-      setNewName("");
+      setNewName(sourceListName ?? "");
       setNewDescription("");
       setIsPublic(false);
       setExistingListId("");
@@ -119,8 +136,8 @@ export function TemplateCopyModal({
       });
       return;
     }
-    // 既存リスト候補を初回のみ取得
-    if (!ownedListsLoaded) {
+    // 既存リスト候補を初回のみ取得（ゲストは所有リストが無いのでスキップ）
+    if (isLoggedIn && !ownedListsLoaded) {
       const lists = await getOwnedListsForCopy();
       setOwnedLists(lists);
       setOwnedListsLoaded(true);
@@ -129,6 +146,24 @@ export function TemplateCopyModal({
   };
 
   const handleCopy = async () => {
+    // 体験先行ゲート: ゲストはここまでの入力を保存し、登録導線へ送る。
+    // 登録後は同じリストページの ResumeCopy が復元してワンタップでコピーを完遂する。
+    if (!isLoggedIn) {
+      savePendingCopyIntent({
+        sourceListId,
+        placeIds: Array.from(selected),
+        target: {
+          type: "new",
+          name: newName.trim(),
+          description: newDescription.trim() || undefined,
+          isPublic,
+        },
+      });
+      trackTemplateCopyEvents.gatedSignup(sourceListId);
+      router.push(`/signup?returnTo=/lists/${sourceListId}&pendingCopy=1`);
+      return;
+    }
+
     setIsCopying(true);
     trackTemplateCopyEvents.copyStart(sourceListId);
 
@@ -318,6 +353,24 @@ export function TemplateCopyModal({
         {step === "target" && (
           <>
             <div className="flex-1 overflow-y-auto space-y-4">
+              {resumeIntent && (
+                <div className="flex items-start gap-2 rounded-md border border-primary-200 bg-primary-50 p-3 text-sm text-primary-800">
+                  <RotateCcw className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <div>
+                    <div className="font-medium">
+                      {t("templateCopy.resume.restored")}
+                    </div>
+                    <div className="text-xs text-primary-700">
+                      {t("templateCopy.resume.hint")}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!isLoggedIn && (
+                <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600">
+                  {t("templateCopy.guest.gateNote")}
+                </div>
+              )}
               <RadioGroup
                 value={targetType}
                 onValueChange={(v) => setTargetType(v as TargetType)}
@@ -422,7 +475,9 @@ export function TemplateCopyModal({
                 )}
                 {isCopying
                   ? t("templateCopy.progress.copying")
-                  : t("templateCopy.action.copy")}
+                  : isLoggedIn
+                    ? t("templateCopy.action.copy")
+                    : t("templateCopy.guest.saveButton")}
               </Button>
             </DialogFooter>
           </>

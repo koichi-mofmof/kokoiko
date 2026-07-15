@@ -22,7 +22,7 @@ import {
   validateFileUpload,
 } from "@/lib/utils/file-security";
 import { resizeImage } from "@/lib/utils/image-optimization";
-import { profileSchema } from "@/lib/validators/profile";
+import { createProfileSchemaT } from "@/lib/validators/profile";
 import { Upload, User } from "lucide-react";
 import { useState } from "react";
 
@@ -96,7 +96,7 @@ export function ProfileSettings({ initialData }: ProfileSettingsProps) {
       bio,
     };
 
-    const validationResult = profileSchema.safeParse(profileData);
+    const validationResult = createProfileSchemaT(t).safeParse(profileData);
 
     if (!validationResult.success) {
       setValidationErrors(validationResult.error.flatten().fieldErrors);

@@ -27,7 +27,6 @@ import {
   updateUserPassword,
 } from "@/lib/actions/auth";
 import {
-  deleteAccountSchema,
   passwordClientSchema,
 } from "@/lib/validators/auth";
 import { useActionState, useEffect, useState, useTransition } from "react";
@@ -62,12 +61,6 @@ export default function AccountSettingsPage() {
   }>({});
 
   // アカウント削除用のstate
-  const [deletePassword, setDeletePassword] = useState("");
-  const [confirmText, setConfirmText] = useState("");
-  const [deleteValidationErrors, setDeleteValidationErrors] = useState<{
-    password?: string[];
-    confirmText?: string[];
-  }>({});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -121,35 +114,16 @@ export default function AccountSettingsPage() {
     }
   }, [state, toast, t]);
 
-  // アカウント削除処理のuseEffect
+  // アカウント削除処理のuseEffect（エラー時のみトースト。成功時はServer Actionでリダイレクト）
   useEffect(() => {
     if (deleteState.message && !deleteState.success) {
-      // エラーの場合のみ処理（成功時はServer Actionでリダイレクト）
       toast({
         variant: "destructive",
         title: t("common.error"),
-        description: deleteState.message,
+        description: deleteState.messageKey
+          ? t(deleteState.messageKey)
+          : deleteState.message,
       });
-      if (deleteState.errors) {
-        const newDeleteErrors: {
-          password?: string[];
-          confirmText?: string[];
-        } = {};
-        deleteState.errors.forEach((err) => {
-          if (err.field === "password") {
-            newDeleteErrors.password = [
-              ...(newDeleteErrors.password || []),
-              err.message,
-            ];
-          } else if (err.field === "confirmText") {
-            newDeleteErrors.confirmText = [
-              ...(newDeleteErrors.confirmText || []),
-              err.message,
-            ];
-          }
-        });
-        setDeleteValidationErrors(newDeleteErrors);
-      }
     }
   }, [deleteState, toast, t]);
 
@@ -162,19 +136,6 @@ export default function AccountSettingsPage() {
     });
     if (!validationResult.success) {
       setClientValidationErrors(validationResult.error.flatten().fieldErrors);
-      return false;
-    }
-    return true;
-  };
-
-  const handleDeleteValidation = () => {
-    setDeleteValidationErrors({});
-    const validationResult = deleteAccountSchema.safeParse({
-      password: deletePassword,
-      confirmText,
-    });
-    if (!validationResult.success) {
-      setDeleteValidationErrors(validationResult.error.flatten().fieldErrors);
       return false;
     }
     return true;
@@ -205,8 +166,6 @@ export default function AccountSettingsPage() {
   }, [isDeleteDialogOpen, subscriptionStatus]);
 
   const handleDeleteAccount = () => {
-    if (!handleDeleteValidation()) return;
-
     // アクティブなサブスクリプションがある場合は警告
     if (subscriptionStatus?.hasActiveSubscription) {
       const statusMessage = subscriptionStatus.subscriptionStatus
@@ -226,10 +185,8 @@ export default function AccountSettingsPage() {
     }
 
     startTransition(() => {
-      const formData = new FormData();
-      formData.append("password", deletePassword);
-      formData.append("confirmText", confirmText);
-      deleteFormAction(formData);
+      // 入力は不要。パラメータなしでサーバーアクションを呼び出す。
+      deleteFormAction();
     });
   };
 
@@ -427,68 +384,9 @@ export default function AccountSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-4 py-4">
-                    <div>
-                      <label
-                        htmlFor="delete-password"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        {t("settings.account.delete.inputPassword")}
-                      </label>
-                      <Input
-                        id="delete-password"
-                        type="password"
-                        value={deletePassword}
-                        onChange={(e) => setDeletePassword(e.target.value)}
-                        className={`w-full ${
-                          deleteValidationErrors.password
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                        placeholder={t("settings.account.currentPassword")}
-                      />
-                      {deleteValidationErrors.password?.map((error, index) => (
-                        <p key={index} className="mt-1 text-sm text-red-500">
-                          {error}
-                        </p>
-                      ))}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="confirm-text"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        {t("settings.account.delete.inputConfirm")}
-                      </label>
-                      <Input
-                        id="confirm-text"
-                        type="text"
-                        value={confirmText}
-                        onChange={(e) => setConfirmText(e.target.value)}
-                        className={`w-full ${
-                          deleteValidationErrors.confirmText
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                        placeholder={t("settings.account.delete.confirmWord")}
-                      />
-                      {deleteValidationErrors.confirmText?.map(
-                        (error, index) => (
-                          <p key={index} className="mt-1 text-sm text-red-500">
-                            {error}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  </div>
-
                   <AlertDialogFooter>
                     <AlertDialogCancel
                       onClick={() => {
-                        setDeletePassword("");
-                        setConfirmText("");
-                        setDeleteValidationErrors({});
                         setSubscriptionStatus(null);
                       }}
                     >

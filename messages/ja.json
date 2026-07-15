@@ -152,6 +152,7 @@
   "auth.email.confirmationSent": "確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。",
   "auth.signup.failed": "ユーザー登録に失敗しました。",
   "auth.signup.retryLater": "ユーザー登録に失敗しました。時間をおいて再度お試しください。",
+  "auth.signup.emailAlreadyRegistered": "このメールアドレスは既に登録されています。下の「ログイン」からサインインしてください。",
   "auth.google.startFailed": "Googleログインの開始に失敗しました。",
   "auth.google.urlAcquireFailed": "Googleログイン用のURLを取得できませんでした。",
   "place.errors.checkExistingFailed": "リスト内の場所の確認中にエラーが発生しました。",
@@ -210,6 +211,10 @@
   "templateCopy.errors.limitReached": "地点数の上限に達しています",
   "templateCopy.errors.permissionDenied": "このリストはコピーできません",
   "templateCopy.errors.copyFailed": "コピーに失敗しました",
+  "templateCopy.guest.gateNote": "保存には無料アカウントが必要です。次の画面で登録すると、いま選んだ地点がそのままコピーされます。",
+  "templateCopy.guest.saveButton": "無料登録してコピー",
+  "templateCopy.resume.restored": "登録前に選んだ内容を復元しました",
+  "templateCopy.resume.hint": "内容を確認して「コピーする」を押してください。",
 
   "lists.edit.successTitle": "更新完了",
   "lists.edit.successDesc": "リストが更新されました。",

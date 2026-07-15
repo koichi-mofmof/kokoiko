@@ -36,7 +36,8 @@ export default function RankingView({
       // Supabaseデータ利用
       const result = await fetchRankingViewData(listId);
       if (result.error) {
-        setError(result.error);
+        console.error("ランキングデータの取得に失敗:", result.error);
+        setError(t("common.unexpectedError"));
         setIsLoading(false);
         return;
       }
@@ -45,7 +46,7 @@ export default function RankingView({
       setIsLoading(false);
     };
     fetchData();
-  }, [listId, parentPlaces]);
+  }, [listId, parentPlaces, t]);
 
   const handleRankingUpdate = async () => {
     setIsEditModalOpen(false);

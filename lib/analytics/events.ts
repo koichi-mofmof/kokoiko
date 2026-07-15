@@ -126,6 +126,12 @@ export const trackTemplateCopyEvents = {
     );
   },
 
+  // ゲストが「保存」を押して登録導線へ送られた（体験先行ゲート通過）。
+  // guest ファネル: copy_button_click → copy_gated_signup → sign_up → copy_list_complete
+  gatedSignup: (sourceListId: string) => {
+    sendGAEvent("copy_gated_signup", "template_copy", sourceListId);
+  },
+
   // コピー開始（モーダルでコピー実行）
   copyStart: (sourceListId: string) => {
     sendGAEvent("copy_list_start", "template_copy", sourceListId);

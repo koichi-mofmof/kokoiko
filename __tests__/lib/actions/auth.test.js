@@ -384,9 +384,10 @@ describe("認証機能テスト: signupWithCredentials", () => {
     );
     const result = await signupWithCredentials({}, formData);
 
-    // エラーレスポンスを確認 - CSRF検証により無効なリクエストエラーになることを期待
+    // 既存メールは「再度お試しを」ではなくログイン誘導メッセージを返す
     expect(result.success).toBe(false);
-    expect(result.message).toMatch(/ユーザー登録に失敗しました/);
+    expect(result.messageKey).toBe("auth.signup.emailAlreadyRegistered");
+    expect(result.message).toMatch(/既に登録されています/);
   });
 
   it("パスワード要件バリデーションを確認すること", async () => {

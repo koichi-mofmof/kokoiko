@@ -78,7 +78,8 @@ export function ListCardActions({
     if (res.success && res.links) {
       setShareLinks(res.links);
     } else {
-      setShareLinksError(res.error || t("lists.share.fetchFailed"));
+      console.error("共有リンクの取得に失敗:", res.error);
+      setShareLinksError(t("common.unexpectedError"));
     }
     setShareLinksLoading(false);
   };

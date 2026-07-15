@@ -552,7 +552,7 @@ export default function AddPlaceForm({
               {/* ★追加: タグのフィールドエラー表示 */}
               {registerState.fieldErrors?.tags?.[0] && (
                 <p className="text-sm text-red-500 mt-1">
-                  {registerState.fieldErrors.tags[0]}
+                  {t(registerState.fieldErrors.tags[0])}
                 </p>
               )}
             </div>
@@ -570,7 +570,7 @@ export default function AddPlaceForm({
               {/* ★追加: コメントのフィールドエラー表示 */}
               {registerState.fieldErrors?.memo?.[0] && (
                 <p className="text-sm text-red-500 mt-1">
-                  {registerState.fieldErrors.memo[0]}
+                  {t(registerState.fieldErrors.memo[0])}
                 </p>
               )}
             </div>
