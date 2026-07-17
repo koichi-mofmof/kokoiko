@@ -57,6 +57,56 @@ export async function getSharedListCount(
 }
 
 /**
+ * 社交フック（共同編集の招待）を「今このリストで」提示してよいか判定する。
+ * - すでに共有済み（有効リンク or 参加者あり）のリストは対象外（ループは既に存在）
+ * - プレミアムは常に可
+ * - フリーは他に共有中のリスト数が上限未満のときのみ可（＝脆い初期に課金を突きつけない）
+ *
+ * @param supabase Supabaseクライアント（server想定）
+ * @param userId リスト所有者のユーザーID
+ * @param listId 対象リストID
+ */
+export async function canInviteToList(
+  supabase: SupabaseClient,
+  userId: string,
+  listId: string
+): Promise<boolean> {
+  // このリストが既に共有済みなら不要
+  const { data: activeLinks } = await supabase
+    .from("list_share_tokens")
+    .select("id")
+    .eq("list_id", listId)
+    .eq("is_active", true)
+    .limit(1);
+  if (activeLinks && activeLinks.length > 0) return false;
+
+  const { data: collabRows } = await supabase
+    .from("shared_lists")
+    .select("id")
+    .eq("list_id", listId)
+    .neq("shared_with_user_id", userId)
+    .limit(1);
+  if (collabRows && collabRows.length > 0) return false;
+
+  // プレミアム判定
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", userId)
+    .in("status", ["active", "trialing"])
+    .order("current_period_end", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (subscription) return true;
+
+  // フリーは上限未満のときだけ（null = 無制限なら常に可）
+  const maxSharedLists = SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS;
+  if (maxSharedLists === null) return true;
+  const { count } = await getSharedListCount(supabase, userId, listId);
+  return count < maxSharedLists;
+}
+
+/**
  * 累計登録済み地点数をカウント（サーバー・クライアント共通）
  * @param supabase Supabaseクライアント
  * @param userId 対象ユーザーID

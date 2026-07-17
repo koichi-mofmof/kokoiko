@@ -5,17 +5,24 @@ import PlaceList from "@/app/components/places/PlaceList";
 import FilterBar from "@/components/ui/FilterBar";
 import ViewToggle from "@/components/ui/ViewToggle";
 import { useI18n } from "@/hooks/use-i18n";
-import { trackListEvents, trackMapEvents } from "@/lib/analytics/events";
+import {
+  trackListEvents,
+  trackMapEvents,
+  trackShareHookEvents,
+} from "@/lib/analytics/events";
 import { getDisplayOrdersForList } from "@/lib/actions/place-display-orders";
 import { DisplayOrderedPlace, FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
+import { InviteCollaboratorHook } from "./InviteCollaboratorHook";
 
 interface ListDetailViewProps {
   places: Place[];
   listId: string;
   permission?: string | null;
+  // 所有者かつ未共有かつ無料上限内のとき true（社交フック表示可否・サーバ算出）
+  canInvite?: boolean;
 }
 
 // OpenStreetMapView を動的にインポートし、SSRを無効にする
@@ -35,6 +42,7 @@ export default function ListDetailView({
   places,
   listId,
   permission,
+  canInvite = false,
 }: ListDetailViewProps) {
   const { t } = useI18n();
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>(places);
@@ -57,6 +65,15 @@ export default function ListDetailView({
   useEffect(() => {
     if (!listId.startsWith("sample-")) {
       trackListEvents.viewList(listId);
+    }
+  }, [listId]);
+
+  // 招待リンク経由の参加成立を計測（?joined=1）。一度計測したらパラメータを除去。
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("joined") === "1") {
+      trackShareHookEvents.collaboratorJoined(listId);
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, [listId]);
 
@@ -173,6 +190,13 @@ export default function ListDetailView({
 
   return (
     <div>
+      {/* 社交フック：1軒目追加後の熱量ピークで共同編集の招待を差し込む（所有者・未共有・上限内・地点1〜3件） */}
+      {canInvite &&
+        permission === "owner" &&
+        places.length >= 1 &&
+        places.length <= 3 && (
+          <InviteCollaboratorHook listId={listId} placeCount={places.length} />
+        )}
       <div className="inline-flex items-center justify-between mb-4 w-full">
         {/* 左：FilterBar */}
         <div className="flex justify-start">

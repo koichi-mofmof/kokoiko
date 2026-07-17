@@ -34,7 +34,8 @@ export async function handleJoin(formData: FormData) {
   );
   if (result.success) {
     revalidatePath(`/lists/${verifyResult.listId}`);
-    redirect(`/lists/${verifyResult.listId}`);
+    // joined=1 を付けて遷移先で collaborator_joined を計測（ループ成立の本命KPI）
+    redirect(`/lists/${verifyResult.listId}?joined=1`);
   }
   return {
     success: false,

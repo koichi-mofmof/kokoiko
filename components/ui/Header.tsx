@@ -16,7 +16,6 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/hooks/use-i18n";
 import { useSubscription } from "@/hooks/use-subscription";
-import { SUBSCRIPTION_LIMITS } from "@/lib/constants/config/subscription";
 import { createClient } from "@/lib/supabase/client";
 import { List, LogIn, LogOut, Settings, User } from "lucide-react";
 import Image from "next/image";
@@ -40,9 +39,7 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
     plan: subscriptionPlan,
     totalLimit,
     usedPlaces,
-    sharedListCount,
     loading: planLoading,
-    isPremium,
   } = useSubscription();
 
   useEffect(() => {
@@ -54,9 +51,6 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
     subscriptionPlan === "premium"
       ? t("header.plan.premium")
       : t("header.plan.free");
-  const maxSharedLists = isPremium
-    ? null
-    : SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS;
 
   // プロフィール情報の再取得（useCallbackでラップ）
   const refreshUserProfile = useCallback(async () => {
@@ -166,14 +160,6 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                     loading={planLoading}
                   />
                 </div>
-                <div className="w-36">
-                  <SubscriptionStatus
-                    label={t("header.stat.sharedLists")}
-                    currentValue={sharedListCount}
-                    maxValue={maxSharedLists}
-                    loading={planLoading}
-                  />
-                </div>
                 {subscriptionPlan === "free" && !planLoading && (
                   <UpgradePlanDialog />
                 )}
@@ -248,12 +234,6 @@ const Header = ({ currentUser: initialUser, onLogout }: HeaderProps) => {
                             label={t("header.stat.totalPlaces")}
                             currentValue={usedPlaces}
                             maxValue={totalLimit}
-                            loading={planLoading}
-                          />
-                          <SubscriptionStatus
-                            label={t("header.stat.sharedLists")}
-                            currentValue={sharedListCount}
-                            maxValue={maxSharedLists}
                             loading={planLoading}
                           />
                         </div>

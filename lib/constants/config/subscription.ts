@@ -1,8 +1,14 @@
 // サブスクリプションプランごとの機能制限定数
-export const SUBSCRIPTION_LIMITS = {
+// null = 無制限。将来数値へ戻せるよう number | null で型付けする。
+type PlanLimits = {
+  MAX_PLACES_TOTAL: number | null;
+  MAX_SHARED_LISTS: number | null;
+};
+
+export const SUBSCRIPTION_LIMITS: { free: PlanLimits; premium: PlanLimits } = {
   free: {
     MAX_PLACES_TOTAL: 30, // 累計地点登録制限（20→30に緩和）
-    MAX_SHARED_LISTS: 1,
+    MAX_SHARED_LISTS: null, // 無制限（拡散・定着ループ優先で撤廃。上限は課金非レバーのため）
   },
   premium: {
     MAX_PLACES_TOTAL: null, // 無制限

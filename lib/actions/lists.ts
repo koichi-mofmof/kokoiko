@@ -646,20 +646,20 @@ export async function createShareLink({
   const isPremium =
     subscription &&
     (subscription.status === "active" || subscription.status === "trialing");
-  if (!isPremium) {
+  const maxSharedLists = SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS;
+  // maxSharedLists が null（無制限）なら上限チェック自体をスキップ
+  if (!isPremium && maxSharedLists !== null) {
     // 共通ユーティリティで判定
     const { count: sharedCount, sharedListNames } = await getSharedListCount(
       supabase,
       user.id,
       listId
     );
-    if (sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS) {
+    if (sharedCount >= maxSharedLists) {
       return {
         success: false,
         errorKey: "errors.common.limitReached",
-        error: `フリープランで共有できるリストは${
-          SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS
-        }件までです。\n\n現在共有中のリスト: ${sharedListNames.join(
+        error: `フリープランで共有できるリストは${maxSharedLists}件までです。\n\n現在共有中のリスト: ${sharedListNames.join(
           ", "
         )}\n\nプレミアムプランにアップグレードすると、無制限に共有できます。`,
         upgradeRecommended: true,
