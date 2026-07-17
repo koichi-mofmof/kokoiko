@@ -119,8 +119,19 @@ describe("ListDetailView", () => {
     expect(screen.getByText("マップデータを読み込み中...")).toBeInTheDocument();
   });
 
-  it("場所が0件の場合、未登録メッセージが表示される", () => {
+  it("場所が0件かつ所有者の場合、地点追加の発射台（CTA）が表示される", () => {
     render(<ListDetailView places={[]} listId="list1" permission="owner" />);
+    // 灰色メッセージではなく、地点追加ダイアログを開く発射台（AddPlaceButtonClient）を表示する
+    expect(screen.getAllByTestId("AddPlaceButtonClient").length).toBeGreaterThan(
+      0
+    );
+    expect(
+      screen.queryByText("このリストにはまだ場所が登録されていません。")
+    ).not.toBeInTheDocument();
+  });
+
+  it("場所が0件かつ閲覧者の場合、未登録メッセージが表示される", () => {
+    render(<ListDetailView places={[]} listId="list1" permission="view" />);
     expect(
       screen.getByText("このリストにはまだ場所が登録されていません。")
     ).toBeInTheDocument();

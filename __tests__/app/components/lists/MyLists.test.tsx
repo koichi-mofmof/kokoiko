@@ -169,11 +169,11 @@ describe("MyLists", () => {
     expect(screen.queryByText("My List")).not.toBeInTheDocument();
   });
 
-  it("各カテゴリのリストが0件の場合にメッセージが表示される", async () => {
+  it("各カテゴリのリストが0件の場合に作成導線（発射台）が表示される", async () => {
     render(<MyLists initialLists={[]} />);
-    expect(
-      screen.getByText("まだリストは作成されていません。")
-    ).toBeInTheDocument();
+    // 灰色テキストではなく、作成CTA＋公開リストへの導線を持つ発射台を表示する
+    expect(screen.getByText("最初のリストを作ろう")).toBeInTheDocument();
+    expect(screen.getByText("みんなの公開リストを見る")).toBeInTheDocument();
 
     const bookmarkTab = screen.getByRole("tab", { name: "ブックマーク" });
     await userEvent.click(bookmarkTab);

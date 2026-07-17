@@ -46,6 +46,26 @@ export const trackListEvents = {
   },
 };
 
+// アクティベーション（新規ユーザーの初回体験）関連のイベント
+// ファネル: onboarding_start_first_list → onboarding_first_list_created
+//         → onboarding_first_place_added（＝アクティベーションKPI）
+export const trackOnboardingEvents = {
+  // サインアップ直後、最初のリスト作成へ誘導開始
+  startFirstList: () => {
+    sendGAEvent("onboarding_start_first_list", "onboarding");
+  },
+
+  // リスト作成→最初の1軒追加ダイアログを自動起動した瞬間
+  firstPlacePrompted: (listId: string) => {
+    sendGAEvent("onboarding_first_place_prompted", "onboarding", listId);
+  },
+
+  // 空リスト（地点0件）に対して初めて地点を追加できた＝アクティベーション成立
+  firstPlaceAdded: (listId: string) => {
+    sendGAEvent("onboarding_first_place_added", "onboarding", listId);
+  },
+};
+
 // ユーザー関連のイベント
 export const trackUserEvents = {
   // サインアップ

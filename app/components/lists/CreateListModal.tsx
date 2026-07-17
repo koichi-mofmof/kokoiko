@@ -22,8 +22,22 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ListFormComponent, ListFormData } from "./ListFormComponent";
 
-export function CreateListModal() {
-  const [open, setOpen] = useState(false);
+interface CreateListModalProps {
+  // 外部から開閉を制御したい場合に指定（空状態のCTAやオンボーディングから起動）
+  controlledOpen?: boolean;
+  onControlledOpenChange?: (open: boolean) => void;
+  // トリガーボタン（ツールバーの「リストを作成」）を表示しない場合
+  hideTrigger?: boolean;
+}
+
+export function CreateListModal({
+  controlledOpen,
+  onControlledOpenChange,
+  hideTrigger = false,
+}: CreateListModalProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onControlledOpenChange ?? setInternalOpen;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -55,7 +69,9 @@ export function CreateListModal() {
         setOpen(false);
         router.refresh();
         if (result.listId) {
-          router.push(`/lists/${result.listId}`);
+          // 作成直後は必ず空リスト。firstPlace=1 を付けて遷移し、
+          // 遷移先で「場所を追加」ダイアログを自動起動して作成→1軒目を1フローに繋ぐ。
+          router.push(`/lists/${result.listId}?firstPlace=1`);
         }
       } else {
         toast({
@@ -85,25 +101,27 @@ export function CreateListModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DialogTrigger asChild>
-              <Button
-                className="h-10 w-10 md:w-auto md:h-auto rounded-full md:rounded-md shadow-lg items-center"
-                aria-label={t("lists.create.aria")}
-                aria-haspopup="menu"
-                aria-expanded="false"
-              >
-                <ListPlus className="h-6 w-6 sm:h-4 sm:w-4" />
-                <span className="hidden md:inline">
-                  {t("lists.create.cta")}
-                </span>
-              </Button>
-            </DialogTrigger>
-          </TooltipTrigger>
-        </Tooltip>
-      </TooltipProvider>
+      {!hideTrigger && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                <Button
+                  className="h-10 w-10 md:w-auto md:h-auto rounded-full md:rounded-md shadow-lg items-center"
+                  aria-label={t("lists.create.aria")}
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                >
+                  <ListPlus className="h-6 w-6 sm:h-4 sm:w-4" />
+                  <span className="hidden md:inline">
+                    {t("lists.create.cta")}
+                  </span>
+                </Button>
+              </DialogTrigger>
+            </TooltipTrigger>
+          </Tooltip>
+        </TooltipProvider>
+      )}
 
       <DialogContent
         className="sm:max-w-[425px]"
