@@ -1067,7 +1067,7 @@
   "validation.auth.email.invalid": "有効なメールアドレスを入力してください。",
   "validation.auth.password.min8": "パスワードは8文字以上で入力してください。",
   "validation.auth.password.ruleSimple": "パスワードは英大文字、小文字、数字をそれぞれ1文字以上含める必要があります。",
-  "validation.auth.password.ruleStrong": "パスワードは英大文字、小文字、数字、記号(!@#$%^&*(),.?\":{}|<>)をそれぞれ1文字以上含める必要があります。",
+  "validation.auth.password.ruleStrong": "パスワードは英大文字、小文字、数字、記号をそれぞれ1文字以上含める必要があります。",
   "validation.auth.terms.required": "利用規約とプライバシーポリシーへの同意が必要です。",
   "validation.auth.password.mismatch": "パスワードが一致しません。",
   "validation.auth.password.current.required": "現在のパスワードを入力してください。",

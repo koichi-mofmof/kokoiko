@@ -217,4 +217,54 @@ describe("ログインフォームコンポーネントテスト", () => {
       screen.getByText("auth.login.error.invalidCredentials")
     ).toBeInTheDocument();
   });
+
+  it("messageKey / generalKey / general が同時にあっても重複せず messageKey だけ表示すること", () => {
+    const mockActionState = {
+      messageKey: "auth.login.failed",
+      errors: {
+        generalKey: "auth.login.incorrectEmailOrPassword",
+        general: ["メールアドレスまたはパスワードが正しくありません。"],
+      },
+      success: false,
+    };
+    require("react").useActionState.mockImplementation(() => [
+      mockActionState,
+      jest.fn(),
+    ]);
+
+    render(<LoginForm />);
+
+    // messageKey が優先され、generalKey / general は表示されない（重複排除）
+    expect(screen.getByText("auth.login.failed")).toBeInTheDocument();
+    expect(
+      screen.queryByText("auth.login.incorrectEmailOrPassword")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("メールアドレスまたはパスワードが正しくありません。")
+    ).not.toBeInTheDocument();
+  });
+
+  it("messageKey が無く generalKey のみなら generalKey を1つ表示すること", () => {
+    const mockActionState = {
+      errors: {
+        generalKey: "auth.login.incorrectEmailOrPassword",
+        general: ["メールアドレスまたはパスワードが正しくありません。"],
+      },
+      success: false,
+    };
+    require("react").useActionState.mockImplementation(() => [
+      mockActionState,
+      jest.fn(),
+    ]);
+
+    render(<LoginForm />);
+
+    // generalKey が優先され、general 配列（同義の生文言）は表示されない
+    expect(
+      screen.getByText("auth.login.incorrectEmailOrPassword")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("メールアドレスまたはパスワードが正しくありません。")
+    ).not.toBeInTheDocument();
+  });
 });

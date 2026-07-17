@@ -1003,7 +1003,7 @@
   "validation.auth.email.invalid": "Introduce una dirección de correo válida.",
   "validation.auth.password.min8": "La contraseña debe tener al menos 8 caracteres.",
   "validation.auth.password.ruleSimple": "La contraseña debe incluir al menos una mayúscula, una minúscula y un dígito.",
-  "validation.auth.password.ruleStrong": "La contraseña debe incluir al menos una mayúscula, una minúscula, un dígito y un símbolo (!@#$%^&*(),.?\":{}|<>).",
+  "validation.auth.password.ruleStrong": "La contraseña debe incluir al menos una mayúscula, una minúscula, un dígito y un símbolo.",
   "validation.auth.terms.required": "Debes aceptar los Términos y la Política de privacidad.",
   "validation.auth.password.mismatch": "Las contraseñas no coinciden.",
   "validation.auth.password.current.required": "Introduce tu contraseña actual.",

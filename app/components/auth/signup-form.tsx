@@ -106,10 +106,10 @@ export function SignupForm() {
   // メール確認フローの登録（サーバー側リダイレクトが発生せず success ステートで返る）は
   // ここで sign_up を計測する。自動確認でリダイレクトされるケースは auth_event 経由で計測。
   useEffect(() => {
-    if (state.success && state.message?.includes("確認メール")) {
+    if (state.success && state.messageKey === "auth.email.confirmationSent") {
       trackUserEvents.signup("email");
     }
-  }, [state.success, state.message]);
+  }, [state.success, state.messageKey]);
 
   const googleLoginAction = async () => {
     // 認証コールバック待機状態をマーク
@@ -142,13 +142,15 @@ export function SignupForm() {
     }
   };
 
-  if (state.success && state.message?.includes("確認メール")) {
+  if (state.success && state.messageKey === "auth.email.confirmationSent") {
     return (
       <div className="space-y-4 text-center">
         <h2 className="text-xl font-semibold">
           {t("auth.signup.success.title")}
         </h2>
-        <p>{state.message}</p>
+        <p>
+          {state.messageKey ? t(state.messageKey) : state.message}
+        </p>
         <p>{t("auth.signup.success.checkEmail")}</p>
         <Button asChild>
           <Link href="/login">{t("auth.signup.success.loginLink")}</Link>
@@ -292,25 +294,24 @@ export function SignupForm() {
           </div>
         </div>
 
-        {/* General Error */}
+        {/* General Error（重複表示を防ぐため messageKey > generalKey > general の優先で1つだけ表示） */}
         {(state.messageKey ||
           state.errors?.generalKey ||
-          state.errors?.general) && (
+          state.errors?.general?.length) && (
           <div aria-live="polite" aria-atomic="true">
-            {state.messageKey && (
+            {state.messageKey ? (
               <p className="text-sm text-red-500">{t(state.messageKey)}</p>
-            )}
-            {state.errors?.generalKey && (
+            ) : state.errors?.generalKey ? (
               <p className="text-sm text-red-500">
                 {t(state.errors.generalKey)}
               </p>
-            )}
-            {state.errors?.general &&
-              state.errors.general.map((error: string) => (
+            ) : (
+              state.errors?.general?.map((error: string) => (
                 <p className="text-sm text-red-500" key={error}>
                   {error}
                 </p>
-              ))}
+              ))
+            )}
           </div>
         )}
         <SignupSubmitButton />

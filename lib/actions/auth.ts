@@ -158,28 +158,15 @@ export async function loginWithCredentials(
     revalidatePath("/lists"); // マイリストページのキャッシュも無効化
 
     redirect(withAuthEvent(returnTo, "login_email"));
-  } else if (signInData.user) {
-    // メール確認が必要な場合
-    return {
-      message:
-        "確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。",
-      messageKey: "auth.email.confirmationSent",
-      errors: {},
-      success: true,
-      googleUrl: undefined, // AuthStateに合わせる
-    };
-  } else {
-    // 予期せぬケース
-    return {
-      message: "ユーザー登録中に予期せぬエラーが発生しました。",
-      messageKey: "errors.unexpected.signup",
-      errors: {
-        general: ["ユーザー登録中に予期せぬエラーが発生しました。"],
-        generalKey: "errors.unexpected.signup",
-      },
-      success: false,
-    };
   }
+
+  // ここに到達するのは想定外（ログイン成功時は session が必ず存在する）。
+  return {
+    message: "ログイン処理中に予期せぬエラーが発生しました。",
+    messageKey: "errors.unexpected.common",
+    errors: {},
+    success: false,
+  };
 }
 
 // サインアップ用 Server Action
@@ -415,10 +402,9 @@ export async function logoutUser() {
 const newPasswordSchema = z.object({
   newPassword: z
     .string()
-    .min(8, { message: "パスワードは8文字以上で入力してください。" })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/, {
-      message:
-        'パスワードは英大文字、小文字、数字、記号(!@#$%^&*(),.?":{}|<>)をそれぞれ1文字以上含める必要があります。',
+    .min(8, { message: "validation.auth.password.min8" })
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).*$/, {
+      message: "validation.auth.password.ruleStrong",
     }),
 });
 
@@ -498,19 +484,18 @@ export async function updateUserPassword(
   });
 
   if (updateError) {
-    let errorMessage = `パスワードの更新に失敗しました。`;
-    if (updateError.message.includes("New password should be different")) {
-      errorMessage =
-        "新しいパスワードは現在のパスワードと異なる必要があります。";
-    } else if (updateError.message.includes("same as the old password")) {
-      errorMessage =
-        "新しいパスワードは現在のパスワードと同じものは使用できません。";
-    }
+    const isSamePassword =
+      updateError.message.includes("New password should be different") ||
+      updateError.message.includes("same as the old password");
 
     return {
       success: false,
-      message: errorMessage,
-      messageKey: "auth.password.updateFailed",
+      message: isSamePassword
+        ? "新しいパスワードは現在のパスワードと異なる必要があります。"
+        : "パスワードの更新に失敗しました。",
+      messageKey: isSamePassword
+        ? "validation.auth.password.newMustDiffer"
+        : "auth.password.updateFailed",
     };
   }
 

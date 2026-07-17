@@ -157,18 +157,28 @@ describe("updateUserPassword: 再認証ゲート", () => {
     expect(result.messageKey).toBe("auth.password.updateSuccess");
   });
 
-  it("Supabase 更新エラーは updateFailed を返す", async () => {
-    setUser(
-      { id: "u1", email: "a@example.com" },
-      null,
-      { message: "same as the old password" }
-    );
+  it("Supabase 更新エラー（汎用）は updateFailed を返す", async () => {
+    setUser({ id: "u1", email: "a@example.com" }, null, {
+      message: "Unexpected server error",
+    });
     const result = await updateUserPassword(
       undefined,
       formDataOf({ currentPassword: "ok", newPassword: "Abcdef1!" })
     );
     expect(result.success).toBe(false);
     expect(result.messageKey).toBe("auth.password.updateFailed");
+  });
+
+  it("新旧同一パスワードのエラーは newMustDiffer を返す", async () => {
+    setUser({ id: "u1", email: "a@example.com" }, null, {
+      message: "same as the old password",
+    });
+    const result = await updateUserPassword(
+      undefined,
+      formDataOf({ currentPassword: "ok", newPassword: "Abcdef1!" })
+    );
+    expect(result.success).toBe(false);
+    expect(result.messageKey).toBe("validation.auth.password.newMustDiffer");
   });
 });
 

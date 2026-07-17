@@ -223,26 +223,22 @@ export function LoginForm() {
         </p>
       </div>
 
-      {/* 一般的な認証エラー表示 (メール/パスワード) */}
+      {/* 一般的な認証エラー表示（重複表示を防ぐため messageKey > generalKey > general の優先で1つだけ表示） */}
       {(state.messageKey ||
         state.errors?.generalKey ||
-        state.errors?.general) && (
+        state.errors?.general?.length) && (
         <div aria-live="polite" aria-atomic="true">
-          {/* サーバーからのトップレベルメッセージキー */}
-          {state.messageKey && (
+          {state.messageKey ? (
             <p className="text-sm text-red-500">{t(state.messageKey)}</p>
-          )}
-          {/* 一般エラーキー */}
-          {state.errors?.generalKey && (
+          ) : state.errors?.generalKey ? (
             <p className="text-sm text-red-500">{t(state.errors.generalKey)}</p>
-          )}
-          {/* 既存のメッセージ配列（フォールバック） */}
-          {state.errors?.general &&
-            state.errors.general.map((error: string) => (
+          ) : (
+            state.errors?.general?.map((error: string) => (
               <p className="text-sm text-red-500" key={error}>
                 {error}
               </p>
-            ))}
+            ))
+          )}
         </div>
       )}
 

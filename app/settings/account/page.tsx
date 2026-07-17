@@ -84,7 +84,10 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     if (state.message) {
       if (state.success) {
-        toast({ title: t("common.success"), description: state.message });
+        toast({
+          title: t("common.success"),
+          description: state.messageKey ? t(state.messageKey) : state.message,
+        });
         setCurrentPassword("");
         setNewPassword("");
         setClientValidationErrors({});
@@ -92,7 +95,7 @@ export default function AccountSettingsPage() {
         toast({
           variant: "destructive",
           title: t("common.error"),
-          description: state.message,
+          description: state.messageKey ? t(state.messageKey) : state.message,
         });
         if (state.errors) {
           const newErrors: {

@@ -1065,7 +1065,7 @@
   "validation.auth.email.invalid": "Please enter a valid email address.",
   "validation.auth.password.min8": "Password must be at least 8 characters.",
   "validation.auth.password.ruleSimple": "Password must include at least one uppercase, one lowercase letter, and one digit.",
-  "validation.auth.password.ruleStrong": "Password must include at least one uppercase, one lowercase letter, one digit, and one symbol (!@#$%^&*(),.?\":{}|<>).",
+  "validation.auth.password.ruleStrong": "Password must include at least one uppercase letter, one lowercase letter, one digit, and one symbol.",
   "validation.auth.terms.required": "You must agree to the Terms and Privacy Policy.",
   "validation.auth.password.mismatch": "Passwords do not match.",
   "validation.auth.password.current.required": "Please enter your current password.",

@@ -2,12 +2,12 @@ import { z } from "zod";
 
 export const loginSchema = z.object({
   email: z.string().email({ message: "validation.auth.email.invalid" }),
+  // ログインでは複雑性を課さない（正誤判定は認証サーバに委ねる）。
+  // 強度チェックを課すと旧ルールのパスワードでログイン不能になり、
+  // 未認証段階でポリシーを露呈してしまうため、空でないことのみ要求する。
   password: z
     .string()
-    .min(8, { message: "validation.auth.password.min8" })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-      message: "validation.auth.password.ruleSimple",
-    }),
+    .min(1, { message: "validation.auth.password.required" }),
 });
 
 export const signupSchema = z
@@ -16,7 +16,7 @@ export const signupSchema = z
     password: z
       .string()
       .min(8, { message: "validation.auth.password.min8" })
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/, {
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).*$/, {
         message: "validation.auth.password.ruleStrong",
       }),
     confirmPassword: z.string(),
@@ -38,7 +38,7 @@ export const passwordClientSchema = z
     newPassword: z
       .string()
       .min(8, { message: "validation.auth.password.min8" })
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/, {
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).*$/, {
         message: "validation.auth.password.ruleStrong",
       }),
   })
