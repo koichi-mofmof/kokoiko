@@ -14,6 +14,7 @@ import {
   getPublicListData,
 } from "@/lib/dal/lists";
 import { getUserProfile } from "@/lib/dal/user-public-lists";
+import { canInviteToList } from "@/lib/utils/subscription-utils";
 import {
   createServerT,
   loadMessages,
@@ -144,6 +145,12 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     notFound();
   }
 
+  // 社交フック（共同編集の招待）の表示可否：所有者かつ未共有かつ無料上限内のときのみ
+  const canInvite =
+    !!user && listDetails.created_by === user.id
+      ? await canInviteToList(supabase, user.id, listId)
+      : false;
+
   // i18n
   const cookieStore = await cookies();
   const locale = normalizeLocale(cookieStore.get("lang")?.value);
@@ -249,6 +256,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
             listId={listId}
             places={listDetails.places}
             permission={listDetails.permission}
+            canInvite={canInvite}
           />
         </Suspense>
       </div>

@@ -59,18 +59,7 @@ export function PricingSection() {
                     {t("home.pricing.free.limitPlacesLabel")}：
                     <span className="font-semibold ml-1">
                       {t("home.pricing.free.limitPlacesValue", {
-                        n: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL,
-                      })}
-                    </span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-400 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
-                    </div>
-                    {t("home.pricing.free.limitSharedLabel")}：
-                    <span className="font-semibold ml-1">
-                      {t("home.pricing.free.limitSharedValue", {
-                        n: SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS,
+                        n: SUBSCRIPTION_LIMITS.free.MAX_PLACES_TOTAL ?? 0,
                       })}
                     </span>
                   </li>
@@ -146,15 +135,6 @@ export function PricingSection() {
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                     </div>
                     {t("home.pricing.premium.limitPlacesLabel")}：
-                    <span className="font-semibold ml-1">
-                      {t("common.unlimited")}
-                    </span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary-500 flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
-                    </div>
-                    {t("home.pricing.premium.limitSharedLabel")}：
                     <span className="font-semibold ml-1">
                       {t("common.unlimited")}
                     </span>

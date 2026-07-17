@@ -104,7 +104,9 @@ export const SubscriptionProvider = ({
         registeredPlacesTotal: placeAvailability.usedPlaces, // 後方互換性
         sharedListCount: sharedCount,
         isSharedListLimitExceeded:
-          !premium && sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS,
+          !premium &&
+          SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS !== null &&
+          sharedCount >= SUBSCRIPTION_LIMITS.free.MAX_SHARED_LISTS,
         loading: false,
         error: null,
       });

@@ -66,6 +66,30 @@ export const trackOnboardingEvents = {
   },
 };
 
+// 社交フック（共同編集の招待）関連のイベント
+// ファネル: share_hook_shown → share_hook_clicked → collaborator_joined（＝ループ成立KPI）
+export const trackShareHookEvents = {
+  // 1軒目追加後にフックを提示（何軒目で出したかを value に）
+  shown: (listId: string, placeCount: number) => {
+    sendGAEvent("share_hook_shown", "social_hook", listId, placeCount);
+  },
+
+  // 「共有リンクを作る」を押下
+  clicked: (listId: string) => {
+    sendGAEvent("share_hook_clicked", "social_hook", listId);
+  },
+
+  // 「あとで」で閉じた
+  dismissed: (listId: string) => {
+    sendGAEvent("share_hook_dismissed", "social_hook", listId);
+  },
+
+  // 招待リンク経由で他者が実際に参加＝再訪ループ成立（本命KPI）
+  collaboratorJoined: (listId: string) => {
+    sendGAEvent("collaborator_joined", "social_hook", listId);
+  },
+};
+
 // ユーザー関連のイベント
 export const trackUserEvents = {
   // サインアップ
