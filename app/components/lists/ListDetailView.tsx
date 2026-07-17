@@ -193,7 +193,10 @@ export default function ListDetailView({
         <div className="flex justify-end">
           {viewMode !== "ranking" &&
             (permission === "edit" || permission === "owner") && (
-              <AddPlaceButtonClient listId={listId} />
+              <AddPlaceButtonClient
+                listId={listId}
+                isFirstPlace={places.length === 0}
+              />
             )}
         </div>
       </div>
@@ -230,14 +233,22 @@ export default function ListDetailView({
         <RankingView listId={listId} places={places} permission={permission} />
       </div>
 
-      {/* Places Not Found Message */}
-      {viewMode !== "ranking" && places.length === 0 && (
-        <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
-          <p className="text-sm text-neutral-600 mb-4">
-            {t("lists.detail.noPlaces")}
-          </p>
-        </div>
-      )}
+      {/* 空リスト：所有者/編集者には「最初の1軒を追加」発射台、閲覧者には従来メッセージ */}
+      {viewMode !== "ranking" &&
+        places.length === 0 &&
+        (permission === "edit" || permission === "owner" ? (
+          <AddPlaceButtonClient
+            listId={listId}
+            variant="empty"
+            isFirstPlace={true}
+          />
+        ) : (
+          <div className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center">
+            <p className="text-sm text-neutral-600 mb-4">
+              {t("lists.detail.noPlaces")}
+            </p>
+          </div>
+        ))}
       {viewMode !== "ranking" &&
         places.length > 0 &&
         filteredPlaces.length === 0 && (

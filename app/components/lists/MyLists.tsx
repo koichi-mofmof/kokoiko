@@ -23,8 +23,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useI18n } from "@/hooks/use-i18n";
 import { ListForClient as MyListClientData } from "@/lib/dal/lists";
-import { ArrowDown, ArrowUp, ListFilter, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, ListFilter, Map, Search } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { CreateListModal } from "./CreateListModal";
 
 type MyListsProps = {
@@ -40,6 +41,18 @@ export function MyLists({ initialLists }: MyListsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [createOpen, setCreateOpen] = useState(false);
+
+  // サインアップ直後（?firstList=1）に作成モーダルを自動起動し、
+  // 表示名→最初のリスト→最初の1軒 まで一直線に繋ぐ。
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("firstList") === "1") {
+      setCreateOpen(true);
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
 
   const processedLists = useMemo(() => {
     let lists = [...initialLists];
@@ -158,7 +171,10 @@ export function MyLists({ initialLists }: MyListsProps) {
           </div>
           {/* リストを作成ボタン */}
           <div>
-            <CreateListModal />
+            <CreateListModal
+              controlledOpen={createOpen}
+              onControlledOpenChange={setCreateOpen}
+            />
           </div>
         </div>
 
@@ -263,9 +279,31 @@ export function MyLists({ initialLists }: MyListsProps) {
                 </p>
               )
             ) : (
-              <p className="text-center text-muted-foreground py-8">
-                {t("lists.my.noneYet")}
-              </p>
+              /* リスト0件：始め方を示す発射台。作成CTA＋公開リストへの逃げ道でコールドスタートを回避 */
+              <div
+                className="bg-white rounded-soft border border-neutral-200 shadow-soft p-8 text-center flex flex-col items-center"
+                data-testid="my-lists-empty-state"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 mb-4">
+                  <Map className="h-6 w-6 text-primary-500" />
+                </div>
+                <h3 className="text-base font-semibold text-neutral-900 mb-1">
+                  {t("lists.my.empty.title")}
+                </h3>
+                <p className="text-sm text-neutral-600 mb-4 max-w-sm">
+                  {t("lists.my.empty.desc")}
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <Button onClick={() => setCreateOpen(true)}>
+                    {t("lists.create.cta")}
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <Link href="/public-lists">
+                      {t("lists.my.empty.browse")}
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             )}
           </TabsContent>
           <TabsContent value="bookmarked" className="mt-4">

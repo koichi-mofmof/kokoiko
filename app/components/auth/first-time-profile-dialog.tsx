@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
+import { trackOnboardingEvents } from "@/lib/analytics/events";
 import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
 import { createProfileSchemaT } from "@/lib/validators/profile";
@@ -130,7 +131,10 @@ export function FirstTimeProfileDialog({
       toast({ title: t("settings.profile.update.success"), description: "" });
 
       onOpenChange(false);
-      router.refresh();
+      // 表示名の入力だけで放流せず、そのまま最初のリスト作成へ導く。
+      // /lists?firstList=1 で作成モーダルが自動起動し、作成→最初の1軒まで一直線に繋がる。
+      trackOnboardingEvents.startFirstList();
+      router.push("/lists?firstList=1");
     } catch (error) {
       console.error("profile update error:", error);
       toast({
