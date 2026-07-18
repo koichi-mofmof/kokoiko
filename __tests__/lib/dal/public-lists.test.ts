@@ -23,7 +23,10 @@ function makeClient(opts: {
   placeListsData?: { data: any; error: any };
   profiles?: any[];
 }) {
-  return {
+  // place_lists ビルダーで共有する or フィルタのスパイ（検索時に呼ばれる）
+  const orSpy = jest.fn();
+  const client: any = {
+    __orSpy: orSpy,
     rpc: jest.fn(() =>
       Promise.resolve(opts.rpc ?? { data: null, error: null })
     ),
@@ -40,17 +43,22 @@ function makeClient(opts: {
       const b: any = {
         select: jest.fn(() => b),
         eq: jest.fn(() => b),
+        or: jest.fn((...args: any[]) => {
+          orSpy(...args);
+          return b;
+        }),
         order: jest.fn(() => b),
         range: jest.fn(() => ({
           then: (res: any) =>
             res(opts.placeListsData ?? { data: [], error: null }),
         })),
-        // count クエリ（.eq() までを await）
+        // count クエリ（.eq()/.or() までを await）
         then: (res: any) => res({ count: opts.count ?? 0 }),
       };
       return b;
     }),
   };
+  return client;
 }
 
 describe("getPublicListsForHome", () => {
@@ -234,5 +242,45 @@ describe("getPublicListsPaginated", () => {
 
     const result = await getPublicListsPaginated(20, 0, "place_count", "desc");
     expect(result).toEqual({ lists: [], totalCount: 8 });
+  });
+
+  it("検索語がある場合は name/description の or ilike フィルタを適用する", async () => {
+    const client = makeClient({
+      count: 1,
+      placeListsData: { data: [], error: null },
+    });
+    mockCreate.mockReturnValue(client);
+
+    await getPublicListsPaginated(20, 0, "updated_at", "desc", "カフェ");
+
+    // count クエリとデータ取得クエリの両方で or フィルタが適用される
+    expect(client.__orSpy).toHaveBeenCalledWith(
+      `name.ilike."%カフェ%",description.ilike."%カフェ%"`
+    );
+    expect(client.__orSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("検索語がない場合は or フィルタを適用しない", async () => {
+    const client = makeClient({
+      count: 3,
+      placeListsData: { data: [], error: null },
+    });
+    mockCreate.mockReturnValue(client);
+
+    await getPublicListsPaginated(20, 0, "updated_at", "desc", "");
+
+    expect(client.__orSpy).not.toHaveBeenCalled();
+  });
+
+  it("place_count ソート + 検索は search_query を RPC に渡す", async () => {
+    const client = makeClient({ count: 2, rpc: { data: [], error: null } });
+    mockCreate.mockReturnValue(client);
+
+    await getPublicListsPaginated(20, 0, "place_count", "desc", "公園");
+
+    expect(client.rpc).toHaveBeenCalledWith(
+      "get_public_lists_paginated_by_place_count",
+      expect.objectContaining({ search_query: "公園" })
+    );
   });
 });

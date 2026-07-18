@@ -71,13 +71,15 @@ export default async function PublicListsPage({
   // ソート条件の取得
   const sortBy = params.sort || "updated_at";
   const sortOrder = (params.order as "asc" | "desc") || "desc";
+  const search = params.search || "";
 
   // データ取得
   const { lists, totalCount } = await getPublicListsPaginated(
     limit,
     offset,
     sortBy,
-    sortOrder
+    sortOrder,
+    search
   );
 
   const totalPages = Math.ceil(totalCount / limit);

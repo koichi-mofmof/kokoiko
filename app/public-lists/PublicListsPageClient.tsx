@@ -6,7 +6,7 @@ import { useI18n } from "@/hooks/use-i18n";
 import { PublicListForHome } from "@/lib/dal/public-lists";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { PublicListsFilters } from "./PublicListsFilters";
 
 interface PublicListsPageClientProps {
@@ -32,35 +32,27 @@ export function PublicListsPageClient({
   const router = useRouter();
   const searchParamsHook = useSearchParams();
   const { t } = useI18n();
-  const [searchQuery, setSearchQuery] = useState(searchParams.search || "");
+  const committedSearch = searchParams.search || "";
+  const [searchQuery, setSearchQuery] = useState(committedSearch);
 
-  // フィルタリングされたリスト
-  const filteredLists = useMemo(() => {
-    if (!searchQuery) return initialLists;
+  // 検索はサーバー側（DB）で実行される。入力をデバウンスして URL を更新し、
+  // 全公開リストを対象に名前・説明を部分一致検索する。
+  useEffect(() => {
+    if (searchQuery === committedSearch) return;
 
-    return initialLists.filter(
-      (list) =>
-        list.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        list.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        list.creatorDisplayName
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        list.creatorUsername.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [initialLists, searchQuery]);
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParamsHook);
+      if (searchQuery) {
+        params.set("search", searchQuery);
+      } else {
+        params.delete("search");
+      }
+      params.delete("page"); // 検索時はページをリセット
+      router.push(`/public-lists?${params.toString()}`);
+    }, 400);
 
-  // 検索処理
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    const params = new URLSearchParams(searchParamsHook);
-    if (query) {
-      params.set("search", query);
-    } else {
-      params.delete("search");
-    }
-    params.delete("page"); // 検索時はページをリセット
-    router.push(`/public-lists?${params.toString()}`);
-  };
+    return () => clearTimeout(timer);
+  }, [searchQuery, committedSearch, searchParamsHook, router]);
 
   // ソート処理
   const handleSort = (sort: string, order: string) => {
@@ -89,7 +81,7 @@ export function PublicListsPageClient({
               type="text"
               placeholder={t("publicLists.search.placeholder")}
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
@@ -109,21 +101,21 @@ export function PublicListsPageClient({
         <p className="text-sm text-neutral-600">
           {t("publicLists.result.total", { n: totalCount })}
         </p>
-        {searchQuery && (
+        {committedSearch && (
           <p className="text-sm text-neutral-600">
             {t("publicLists.result.search", {
-              query: searchQuery,
-              n: filteredLists.length,
+              query: committedSearch,
+              n: totalCount,
             })}
           </p>
         )}
       </div>
 
       {/* リスト表示 */}
-      {filteredLists.length > 0 ? (
+      {initialLists.length > 0 ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredLists.map((list) => (
+            {initialLists.map((list) => (
               <PublicListCard key={list.id} list={list} />
             ))}
           </div>
@@ -145,12 +137,12 @@ export function PublicListsPageClient({
             <Search className="h-12 w-12 mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-neutral-900 mb-2">
-            {searchQuery
+            {committedSearch
               ? t("publicLists.empty.searchTitle")
               : t("publicLists.empty.noneTitle")}
           </h3>
           <p className="text-neutral-600">
-            {searchQuery
+            {committedSearch
               ? t("publicLists.empty.searchDesc")
               : t("publicLists.empty.noneDesc")}
           </p>

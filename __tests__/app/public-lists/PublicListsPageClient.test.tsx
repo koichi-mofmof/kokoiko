@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { PublicListsPageClient } from "@/app/public-lists/PublicListsPageClient";
 import { PublicListForHome } from "@/lib/dal/public-lists";
 
@@ -148,27 +148,39 @@ describe("PublicListsPageClient", () => {
     expect(screen.getByText("テストリスト2")).toBeInTheDocument();
   });
 
-  it("should filter lists by search query", async () => {
-    render(<PublicListsPageClient {...defaultProps} />);
+  it("should push search param to URL after debounce (server-side search)", () => {
+    jest.useFakeTimers();
+    try {
+      render(<PublicListsPageClient {...defaultProps} />);
 
-    const searchInput = screen.getByPlaceholderText("リストを検索...");
-    fireEvent.change(searchInput, { target: { value: "テストリスト1" } });
+      const searchInput = screen.getByPlaceholderText("リストを検索...");
+      fireEvent.change(searchInput, { target: { value: "カフェ" } });
 
-    await waitFor(() => {
-      expect(screen.getByText("テストリスト1")).toBeInTheDocument();
-      expect(screen.queryByText("テストリスト2")).not.toBeInTheDocument();
-    });
+      // デバウンス完了前は遷移しない
+      expect(mockPush).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(400);
+      });
+
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.stringContaining("search=")
+      );
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
-  it("should show search results count", async () => {
-    render(<PublicListsPageClient {...defaultProps} />);
+  it("should show search results count from server total for committed search", () => {
+    render(
+      <PublicListsPageClient
+        {...defaultProps}
+        totalCount={2}
+        searchParams={{ ...defaultProps.searchParams, search: "テスト" }}
+      />
+    );
 
-    const searchInput = screen.getByPlaceholderText("リストを検索...");
-    fireEvent.change(searchInput, { target: { value: "テスト" } });
-
-    await waitFor(() => {
-      expect(screen.getByText("「テスト」の検索結果: 2件")).toBeInTheDocument();
-    });
+    expect(screen.getByText("「テスト」の検索結果: 2件")).toBeInTheDocument();
   });
 
   it("should handle sort action", () => {
@@ -182,18 +194,20 @@ describe("PublicListsPageClient", () => {
     );
   });
 
-  it("should handle empty search results", async () => {
-    render(<PublicListsPageClient {...defaultProps} />);
+  it("should handle empty search results", () => {
+    render(
+      <PublicListsPageClient
+        {...defaultProps}
+        initialLists={[]}
+        totalCount={0}
+        searchParams={{ ...defaultProps.searchParams, search: "存在しないリスト" }}
+      />
+    );
 
-    const searchInput = screen.getByPlaceholderText("リストを検索...");
-    fireEvent.change(searchInput, { target: { value: "存在しないリスト" } });
-
-    await waitFor(() => {
-      expect(screen.getByText("検索結果が見つかりません")).toBeInTheDocument();
-      expect(
-        screen.getByText("別のキーワードで検索してみてください")
-      ).toBeInTheDocument();
-    });
+    expect(screen.getByText("検索結果が見つかりません")).toBeInTheDocument();
+    expect(
+      screen.getByText("別のキーワードで検索してみてください")
+    ).toBeInTheDocument();
   });
 
   it("should handle empty lists", () => {
@@ -230,56 +244,14 @@ describe("PublicListsPageClient", () => {
     expect(screen.queryByText("1")).not.toBeInTheDocument();
   });
 
-  it("should search by creator name", async () => {
-    render(<PublicListsPageClient {...defaultProps} />);
-
-    const searchInput = screen.getByPlaceholderText("リストを検索...");
-    fireEvent.change(searchInput, { target: { value: "テストユーザー1" } });
-
-    await waitFor(() => {
-      expect(screen.getByText("テストリスト1")).toBeInTheDocument();
-      expect(screen.queryByText("テストリスト2")).not.toBeInTheDocument();
-    });
-  });
-
-  it("should search by creator username", async () => {
-    render(<PublicListsPageClient {...defaultProps} />);
-
-    const searchInput = screen.getByPlaceholderText("リストを検索...");
-    fireEvent.change(searchInput, { target: { value: "testuser1" } });
-
-    await waitFor(() => {
-      expect(screen.getByText("テストリスト1")).toBeInTheDocument();
-      expect(screen.queryByText("テストリスト2")).not.toBeInTheDocument();
-    });
-  });
-
-  it("should search by description", async () => {
-    render(<PublicListsPageClient {...defaultProps} />);
-
-    const searchInput = screen.getByPlaceholderText("リストを検索...");
-    fireEvent.change(searchInput, { target: { value: "テスト用のリスト" } });
-
-    await waitFor(() => {
-      expect(screen.getByText("テストリスト1")).toBeInTheDocument();
-      expect(screen.queryByText("テストリスト2")).not.toBeInTheDocument();
-    });
-  });
-
-  it("should handle case insensitive search", async () => {
+  it("should always render server-provided lists regardless of typed query", () => {
+    // クライアント側フィルタは廃止。入力中でもサーバー結果をそのまま表示する。
     render(<PublicListsPageClient {...defaultProps} />);
 
     const searchInput = screen.getByPlaceholderText("リストを検索...");
     fireEvent.change(searchInput, { target: { value: "テストリスト1" } });
 
-    await waitFor(() => {
-      expect(screen.getByText("テストリスト1")).toBeInTheDocument();
-    });
-
-    fireEvent.change(searchInput, { target: { value: "テストリスト1" } });
-
-    await waitFor(() => {
-      expect(screen.getByText("テストリスト1")).toBeInTheDocument();
-    });
+    expect(screen.getByText("テストリスト1")).toBeInTheDocument();
+    expect(screen.getByText("テストリスト2")).toBeInTheDocument();
   });
 });

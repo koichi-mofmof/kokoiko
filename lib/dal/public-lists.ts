@@ -93,13 +93,23 @@ export async function getPublicListsForHome(
 }
 
 /**
+ * PostgREST の or() フィルタ内で安全に使えるよう検索語をエスケープする。
+ * 値をダブルクォートで囲む前提で、内部の " と \ をエスケープする。
+ */
+function escapeForOrFilter(value: string): string {
+  return value.replace(/["\\]/g, "\\$&");
+}
+
+/**
  * 公開リスト一覧用（ページネーション・ソート対応）
+ * search を指定するとリスト名・説明文を対象に部分一致検索する。
  */
 export async function getPublicListsPaginated(
   limit: number = 20,
   offset: number = 0,
   sortBy: string = "updated_at",
-  sortOrder: "asc" | "desc" = "desc"
+  sortOrder: "asc" | "desc" = "desc",
+  search: string = ""
 ): Promise<{
   lists: PublicListForHome[];
   totalCount: number;
@@ -107,11 +117,23 @@ export async function getPublicListsPaginated(
   try {
     const supabase = createAnonymousClient();
 
-    // 総数取得
-    const { count } = await supabase
+    const searchTerm = search.trim();
+    // 名前・説明を対象にした OR ilike フィルタ（検索語がある場合のみ）
+    const orFilter = searchTerm
+      ? `name.ilike."%${escapeForOrFilter(searchTerm)}%",description.ilike."%${escapeForOrFilter(
+          searchTerm
+        )}%"`
+      : null;
+
+    // 総数取得（検索条件を反映）
+    let countQuery = supabase
       .from("place_lists")
       .select("*", { count: "exact", head: true })
       .eq("is_public", true);
+    if (orFilter) {
+      countQuery = countQuery.or(orFilter);
+    }
+    const { count } = await countQuery;
 
     // place_countソートはRPCで対応
     if (sortBy === "place_count") {
@@ -121,6 +143,7 @@ export async function getPublicListsPaginated(
           limit_count: limit,
           offset_count: offset,
           sort_order: sortOrder,
+          search_query: searchTerm || null,
         }
       );
 
@@ -191,7 +214,7 @@ export async function getPublicListsPaginated(
     }
 
     // データ取得
-    const { data, error } = await supabase
+    let dataQuery = supabase
       .from("place_lists")
       .select(
         `
@@ -204,7 +227,11 @@ export async function getPublicListsPaginated(
         list_places(count)
       `
       )
-      .eq("is_public", true)
+      .eq("is_public", true);
+    if (orFilter) {
+      dataQuery = dataQuery.or(orFilter);
+    }
+    const { data, error } = await dataQuery
       .order(orderBy, { ascending })
       .range(offset, offset + limit - 1);
 
