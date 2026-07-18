@@ -20,7 +20,11 @@ export function PublicListCard({ list }: PublicListCardProps) {
   });
 
   return (
-    <Link href={`/lists/${list.id}`} data-testid="public-list-card">
+    <Link
+      href={`/lists/${list.id}`}
+      prefetch={false}
+      data-testid="public-list-card"
+    >
       <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6 h-full flex flex-col border border-neutral-100">
         <h3 className="font-semibold text-lg text-neutral-900 mb-2 line-clamp-2 flex-shrink-0">
           {list.name}
