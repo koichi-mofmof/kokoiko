@@ -1164,5 +1164,7 @@
   "join.guest.placeCount": "{count}件の場所",
   "join.guest.remaining": "ほか{count}件",
   "join.guest.cta": "参加してこのリストを編集する",
-  "join.guest.ctaNote": "登録は無料です。登録後すぐにこのリストへ参加できます。"
+  "join.guest.ctaNote": "登録は無料です。登録後すぐにこのリストへ参加できます。",
+
+  "auth.confirm.failed": "メールの確認に失敗しました。リンクの有効期限が切れているか、既に使用された可能性があります。お手数ですが、もう一度ログインをお試しください。"
 }

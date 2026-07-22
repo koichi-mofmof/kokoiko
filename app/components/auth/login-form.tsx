@@ -76,9 +76,13 @@ export function LoginForm() {
 
   useEffect(() => {
     // URLからエラーを取得して表示
-    const error = searchParams.get("google_error");
-    if (error) {
+    if (searchParams.get("google_error")) {
       setGoogleError(t("auth.login.error.googleFailed"));
+      return;
+    }
+    // メール確認リンクが期限切れ・使用済み・別ブラウザで開かれた場合
+    if (searchParams.get("auth_error") === "confirm") {
+      setGoogleError(t("auth.confirm.failed"));
     }
   }, [searchParams, t]);
 

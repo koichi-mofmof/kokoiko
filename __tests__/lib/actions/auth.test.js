@@ -318,16 +318,11 @@ describe("認証機能テスト: signupWithCredentials", () => {
     expect(result.success).toBe(true);
     expect(result.message).toMatch(/確認メールを送信しました/);
 
-    // 確認メールのリンクは /auth/callback を通す。
-    // トップページに着地させると code が処理されず、ログイン状態にならない。
+    // 確認メールのテンプレートで {{ .RedirectTo }} として使われる最終遷移先。
+    // /auth/confirm が token_hash を検証したあとここへ送る。
     const options = mockSupabaseClient.auth.signUp.mock.calls[0][0].options;
     const emailRedirect = new URL(options.emailRedirectTo);
-    expect(emailRedirect.pathname).toBe("/auth/callback");
-    expect(emailRedirect.searchParams.get("redirect_url")).toBe("/lists");
-    // 認証方法をURLに明示する（app_metadata.provider では判別できないため）
-    expect(emailRedirect.searchParams.get("auth_method")).toBe("email");
-    // 時間差で踏まれても登録として計測できるようにする
-    expect(emailRedirect.searchParams.get("auth_intent")).toBe("signup");
+    expect(emailRedirect.pathname).toBe("/lists");
   });
 
   it("招待リンク経由の登録では確認メールのリンクが招待先へ戻すこと", async () => {
@@ -359,10 +354,8 @@ describe("認証機能テスト: signupWithCredentials", () => {
     const options = mockSupabaseClient.auth.signUp.mock.calls[0][0].options;
     const emailRedirect = new URL(options.emailRedirectTo);
 
-    expect(emailRedirect.pathname).toBe("/auth/callback");
-    expect(emailRedirect.searchParams.get("redirect_url")).toBe(
-      "/lists/join?token=abc123"
-    );
+    expect(emailRedirect.pathname).toBe("/lists/join");
+    expect(emailRedirect.searchParams.get("token")).toBe("abc123");
   });
 
   it("外部URLがreturnToに混入しても確認メールの戻り先にしないこと", async () => {
