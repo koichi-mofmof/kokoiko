@@ -1,5 +1,6 @@
 import { bookmarkList } from "@/lib/actions/lists";
 import { createClient } from "@/lib/supabase/server";
+import { isNewSignup } from "@/lib/utils/is-new-signup";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
@@ -20,11 +21,17 @@ export async function GET(request: Request) {
         data: { user },
       } = await supabase.auth.getUser();
 
-      // プロファイル未作成 = 初回ログイン（= 新規登録）とみなしてGAイベントを撃ち分ける
-      let isNewUser = false;
+      // 新規登録かどうかは auth.users のタイムスタンプで判定する。
+      // プロファイル有無で判定すると、DBトリガー handle_new_user が先に作るため
+      // 新規登録が常に login として計測されてしまう。
+      // 確認メールのリンクは登録時にこちらが発行しているので、その意図を優先する。
+      // 時間差で踏まれると created_at と last_sign_in_at が離れ、時刻判定では
+      // 登録がログインに化けるため。
+      const isNewUser =
+        searchParams.get("auth_intent") === "signup" || isNewSignup(user);
 
       if (user) {
-        // プロファイルの存在確認
+        // プロファイルの存在確認（トリガーが失敗していた場合の保険）
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("id")
@@ -33,7 +40,6 @@ export async function GET(request: Request) {
 
         // プロファイルが存在しない場合、作成する
         if (profileError || !profile) {
-          isNewUser = true;
           console.log("プロファイルが存在しません。作成します:", user.id);
 
           // Googleアカウントの情報を取得
@@ -90,7 +96,15 @@ export async function GET(request: Request) {
 
       // クライアント側（use-auth-sync）で sign_up / login を発火させるための計測パラメータを付与
       // （元コードと同じ文字列連結方式。new URL() による例外リスクを避ける）
-      const authEvent = isNewUser ? "signup_google" : "login_google";
+      // 認証方法はコールバックURLに自分で載せた auth_method を信用する。
+      // app_metadata.provider は「アカウントを最初に作った方法」であり、
+      // メール登録後に Google を連携した人は Google ログインでも "email" のまま残るため使えない。
+      // 付いていない場合（過去に発行された確認メールのリンク等）は従来通り google 扱い。
+      const authMethod =
+        searchParams.get("auth_method") === "email" ? "email" : "google";
+      const authEvent = isNewUser
+        ? `signup_${authMethod}`
+        : `login_${authMethod}`;
       const separator = redirectUrl.includes("?") ? "&" : "?";
       const destination = `${origin}${redirectUrl}${separator}auth_event=${authEvent}`;
 

@@ -1158,5 +1158,11 @@
   "purchase.error.nextSteps.tryAgain": "もう一度試す",
   "purchase.error.nextSteps.backToBilling": "設定に戻る",
   "purchase.error.nextSteps.contactSupport": "サポートに連絡",
-  "purchase.error.nextSteps.description": "問題が解決しない場合は、お気軽にサポートまでお問い合わせください"
+  "purchase.error.nextSteps.description": "問題が解決しない場合は、お気軽にサポートまでお問い合わせください",
+
+  "join.guest.invitedBy": "{name}さんがリストに招待しています",
+  "join.guest.placeCount": "{count}件の場所",
+  "join.guest.remaining": "ほか{count}件",
+  "join.guest.cta": "参加してこのリストを編集する",
+  "join.guest.ctaNote": "登録は無料です。登録後すぐにこのリストへ参加できます。"
 }

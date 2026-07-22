@@ -6,6 +6,7 @@ import {
   getCSRFTokenServer,
   verifyCSRFTokenServer,
 } from "@/lib/utils/csrf-server";
+import { sanitizeInternalPath } from "@/lib/utils/auth-redirect";
 import { recordCSRFViolation } from "@/lib/utils/security-monitor";
 import {
   loginSchema,
@@ -134,7 +135,11 @@ export async function loginWithCredentials(
   if (signInData.session) {
     // セッションがあればログイン成功
     const bookmark = formData.get("bookmark")?.toString();
-    const returnTo = formData.get("returnTo")?.toString() || "/lists";
+    // formData は改竄されうるので、遷移先はサーバー側で必ず検証する
+    const returnTo = sanitizeInternalPath(
+      formData.get("returnTo")?.toString() ??
+        formData.get("redirect_url")?.toString()
+    );
 
     // ブックマーク情報がある場合は、ここで直接処理
     if (bookmark) {
@@ -210,15 +215,28 @@ export async function signupWithCredentials(
 
   const supabase = await createClient();
 
+  // 招待リンク経由の登録では、確認メールのリンクからも招待先へ戻せるようにする。
+  // 外部URLは弾く（オープンリダイレクト対策）。
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const safeReturnTo = sanitizeInternalPath(
+    formData.get("returnTo")?.toString() ??
+      formData.get("redirect_url")?.toString()
+  );
+  // 必ず /auth/callback を通す。トップページに着地させると code が処理されず、
+  // 確認メールを踏んでもログイン状態にならない。
+  // auth_method / auth_intent はコールバック側で sign_up / login を撃ち分けるために使う。
+  // このURLは登録時にしか発行しないので、踏まれた時点で新規登録と確定できる。
+  const emailRedirectTo = `${appUrl}/auth/callback?auth_method=email&auth_intent=signup&redirect_url=${encodeURIComponent(
+    safeReturnTo
+  )}`;
+
   // Supabaseにユーザー登録
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
     options: {
       // 確認メール内のリンクをクリックした後のリダイレクト先
-      emailRedirectTo: `${
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-      }/`,
+      emailRedirectTo,
     },
   });
 
@@ -263,7 +281,11 @@ export async function signupWithCredentials(
   if (signUpData.session) {
     // セッションがあればログイン成功とみなしリダイレクト
     const bookmark = formData.get("bookmark")?.toString();
-    const returnTo = formData.get("returnTo")?.toString() || "/lists";
+    // formData は改竄されうるので、遷移先はサーバー側で必ず検証する
+    const returnTo = sanitizeInternalPath(
+      formData.get("returnTo")?.toString() ??
+        formData.get("redirect_url")?.toString()
+    );
 
     // ブックマーク情報がある場合は、ここで直接処理
     if (bookmark) {
@@ -333,6 +355,10 @@ export async function loginWithGoogle(
       redirectTo.searchParams.set("redirect_url", redirectUrl);
     }
   }
+
+  // 認証方法をコールバックに伝える。app_metadata.provider は「最初に作った方法」
+  // しか表さず、メール登録後にGoogleを連携した人を誤判定するため使えない。
+  redirectTo.searchParams.set("auth_method", "google");
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

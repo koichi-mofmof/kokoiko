@@ -1156,5 +1156,11 @@
   "purchase.error.nextSteps.tryAgain": "Try Again",
   "purchase.error.nextSteps.backToBilling": "Back to Settings",
   "purchase.error.nextSteps.contactSupport": "Contact Support",
-  "purchase.error.nextSteps.description": "If the problem persists, please feel free to contact our support team"
+  "purchase.error.nextSteps.description": "If the problem persists, please feel free to contact our support team",
+
+  "join.guest.invitedBy": "{name} invited you to this list",
+  "join.guest.placeCount": "{count} places",
+  "join.guest.remaining": "and {count} more",
+  "join.guest.cta": "Join and edit this list",
+  "join.guest.ctaNote": "Signing up is free. You'll join this list right afterwards."
 }
