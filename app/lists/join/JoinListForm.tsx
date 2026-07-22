@@ -1,80 +1,63 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
-import { handleJoin } from "./actions";
-
-interface VerifyResult {
-  permission: "view" | "edit";
-  listName: string | null;
-  ownerName: string | null;
-}
+import { autoJoinFromInvite } from "./actions";
+import InviteListPreview, { type InvitePreview } from "./InviteListPreview";
 
 export default function JoinListForm({
   token,
-  verifyResult,
+  preview,
 }: {
   token: string;
-  verifyResult: VerifyResult;
+  preview: InvitePreview & { permission: "view" | "edit" };
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const { t } = useI18n();
 
-  // 権限を日本語に変換
   const permissionLabel =
-    verifyResult.permission === "edit"
+    preview.permission === "edit"
       ? t("join.permission.editAndView")
       : t("join.permission.viewOnly");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    const formData = new FormData(e.currentTarget);
-    const result = await handleJoin(formData);
-    setLoading(false);
-    if (!result.success) {
-      const err = result as { errorKey?: string; error?: string };
-      toast({
-        title: t("join.errorTitle"),
-        description: err.errorKey
-          ? t(err.errorKey)
-          : err.error || t("join.errorDesc"),
-        variant: "destructive",
-      });
+    const result = await autoJoinFromInvite(token);
+
+    if (result.success) {
+      // router 遷移ではなく完全な再読み込みで着地させる。参加はアクセス権を変える
+      // 操作であり、クライアントのRSCキャッシュは「まだ参加していない自分」の
+      // 結果なので、そのまま遷移すると地点や表示順が読み込まれないままになる。
+      window.location.replace(`/lists/${result.listId}?joined=1`);
+      return;
     }
-    // 成功時はredirectで遷移するため何もしない
+
+    setLoading(false);
+    toast({
+      title: t("join.errorTitle"),
+      description: t(result.errorKey),
+      variant: "destructive",
+    });
   }
 
   return (
     <>
-      <form
-        onSubmit={onSubmit}
-        className="flex flex-col items-center justify-center py-16 gap-4"
-      >
-        <CheckCircle2 className="w-12 h-12 text-primary-500 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">{t("join.title")}</h2>
-        <p className="text-neutral-500 mb-4">
-          <span className="font-semibold">{t("join.listName")}:</span>{" "}
-          {verifyResult.listName || t("join.notAvailable")}
-          <br />
-          <span className="font-semibold">{t("join.owner")}:</span>{" "}
-          {verifyResult.ownerName || t("join.notAvailable")}
-          <br />
-          <span className="font-semibold">{t("join.permission")}:</span>{" "}
-          {permissionLabel}
-        </p>
-        <input type="hidden" name="token" value={token} />
-        <button
-          type="submit"
-          className="px-6 py-2 rounded bg-primary-600 text-white font-semibold hover:bg-primary-700 transition"
-          disabled={loading}
-        >
-          {loading ? t("join.submitting") : t("join.submit")}
-        </button>
+      <form onSubmit={onSubmit} className="mx-auto w-full max-w-lg px-4 py-10">
+        <InviteListPreview preview={preview} />
+
+        <div className="space-y-3 text-center">
+          <Button type="submit" size="lg" className="w-full" disabled={loading}>
+            {loading ? t("join.submitting") : t("join.submit")}
+          </Button>
+          <p className="text-sm text-neutral-500">
+            {t("join.permission")}: {permissionLabel}
+          </p>
+        </div>
       </form>
       <Toaster />
     </>

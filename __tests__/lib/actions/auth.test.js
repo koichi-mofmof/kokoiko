@@ -318,14 +318,79 @@ describe("認証機能テスト: signupWithCredentials", () => {
     expect(result.success).toBe(true);
     expect(result.message).toMatch(/確認メールを送信しました/);
 
-    // Supabaseのサインアップ関数が正しいパラメータで呼ばれたことを確認
-    expect(mockSupabaseClient.auth.signUp).toHaveBeenCalledWith({
+    // 確認メールのリンクは /auth/callback を通す。
+    // トップページに着地させると code が処理されず、ログイン状態にならない。
+    const options = mockSupabaseClient.auth.signUp.mock.calls[0][0].options;
+    const emailRedirect = new URL(options.emailRedirectTo);
+    expect(emailRedirect.pathname).toBe("/auth/callback");
+    expect(emailRedirect.searchParams.get("redirect_url")).toBe("/lists");
+    // 認証方法をURLに明示する（app_metadata.provider では判別できないため）
+    expect(emailRedirect.searchParams.get("auth_method")).toBe("email");
+    // 時間差で踏まれても登録として計測できるようにする
+    expect(emailRedirect.searchParams.get("auth_intent")).toBe("signup");
+  });
+
+  it("招待リンク経由の登録では確認メールのリンクが招待先へ戻すこと", async () => {
+    // メール確認フローでも招待先(/lists/join?token=...)へ復帰できないと、
+    // 招待された人は登録後に迷子になる
+    mockSupabaseClient.auth.signUp.mockResolvedValue({
+      data: {
+        user: { id: "new-user-id", email: "newuser@example.com" },
+        session: null,
+      },
+      error: null,
+    });
+
+    const formData = new FormData();
+    formData.data = {
       email: "newuser@example.com",
       password: "ValidPass123",
-      options: {
-        emailRedirectTo: "http://localhost:3000/",
+      confirmPassword: "ValidPass123",
+      termsAccepted: "on",
+      csrf_token: "test-csrf-token",
+      returnTo: "/lists/join?token=abc123",
+    };
+
+    const { signupWithCredentials } = jest.requireActual(
+      "../../../lib/actions/auth"
+    );
+    await signupWithCredentials({}, formData);
+
+    const options = mockSupabaseClient.auth.signUp.mock.calls[0][0].options;
+    const emailRedirect = new URL(options.emailRedirectTo);
+
+    expect(emailRedirect.pathname).toBe("/auth/callback");
+    expect(emailRedirect.searchParams.get("redirect_url")).toBe(
+      "/lists/join?token=abc123"
+    );
+  });
+
+  it("外部URLがreturnToに混入しても確認メールの戻り先にしないこと", async () => {
+    mockSupabaseClient.auth.signUp.mockResolvedValue({
+      data: {
+        user: { id: "new-user-id", email: "newuser@example.com" },
+        session: null,
       },
+      error: null,
     });
+
+    const formData = new FormData();
+    formData.data = {
+      email: "newuser@example.com",
+      password: "ValidPass123",
+      confirmPassword: "ValidPass123",
+      termsAccepted: "on",
+      csrf_token: "test-csrf-token",
+      returnTo: "https://evil.example.com",
+    };
+
+    const { signupWithCredentials } = jest.requireActual(
+      "../../../lib/actions/auth"
+    );
+    await signupWithCredentials({}, formData);
+
+    const options = mockSupabaseClient.auth.signUp.mock.calls[0][0].options;
+    expect(options.emailRedirectTo).not.toContain("evil.example.com");
   });
 
   it("有効なデータでサインアップ成功しセッションが作成されるとリダイレクトすること", async () => {

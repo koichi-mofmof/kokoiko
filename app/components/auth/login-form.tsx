@@ -10,6 +10,10 @@ import {
   loginWithCredentials,
   loginWithGoogle,
 } from "@/lib/actions/auth";
+import {
+  buildAuthHref,
+  resolvePostAuthRedirect,
+} from "@/lib/utils/auth-redirect";
 import { isGoogleOAuthBlocked } from "@/lib/utils/browser-detection";
 import { getCSRFTokenFromCookie } from "@/lib/utils/csrf-client";
 import Link from "next/link";
@@ -55,7 +59,8 @@ export function LoginForm() {
   const { t } = useI18n();
 
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect_url");
+  // redirect_url / returnTo のどちらで来ても同じ遷移先に解決する（招待リンク対応）
+  const postAuthRedirect = resolvePostAuthRedirect(searchParams);
   const [googleError, setGoogleError] = useState<string | null>(
     searchParams.get("google_error")
   );
@@ -88,14 +93,13 @@ export function LoginForm() {
 
     // ブックマーク情報とリダイレクト先を取得
     const bookmark = searchParams.get("bookmark");
-    const returnTo = searchParams.get("returnTo");
 
     // 認証コールバックURLにブックマーク情報を含める
-    let finalRedirectUrl = redirectUrl || returnTo || "/lists";
+    let finalRedirectUrl = postAuthRedirect;
     if (bookmark) {
       const params = new URLSearchParams();
       params.set("bookmark", bookmark);
-      if (returnTo) params.set("redirect_url", returnTo);
+      params.set("redirect_url", postAuthRedirect);
       finalRedirectUrl = `/auth/callback?${params.toString()}`;
     }
 
@@ -125,21 +129,13 @@ export function LoginForm() {
         className="space-y-4"
         data-testid="credentials-login-form"
       >
-        {redirectUrl && (
-          <input type="hidden" name="redirect_url" value={redirectUrl} />
-        )}
+        {/* サーバーアクションは returnTo のみを読むため、redirect_url で来た場合もここへ寄せる */}
+        <input type="hidden" name="returnTo" value={postAuthRedirect} />
         {searchParams.get("bookmark") && (
           <input
             type="hidden"
             name="bookmark"
             value={searchParams.get("bookmark")!}
-          />
-        )}
-        {searchParams.get("returnTo") && (
-          <input
-            type="hidden"
-            name="returnTo"
-            value={searchParams.get("returnTo")!}
           />
         )}
         <input type="hidden" name="csrf_token" value={csrfToken} />
@@ -246,7 +242,7 @@ export function LoginForm() {
       <div className="mt-4 text-center text-sm">
         {t("auth.common.noAccountYet")}{" "}
         <Link
-          href="/signup"
+          href={buildAuthHref("/signup", searchParams)}
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
           {t("auth.common.signup")}

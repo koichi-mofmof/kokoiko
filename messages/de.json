@@ -1150,5 +1150,11 @@
   "conversion.copy.preview.title": "Orte, die du kopierst",
   "conversion.copy.preview.more": "…und {count} weitere",
   "conversion.bookmark.preview.title": "Inhalt der Liste",
-  "conversion.bookmark.preview.more": "…und {count} weitere"
+  "conversion.bookmark.preview.more": "…und {count} weitere",
+
+  "join.guest.invitedBy": "{name} hat dich zu dieser Liste eingeladen",
+  "join.guest.placeCount": "{count} Orte",
+  "join.guest.remaining": "und {count} weitere",
+  "join.guest.cta": "Beitreten und diese Liste bearbeiten",
+  "join.guest.ctaNote": "Die Registrierung ist kostenlos. Direkt danach trittst du dieser Liste bei."
 }

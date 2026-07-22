@@ -18,7 +18,8 @@ import type { ProfileSettingsData } from "@/lib/dal/users";
 import { createClient } from "@/lib/supabase/client";
 import { createProfileSchemaT } from "@/lib/validators/profile";
 import { Upload, User } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { resolvePostProfileSetupDestination } from "@/lib/utils/post-profile-setup-destination";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface FirstTimeProfileDialogProps {
@@ -34,6 +35,7 @@ export function FirstTimeProfileDialog({
 }: FirstTimeProfileDialogProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useI18n();
   const [image, setImage] = useState<string | null>(profileData.avatarUrl);
   const [nickname, setNickname] = useState(profileData.displayName);
@@ -131,10 +133,17 @@ export function FirstTimeProfileDialog({
       toast({ title: t("settings.profile.update.success"), description: "" });
 
       onOpenChange(false);
+
       // 表示名の入力だけで放流せず、そのまま最初のリスト作成へ導く。
       // /lists?firstList=1 で作成モーダルが自動起動し、作成→最初の1軒まで一直線に繋がる。
-      trackOnboardingEvents.startFirstList();
-      router.push("/lists?firstList=1");
+      // ただし招待リンク経由で既にリストへ着地している場合は、そこから引き剥がさない。
+      const destination = resolvePostProfileSetupDestination(pathname);
+      if (destination) {
+        trackOnboardingEvents.startFirstList();
+        router.push(destination);
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       console.error("profile update error:", error);
       toast({

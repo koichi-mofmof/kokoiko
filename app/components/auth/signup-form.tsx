@@ -11,6 +11,10 @@ import {
   signupWithCredentials,
 } from "@/lib/actions/auth";
 import { trackUserEvents } from "@/lib/analytics/events";
+import {
+  buildAuthHref,
+  resolvePostAuthRedirect,
+} from "@/lib/utils/auth-redirect";
 import { isGoogleOAuthBlocked } from "@/lib/utils/browser-detection";
 import { getCSRFTokenFromCookie } from "@/lib/utils/csrf-client";
 import Link from "next/link";
@@ -86,6 +90,8 @@ export function SignupForm() {
   const { t } = useI18n();
 
   const searchParams = useSearchParams();
+  // redirect_url / returnTo のどちらで来ても同じ遷移先に解決する（招待リンク対応）
+  const postAuthRedirect = resolvePostAuthRedirect(searchParams);
   const [googleError, setGoogleError] = useState<string | null>(
     searchParams.get("google_error")
   );
@@ -117,14 +123,13 @@ export function SignupForm() {
 
     // ブックマーク情報とリダイレクト先を取得
     const bookmark = searchParams.get("bookmark");
-    const returnTo = searchParams.get("returnTo");
 
     // 認証コールバックURLにブックマーク情報を含める
-    let redirectUrl = returnTo || "/lists";
+    let redirectUrl = postAuthRedirect;
     if (bookmark) {
       const params = new URLSearchParams();
       params.set("bookmark", bookmark);
-      if (returnTo) params.set("redirect_url", returnTo);
+      params.set("redirect_url", postAuthRedirect);
       redirectUrl = `/auth/callback?${params.toString()}`;
     }
 
@@ -153,7 +158,9 @@ export function SignupForm() {
         </p>
         <p>{t("auth.signup.success.checkEmail")}</p>
         <Button asChild>
-          <Link href="/login">{t("auth.signup.success.loginLink")}</Link>
+          <Link href={buildAuthHref("/login", searchParams)}>
+            {t("auth.signup.success.loginLink")}
+          </Link>
         </Button>
       </div>
     );
@@ -177,13 +184,8 @@ export function SignupForm() {
             value={searchParams.get("bookmark")!}
           />
         )}
-        {searchParams.get("returnTo") && (
-          <input
-            type="hidden"
-            name="returnTo"
-            value={searchParams.get("returnTo")!}
-          />
-        )}
+        {/* redirect_url（招待リンク経由）で来た場合も returnTo に寄せる */}
+        <input type="hidden" name="returnTo" value={postAuthRedirect} />
         {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email">{t("auth.common.email")}</Label>
@@ -350,7 +352,7 @@ export function SignupForm() {
       <div className="mt-4 text-center text-sm">
         {t("auth.common.alreadyHaveAccount")}{" "}
         <Link
-          href="/login"
+          href={buildAuthHref("/login", searchParams)}
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
           {t("auth.common.login")}
