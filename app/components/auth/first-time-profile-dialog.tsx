@@ -19,7 +19,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createProfileSchemaT } from "@/lib/validators/profile";
 import { Upload, User } from "lucide-react";
 import { resolvePostProfileSetupDestination } from "@/lib/utils/post-profile-setup-destination";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 interface FirstTimeProfileDialogProps {
@@ -34,7 +34,6 @@ export function FirstTimeProfileDialog({
   onOpenChange,
 }: FirstTimeProfileDialogProps) {
   const { toast } = useToast();
-  const router = useRouter();
   const pathname = usePathname();
   const { t } = useI18n();
   const [image, setImage] = useState<string | null>(profileData.avatarUrl);
@@ -137,12 +136,17 @@ export function FirstTimeProfileDialog({
       // 表示名の入力だけで放流せず、そのまま最初のリスト作成へ導く。
       // /lists?firstList=1 で作成モーダルが自動起動し、作成→最初の1軒まで一直線に繋がる。
       // ただし招待リンク経由で既にリストへ着地している場合は、そこから引き剥がさない。
+      //
+      // 遷移はクライアント側ではなく完全な再読み込みで行う。ルートレイアウトが
+      // 保持するプロフィール情報は表示名が空のままキャッシュされており、
+      // router.push / refresh だと ProfileSetupProvider がそれを見て
+      // このダイアログを再度開いてしまう（F5でしか消えない状態になる）。
       const destination = resolvePostProfileSetupDestination(pathname);
       if (destination) {
         trackOnboardingEvents.startFirstList();
-        router.push(destination);
+        window.location.assign(destination);
       } else {
-        router.refresh();
+        window.location.reload();
       }
     } catch (error) {
       console.error("profile update error:", error);
