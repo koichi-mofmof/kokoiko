@@ -1162,5 +1162,7 @@
   "join.guest.placeCount": "{count} places",
   "join.guest.remaining": "and {count} more",
   "join.guest.cta": "Join and edit this list",
-  "join.guest.ctaNote": "Signing up is free. You'll join this list right afterwards."
+  "join.guest.ctaNote": "Signing up is free. You'll join this list right afterwards.",
+
+  "auth.confirm.failed": "We could not confirm your email. The link may have expired or already been used. Please try logging in again."
 }

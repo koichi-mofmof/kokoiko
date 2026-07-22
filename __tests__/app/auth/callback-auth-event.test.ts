@@ -145,6 +145,40 @@ describe("GET /auth/callback の登録/ログイン判定", () => {
     expect(authEventOf(res)).toBe("signup_email");
   });
 
+  it("メール確認が失敗したら Google のエラーとして扱わない", async () => {
+    // 確認リンクの期限切れ・使用済み・別ブラウザで開いた場合などに到達する。
+    // ここで google_error を返すと「Googleでのログインに失敗しました」と誤表示される。
+    mockExchangeCodeForSession.mockResolvedValue({
+      error: { message: "invalid flow state" },
+    });
+
+    const res = await GET(
+      new Request(
+        "http://localhost:3000/auth/callback?code=abc&auth_method=email&auth_intent=signup"
+      )
+    );
+
+    const location = new URL(res.headers.get("location")!);
+    expect(location.pathname).toBe("/login");
+    expect(location.searchParams.get("google_error")).toBeNull();
+    expect(location.searchParams.get("auth_error")).toBe("confirm");
+  });
+
+  it("Google 認証が失敗した場合は従来どおり google_error を返す", async () => {
+    mockExchangeCodeForSession.mockResolvedValue({
+      error: { message: "bad code" },
+    });
+
+    const res = await GET(
+      new Request(
+        "http://localhost:3000/auth/callback?code=abc&auth_method=google"
+      )
+    );
+
+    const location = new URL(res.headers.get("location")!);
+    expect(location.searchParams.get("google_error")).toBe("true");
+  });
+
   it("redirect_url で指定された遷移先を保持する", async () => {
     mockGetUser.mockResolvedValue({
       data: {

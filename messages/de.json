@@ -1156,5 +1156,7 @@
   "join.guest.placeCount": "{count} Orte",
   "join.guest.remaining": "und {count} weitere",
   "join.guest.cta": "Beitreten und diese Liste bearbeiten",
-  "join.guest.ctaNote": "Die Registrierung ist kostenlos. Direkt danach trittst du dieser Liste bei."
+  "join.guest.ctaNote": "Die Registrierung ist kostenlos. Direkt danach trittst du dieser Liste bei.",
+
+  "auth.confirm.failed": "Wir konnten deine E-Mail nicht bestätigen. Der Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Bitte versuche dich erneut anzumelden."
 }

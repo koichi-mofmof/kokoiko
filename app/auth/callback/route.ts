@@ -112,9 +112,17 @@ export async function GET(request: Request) {
     }
   }
 
-  // return the user to an error page with instructions
-  console.error("Error in OAuth callback or no code found");
+  // 認証に失敗した場合はログイン画面へ。原因を取り違えないよう、
+  // このコールバックがメール確認だったのか Google だったのかで出し分ける。
+  console.error("Auth callback failed", {
+    authMethod: searchParams.get("auth_method"),
+    hasCode: Boolean(code),
+  });
   const errorRedirect = new URL("/login", request.url);
-  errorRedirect.searchParams.set("google_error", "true");
+  if (searchParams.get("auth_method") === "email") {
+    errorRedirect.searchParams.set("auth_error", "confirm");
+  } else {
+    errorRedirect.searchParams.set("google_error", "true");
+  }
   return NextResponse.redirect(errorRedirect);
 }

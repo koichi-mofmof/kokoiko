@@ -224,11 +224,9 @@ export async function signupWithCredentials(
   );
   // 必ず /auth/callback を通す。トップページに着地させると code が処理されず、
   // 確認メールを踏んでもログイン状態にならない。
-  // auth_method / auth_intent はコールバック側で sign_up / login を撃ち分けるために使う。
-  // このURLは登録時にしか発行しないので、踏まれた時点で新規登録と確定できる。
-  const emailRedirectTo = `${appUrl}/auth/callback?auth_method=email&auth_intent=signup&redirect_url=${encodeURIComponent(
-    safeReturnTo
-  )}`;
+  // 確認メールのテンプレートで {{ .RedirectTo }} として使われる値。
+  // /auth/confirm が token_hash を検証したあと、ここへ送る。
+  const emailRedirectTo = `${appUrl}${safeReturnTo}`;
 
   // Supabaseにユーザー登録
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({

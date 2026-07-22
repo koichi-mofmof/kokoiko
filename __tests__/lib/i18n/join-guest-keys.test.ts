@@ -15,6 +15,7 @@ const REQUIRED_KEYS = [
   "join.guest.ctaNote",
   "auth.common.login",
   "notFound.backHome",
+  "auth.confirm.failed",
 ];
 
 describe("招待プレビューの文言が5言語すべてに存在する", () => {
