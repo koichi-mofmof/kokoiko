@@ -178,7 +178,7 @@
   "lists.create.title": "新しいリストを作成",
   "lists.create.submit": "リストを作成",
 
-  "templateCopy.button": "このリストをベースに自分用に編集",
+  "templateCopy.button": "このリストをコピーして編集",
   "templateCopy.loginRequired": "コピーするにはログインが必要です",
   "templateCopy.modal.title": "地点をコピー",
   "templateCopy.modal.selectPlaces": "コピーしたい地点を選択してください",

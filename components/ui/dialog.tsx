@@ -73,7 +73,9 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      // モバイルは縦積み(flex-col-reverse)。space-x は横方向専用で縦の隙間が
+      // 生まれず押し間違えるため、両軸に効く gap を使う（スマホ=gap-3, PC=gap-2）。
+      "flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-2",
       className
     )}
     {...props}

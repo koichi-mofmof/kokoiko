@@ -1101,7 +1101,7 @@
   "upgrade.perYearSuffix": "/Jahr",
   "upgrade.perMonthSuffix": "/Monat",
   "validation.list.name.tooLong": "Der Listenname darf höchstens 100 Zeichen lang sein",
-  "templateCopy.button": "Diese Karte als Basis nutzen und anpassen",
+  "templateCopy.button": "Diese Liste kopieren und bearbeiten",
   "templateCopy.loginRequired": "Zum Kopieren dieser Liste anmelden",
   "templateCopy.modal.title": "Orte kopieren",
   "templateCopy.modal.selectPlaces": "Wähle die zu kopierenden Orte",

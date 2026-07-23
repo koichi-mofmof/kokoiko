@@ -86,6 +86,8 @@ export function TemplateCopyModal({
     []
   );
   const [ownedListsLoaded, setOwnedListsLoaded] = useState(false);
+  // 「次へ」押下時の所有リスト取得中フラグ（無反応・二度押し防止）
+  const [isLoadingLists, setIsLoadingLists] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   // 上限超過でコピーをブロックした際の案内（選び直し/アップグレード導線）
   const [limitInfo, setLimitInfo] = useState<{
@@ -139,9 +141,14 @@ export function TemplateCopyModal({
     }
     // 既存リスト候補を初回のみ取得（ゲストは所有リストが無いのでスキップ）
     if (isLoggedIn && !ownedListsLoaded) {
-      const lists = await getOwnedListsForCopy();
-      setOwnedLists(lists);
-      setOwnedListsLoaded(true);
+      setIsLoadingLists(true);
+      try {
+        const lists = await getOwnedListsForCopy();
+        setOwnedLists(lists);
+        setOwnedListsLoaded(true);
+      } finally {
+        setIsLoadingLists(false);
+      }
     }
     setStep("target");
   };
@@ -343,10 +350,20 @@ export function TemplateCopyModal({
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={resetAndClose}>
+              <Button
+                variant="outline"
+                onClick={resetAndClose}
+                disabled={isLoadingLists}
+              >
                 {t("common.cancel")}
               </Button>
-              <Button onClick={goToTarget} disabled={selected.size === 0}>
+              <Button
+                onClick={goToTarget}
+                disabled={selected.size === 0 || isLoadingLists}
+              >
+                {isLoadingLists && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 {t("templateCopy.modal.next")}
               </Button>
             </DialogFooter>
