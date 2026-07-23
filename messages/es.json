@@ -1101,7 +1101,7 @@
   "upgrade.perYearSuffix": "/año",
   "upgrade.perMonthSuffix": "/mes",
   "validation.list.name.tooLong": "El nombre de la lista debe tener 100 caracteres o menos",
-  "templateCopy.button": "Usa este mapa como base y personalízalo",
+  "templateCopy.button": "Copiar esta lista para editarla",
   "templateCopy.loginRequired": "Inicia sesión para copiar esta lista",
   "templateCopy.modal.title": "Copiar lugares",
   "templateCopy.modal.selectPlaces": "Selecciona los lugares que quieres copiar",

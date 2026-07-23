@@ -1,9 +1,8 @@
-import { BookmarkButton } from "@/app/components/lists/BookmarkButton";
 import { CreatorInfoCard } from "@/app/components/lists/CreatorInfoCard";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
 import { ResumeCopy } from "@/app/components/lists/ResumeCopy";
-import { TemplateCopyButton } from "@/app/components/lists/TemplateCopyButton";
+import { TemplateCopyCTA } from "@/app/components/lists/TemplateCopyCTA";
 import JsonLd from "@/components/seo/JsonLd";
 import { ParticipantAvatars } from "@/components/ui/avatar";
 import NoAccess from "@/components/ui/NoAccess";
@@ -151,6 +150,11 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
       ? await canInviteToList(supabase, user.id, listId)
       : false;
 
+  // 目玉CTA（このリストをベースに自分用に編集）の表示可否：
+  // 公開リストかつ非所有者（＝閲覧者・ゲスト含む）のときのみ。
+  const isCopyable =
+    listDetails.created_by !== user?.id && !!listDetails.is_public;
+
   // i18n
   const cookieStore = await cookies();
   const locale = normalizeLocale(cookieStore.get("lang")?.value);
@@ -168,7 +172,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     <>
       <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
       <JsonLd data={generateItemListSchema(listDetails)} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-28 lg:pb-24">
         <div className="mb-4">
           <Link
             href={user ? "/lists" : "/"}
@@ -206,14 +210,8 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
             ) : null}
           </span>
           <div className="flex-shrink-0 flex items-center gap-2">
-            {listDetails.created_by !== user?.id && listDetails.is_public && (
-              <BookmarkButton
-                listId={listDetails.id}
-                initialIsBookmarked={listDetails.isBookmarked}
-                listName={listDetails.name}
-                places={listDetails.places}
-              />
-            )}
+            {/* 保存（ブックマーク）は熱量ピークのCTAクラスタ（追従バー／右パネル）へ集約。
+                ここでは所有者向けの管理メニューのみ残す。 */}
             <ListCardActions list={listDetails} variant="inline" />
           </div>
         </h1>
@@ -227,24 +225,8 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           <CreatorInfoCard creator={creatorProfile} />
         </div>
 
-        {/* 目玉機能のCTA（公開リストかつ非所有者のみ）。スマホでもラベルを明確に表示 */}
-        {listDetails.created_by !== user?.id && listDetails.is_public && (
-          <div className="mb-4">
-            <TemplateCopyButton
-              sourceListId={listDetails.id}
-              sourceListName={listDetails.name}
-              places={listDetails.places}
-              isLoggedIn={!!user}
-            />
-            {/* 登録後、ゲスト時に選んだ内容を復元しワンタップでコピー完遂させる */}
-            <ResumeCopy
-              sourceListId={listDetails.id}
-              places={listDetails.places}
-              isLoggedIn={!!user}
-            />
-          </div>
-        )}
-
+        {/* 本文（リスト/マップ）は全幅。CTAはスマホ=追従バー、
+            PC=画面下中央の浮遊ピルで担う（常時表示のため末尾ブロックは持たない）。 */}
         <div className="mb-4 flex justify-between">
           <ParticipantAvatars
             participants={otherParticipants}
@@ -260,6 +242,37 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
           />
         </Suspense>
       </div>
+
+      {/* スマホ：追従ボトムバー（親指ゾーン・常時表示） */}
+      {isCopyable && (
+        <TemplateCopyCTA
+          variant="bottomBar"
+          sourceListId={listDetails.id}
+          sourceListName={listDetails.name}
+          places={listDetails.places}
+          isLoggedIn={!!user}
+        />
+      )}
+
+      {/* PC：画面下中央の浮遊ピル（常時表示） */}
+      {isCopyable && (
+        <TemplateCopyCTA
+          variant="desktopPill"
+          sourceListId={listDetails.id}
+          sourceListName={listDetails.name}
+          places={listDetails.places}
+          isLoggedIn={!!user}
+        />
+      )}
+
+      {/* 登録後、ゲスト時に選んだ内容を復元しワンタップでコピー完遂させる（不可視ロジック） */}
+      {isCopyable && (
+        <ResumeCopy
+          sourceListId={listDetails.id}
+          places={listDetails.places}
+          isLoggedIn={!!user}
+        />
+      )}
     </>
   );
 }

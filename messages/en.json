@@ -585,7 +585,7 @@
   "lists.create.title": "Create a new list",
   "lists.create.submit": "Create list",
 
-  "templateCopy.button": "Use this list as a base and customize",
+  "templateCopy.button": "Copy this list to edit",
   "templateCopy.loginRequired": "Sign in to copy this list",
   "templateCopy.modal.title": "Copy places",
   "templateCopy.modal.selectPlaces": "Select the places you want to copy",

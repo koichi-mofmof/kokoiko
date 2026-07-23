@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/hooks/use-i18n";
 import { trackTemplateCopyEvents } from "@/lib/analytics/events";
+import { cn } from "@/lib/utils";
 import type { Place } from "@/types";
 import { Copy } from "lucide-react";
 import { useState } from "react";
@@ -13,6 +14,10 @@ interface TemplateCopyButtonProps {
   sourceListName?: string;
   places: Place[];
   isLoggedIn: boolean;
+  /** 呼び出し側で見た目を差し替えるための追加クラス（配置バリアント用） */
+  className?: string;
+  /** ボタンのラベルを差し替える（未指定なら既定コピー） */
+  label?: string;
 }
 
 /**
@@ -26,6 +31,8 @@ export function TemplateCopyButton({
   sourceListName,
   places,
   isLoggedIn,
+  className,
+  label,
 }: TemplateCopyButtonProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -40,10 +47,10 @@ export function TemplateCopyButton({
     <>
       <Button
         onClick={handleClick}
-        className="w-full gap-2 font-bold shadow-sm sm:w-auto"
+        className={cn("w-full gap-2 font-bold shadow-sm sm:w-auto", className)}
       >
         <Copy className="h-4 w-4 flex-shrink-0" />
-        {t("templateCopy.button")}
+        {label ?? t("templateCopy.button")}
       </Button>
 
       <TemplateCopyModal
