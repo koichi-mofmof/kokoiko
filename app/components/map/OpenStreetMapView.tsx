@@ -6,8 +6,9 @@ import L from "leaflet";
 import { Place, DisplayOrderedPlace } from "@/types";
 import PlaceCard from "@/app/components/places/PlaceCard";
 import { trackMapEvents } from "@/lib/analytics/events";
-import { X } from "lucide-react";
+import { Maximize2, Minimize2, X } from "lucide-react";
 import ReactDOMServer from "react-dom/server";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 
 interface OpenStreetMapViewProps {
@@ -94,6 +95,29 @@ const MapEvents = ({
 }) => {
   const map = useMap();
 
+  // コンテナ寸法の変化（dvh変動・全画面切替・タブ表示切替など）に追随して
+  // invalidateSize を呼び、タイルがグレーのまま/読み込まれない問題を防ぐ。
+  useEffect(() => {
+    const el = map.getContainer();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [map]);
+
+  // 初回マウント時、コンテナのレイアウト（特にモバイルのdvh）が確定してから
+  // タイルを読み込ませる。確定タイミングに幅があるため複数回キックする。
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => map.invalidateSize());
+    const timers = [100, 300, 600].map((d) =>
+      window.setTimeout(() => map.invalidateSize(), d)
+    );
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach((id) => window.clearTimeout(id));
+    };
+  }, [map]);
+
   useEffect(() => {
     map.setView(center, zoom);
     map.invalidateSize();
@@ -151,6 +175,7 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   isSample,
 }) => {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentCenter, setCurrentCenter] = useState<L.LatLngTuple>(
     initialCenter ? [initialCenter.lat, initialCenter.lng] : savedCenter
   );
@@ -162,6 +187,21 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
     setSelectedPlace(null);
   };
 
+  // 全画面中は背面スクロールを固定し、Escで終了できるようにする
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isFullscreen]);
+
   useEffect(() => {
     // 外部から initialCenter や initialZoom が変更された場合に対応
     if (initialCenter) {
@@ -172,13 +212,41 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
     }
   }, [initialCenter, initialZoom]);
 
-  return (
-    <div className="relative w-full h-full min-h-[250px] rounded-lg overflow-hidden z-10">
+  const mapView = (
+    <div
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-[10000] h-[100dvh] w-screen overflow-hidden bg-white"
+          : "relative w-full h-full min-h-[250px] rounded-lg overflow-hidden z-10"
+      }
+    >
+      {/* 全画面切替ボタン（Leafletのズームは左上・帰属は右下なので右上に配置）。
+          全画面時はノッチ回避のため safe-area 分だけ下げる。 */}
+      <button
+        type="button"
+        onClick={() => setIsFullscreen((v) => !v)}
+        className="absolute right-3 top-3 z-[1100] rounded-full bg-white p-2 shadow-md transition-colors hover:bg-neutral-100"
+        style={
+          isFullscreen
+            ? { top: "max(0.75rem, env(safe-area-inset-top))" }
+            : undefined
+        }
+        aria-label={isFullscreen ? "全画面を終了" : "地図を全画面表示"}
+      >
+        {isFullscreen ? (
+          <Minimize2 className="h-4 w-4 text-neutral-700" />
+        ) : (
+          <Maximize2 className="h-4 w-4 text-neutral-700" />
+        )}
+      </button>
+      {/* パーセンテージ高さ(h-full)の連鎖は初期化時に高さ0へ解決されタイルが
+          読み込まれないことがあるため、絶対配置で親の実寸（min-h含む）を必ず埋める。
+          インラインstyleでLeafletの.leaflet-container指定に確実に勝たせる。 */}
       <MapContainer
         center={currentCenter}
         zoom={currentZoom}
         scrollWheelZoom={true}
-        style={{ height: "100%", width: "100%" }}
+        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -255,6 +323,10 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
       )}
     </div>
   );
+
+  // 全画面時は body 直下へポータル。祖先のスタッキング文脈に閉じ込められず、
+  // ヘッダー等の上に確実に重なる（縮小ボタンが隠れて戻せない問題を解消）。
+  return isFullscreen ? createPortal(mapView, document.body) : mapView;
 };
 
 export default OpenStreetMapView;
