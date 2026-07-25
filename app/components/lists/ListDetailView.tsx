@@ -13,7 +13,7 @@ import {
 import { getDisplayOrdersForList } from "@/lib/actions/place-display-orders";
 import { DisplayOrderedPlace, FilterOptions, Place, ViewMode } from "@/types";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AddPlaceButtonClient from "../places/AddPlaceButtonClient";
 import { InviteCollaboratorHook } from "./InviteCollaboratorHook";
 
@@ -51,6 +51,7 @@ export default function ListDetailView({
   const [hasMapBeenViewed, setHasMapBeenViewed] = useState(false);
   const [displayOrders, setDisplayOrders] = useState<DisplayOrderedPlace[]>([]);
   const [isLoadingDisplayOrders, setIsLoadingDisplayOrders] = useState(true);
+  const mapWrapperRef = useRef<HTMLDivElement>(null);
 
   const [filters, setFilters] = useState<FilterOptions>({
     tags: [],
@@ -180,6 +181,38 @@ export default function ListDetailView({
     }
   }, [viewMode, hasMapBeenViewed, listId]);
 
+  // スマホの地図高さをJSで実測して埋める。
+  // vh/dvh やパーセンテージ高さ(h-full)の解決が不安定なため、実表示ビューポート
+  // (window.innerHeight) からラッパの位置と「固定コピーバーの実測高さ」を引き、
+  // 下の余白やサイトフッターの露出を出さずにピッタリ埋める。lg以上はCSSに委ねる。
+  // スクロール中のアドレスバー開閉で伸縮しないよう、マップ表示に入った時に一度だけ
+  // 実測し、以後は固定する（回転時のみ再計測）。
+  useEffect(() => {
+    if (viewMode !== "map") return;
+    const el = mapWrapperRef.current;
+    if (!el) return;
+
+    const applyHeight = () => {
+      if (window.innerWidth >= 1024) {
+        el.style.height = ""; // デスクトップは lg:h-[...] に任せる
+        return;
+      }
+      const top = el.getBoundingClientRect().top;
+      const bar = document.querySelector("[data-mobile-cta-bar]");
+      const barHeight = bar ? bar.getBoundingClientRect().height : 0;
+      const h = window.innerHeight - top - barHeight;
+      el.style.height = `${Math.max(Math.round(h), 280)}px`;
+    };
+
+    // レイアウト確定後に一度だけ実測（スクロールには追従させない）
+    const raf = requestAnimationFrame(applyHeight);
+    window.addEventListener("orientationchange", applyHeight);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("orientationchange", applyHeight);
+    };
+  }, [viewMode, filteredPlaces.length, isLoadingDisplayOrders]);
+
   const handlePlaceSelect = (place: Place) => {
     setSelectedPlace(place);
   };
@@ -229,7 +262,7 @@ export default function ListDetailView({
       {filteredPlaces.length > 0 && (
         <div
           className={`grid gap-6 ${
-            viewMode === "list" ? "grid-cols-1" : "hidden"
+            viewMode === "list" ? "grid-cols-1 pb-28 lg:pb-0" : "hidden"
           }`}
         >
           {/* PlaceListはviewModeがlistの時のみ中身をレンダリングする（負荷軽減のため） */}
@@ -253,7 +286,11 @@ export default function ListDetailView({
       )}
 
       {/* Ranking View */}
-      <div className={`${viewMode === "ranking" ? "block" : "hidden"}`}>
+      <div
+        className={`${
+          viewMode === "ranking" ? "block pb-28 lg:pb-0" : "hidden"
+        }`}
+      >
         <RankingView listId={listId} places={places} permission={permission} />
       </div>
 
@@ -286,7 +323,8 @@ export default function ListDetailView({
       {/* Map View */}
       {filteredPlaces.length > 0 && (
         <div
-          className={`bg-white rounded-soft border border-neutral-200 shadow-soft h-[calc(100vh-25rem)] ${
+          ref={mapWrapperRef}
+          className={`bg-white rounded-soft border border-neutral-200 shadow-soft h-[calc(100vh-15rem)] lg:h-[calc(100vh-25rem)] ${
             viewMode === "map" ? "block" : "hidden"
           }`}
         >

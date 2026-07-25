@@ -25,11 +25,10 @@ import {
   generateItemListSchema,
 } from "@/lib/seo/structured-data";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowLeft, LockKeyhole, LockKeyholeOpen } from "lucide-react";
+import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -133,10 +132,10 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
 
   const owner = listDetails.collaborators.find((c: Collaborator) => c.isOwner);
   const otherParticipants = listDetails.collaborators.filter(
-    (c: Collaborator) => !c.isOwner && c.permission === "edit"
+    (c: Collaborator) => !c.isOwner && c.permission === "edit",
   );
   const viewers = listDetails.collaborators.filter(
-    (c: Collaborator) => !c.isOwner && c.permission === "view"
+    (c: Collaborator) => !c.isOwner && c.permission === "view",
   );
 
   if (!owner) {
@@ -172,17 +171,9 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     <>
       <JsonLd data={generateBreadcrumbSchema(breadcrumbs)} />
       <JsonLd data={generateItemListSchema(listDetails)} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-28 lg:pb-24">
-        <div className="mb-4">
-          <Link
-            href={user ? "/lists" : "/"}
-            className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            {user ? t("noAccess.backToLists") : t("noAccess.backToHome")}
-          </Link>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-4 lg:pb-24">
+        {/* 戻るリンクは撤去：ヘッダーのロゴ(→ホーム)とブラウザバックで代替でき、
+            縦スペースを地図等の本文に回す。パンくずは JsonLd で別途保持。 */}
         <h1 className="flex items-start justify-between gap-4 text-lg sm:text-xl font-semibold text-neutral-900">
           <span className="flex items-center gap-2">
             {listDetails.name}
