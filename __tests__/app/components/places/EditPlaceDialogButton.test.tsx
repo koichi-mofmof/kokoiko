@@ -1,25 +1,40 @@
+import EditPlaceDialogButton from "@/app/components/places/EditPlaceDialogButton";
 import { Place } from "@/types";
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 
-// toast, router, deleteListPlaceActionをモック
 const toastMock = jest.fn();
+const routerReplaceMock = jest.fn();
+const routerPushMock = jest.fn();
+const deleteListPlaceActionMock = jest.fn();
+const trackDeletePlaceMock = jest.fn();
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({
+    push: routerPushMock,
+    replace: routerReplaceMock,
+    prefetch: jest.fn(),
+    back: jest.fn(),
+  }),
 }));
 jest.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: toastMock }),
 }));
-jest.mock("@/lib/actions/place-actions", () => ({
-  deleteListPlaceAction: jest.fn(() =>
-    Promise.resolve({ success: "削除成功" })
-  ),
+jest.mock("@/hooks/use-subscription", () => ({
+  useSubscription: () => ({ refreshSubscription: jest.fn() }),
 }));
-
-beforeEach(() => {
-  toastMock.mockClear();
-});
+jest.mock("@/lib/actions/place-actions", () => ({
+  deleteListPlaceAction: (...args: unknown[]) =>
+    deleteListPlaceActionMock(...args),
+}));
+jest.mock("@/lib/analytics/events", () => ({
+  trackPlaceEvents: { deletePlace: (...args: unknown[]) => trackDeletePlaceMock(...args) },
+}));
+// 編集ダイアログの中身は本テストの対象外
+jest.mock("@/app/components/places/EditPlaceForm", () => () => (
+  <div data-testid="EditPlaceForm" />
+));
 
 const mockPlace: Place = {
   id: "1",
@@ -33,91 +48,142 @@ const mockPlace: Place = {
   visited: "not_visited",
   createdBy: "user-1",
   listPlaceId: "abc-123",
-  // 必要な他のフィールドも追加
 };
 
-// テスト用ラッパー: showDeleteAlertを強制的にtrueにする
-function AlertDialogOnly({ place, listId }: { place: Place; listId: string }) {
-  // EditPlaceDialogButtonの内部ロジックを模倣し、AlertDialog部分だけを抜き出す
-  // 実際のUI/UXやロジックには影響しない
-  const [isDeleting, setIsDeleting] = React.useState(false);
-  const { toast } = require("@/hooks/use-toast").useToast();
-  const { deleteListPlaceAction } = require("@/lib/actions/place-actions");
-  const handleDeleteConfirm = async () => {
-    if (!place.listPlaceId || isDeleting) return;
-    try {
-      setIsDeleting(true);
-      const formData = new FormData();
-      formData.append("listPlaceId", place.listPlaceId);
-      const result = await deleteListPlaceAction(formData);
-      if (result?.success) {
-        toast({ title: "成功", description: result.success });
-      } else if (result?.error) {
-        toast({
-          title: "エラー",
-          description: `削除エラー: ${result.error}`,
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-  return (
-    <>
-      <div data-testid="alert-dialog-root">
-        <div>
-          <h2>削除の確認</h2>
-          <p>
-            本当に「{place.name}
-            」をリストから削除しますか？この操作は元に戻せません。
-          </p>
-        </div>
-        <button onClick={handleDeleteConfirm} disabled={isDeleting}>
-          {isDeleting ? "削除中..." : "削除する"}
-        </button>
-        <button disabled={isDeleting}>キャンセル</button>
-      </div>
-    </>
-  );
-}
+// jest.setup.js の alert-dialog モックは中身を常に描画するため、
+// 確認ダイアログの「削除」ボタンは初期状態から DOM 上に存在する
+const clickDeleteConfirm = () =>
+  fireEvent.click(screen.getByRole("button", { name: "削除" }));
 
-describe("EditPlaceDialogButton/AlertDialog部分のみ", () => {
-  it("削除の確認ダイアログが表示される", () => {
-    render(<AlertDialogOnly place={mockPlace} listId="list-1" />);
-    expect(screen.getByText(/削除の確認/)).toBeInTheDocument();
-    expect(screen.getByText(/テスト場所/)).toBeInTheDocument();
-    expect(screen.getByText(/削除する/)).toBeInTheDocument();
-    expect(screen.getByText(/キャンセル/)).toBeInTheDocument();
+describe("EditPlaceDialogButton", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // 成功時はサーバーアクション側の redirect で遷移するため、戻り値は無い
+    deleteListPlaceActionMock.mockResolvedValue(undefined);
   });
 
-  it("削除ボタン押下でサーバーアクションが呼ばれトースト通知が表示される", async () => {
-    render(<AlertDialogOnly place={mockPlace} listId="list-1" />);
-    fireEvent.click(screen.getByText(/削除する/));
-    expect(await screen.findByText(/削除中/)).toBeInTheDocument();
+  it("削除の確認ダイアログが表示される", () => {
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    expect(screen.getByText("削除の確認")).toBeInTheDocument();
+    expect(screen.getByText(/テスト場所/)).toBeInTheDocument();
+  });
+
+  it("削除ボタン押下でサーバーアクションが呼ばれる", async () => {
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
     await waitFor(() => {
-      expect(
-        require("@/hooks/use-toast").useToast().toast
-      ).toHaveBeenCalledWith(expect.objectContaining({ title: "成功" }));
+      expect(deleteListPlaceActionMock).toHaveBeenCalledTimes(1);
     });
+    const formData = deleteListPlaceActionMock.mock.calls[0][0] as FormData;
+    expect(formData.get("listPlaceId")).toBe("abc-123");
+  });
+
+  it("削除成功時に成功トーストを表示しない", async () => {
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
+    await waitFor(() => {
+      expect(deleteListPlaceActionMock).toHaveBeenCalled();
+    });
+    // 地点が消えること自体が結果として分かるため、成功トーストは出さない
+    await waitFor(() => {
+      expect(screen.queryByText("削除中...")).not.toBeInTheDocument();
+    });
+    expect(toastMock).not.toHaveBeenCalled();
+  });
+
+  it("削除成功時はクライアント側で遷移しない（サーバーの redirect に任せる）", async () => {
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
+    await waitFor(() => {
+      expect(deleteListPlaceActionMock).toHaveBeenCalled();
+    });
+    expect(routerPushMock).not.toHaveBeenCalled();
+    expect(routerReplaceMock).not.toHaveBeenCalled();
+  });
+
+  it("サーバーが redirect せず successKey を返した場合はフォールバック遷移する", async () => {
+    deleteListPlaceActionMock.mockResolvedValue({
+      successKey: "place.delete.success",
+    });
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
+    await waitFor(() => {
+      expect(routerReplaceMock).toHaveBeenCalledWith("/lists/list-1");
+    });
+    expect(toastMock).not.toHaveBeenCalled();
+  });
+
+  it("成功時の NEXT_REDIRECT をエラーとして表示しない", async () => {
+    // サーバーアクションの redirect() はクライアントに NEXT_REDIRECT エラーとして伝わる。
+    // これは削除成功時の正常な遷移なので、エラートーストを出してはいけない。
+    const redirectError = Object.assign(new Error("NEXT_REDIRECT"), {
+      digest: "NEXT_REDIRECT;replace;/lists/list-1;307;",
+    });
+    deleteListPlaceActionMock.mockRejectedValue(redirectError);
+
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
+    // 遷移はルーター側で確定済みなので、握り潰して何も表示しない
+    await waitFor(() => {
+      expect(screen.queryByText("削除中...")).not.toBeInTheDocument();
+    });
+    expect(toastMock).not.toHaveBeenCalled();
+    expect(routerReplaceMock).not.toHaveBeenCalled();
+  });
+
+  it("digest だけを持つ NEXT_REDIRECT もエラーとして表示しない", async () => {
+    // message が digest 形式になる Next.js のバージョン差に備える
+    const redirectError = Object.assign(new Error("NEXT_REDIRECT;replace;/x;307;"), {
+      digest: "NEXT_REDIRECT;replace;/lists/list-1;307;",
+    });
+    deleteListPlaceActionMock.mockRejectedValue(redirectError);
+
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
+    await waitFor(() => {
+      expect(screen.queryByText("削除中...")).not.toBeInTheDocument();
+    });
+    expect(toastMock).not.toHaveBeenCalled();
+  });
+
+  it("削除失敗時はエラートーストを表示する", async () => {
+    deleteListPlaceActionMock.mockResolvedValue({
+      errorKey: "place.errors.deleteFailed",
+      error: "boom",
+    });
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
+    await waitFor(() => {
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: "destructive" })
+      );
+    });
+    expect(routerReplaceMock).not.toHaveBeenCalled();
   });
 
   it("削除中はボタンがローディング・無効化される", async () => {
-    // deleteListPlaceActionを遅延させてisDeleting状態を再現
-    const { deleteListPlaceAction } = require("@/lib/actions/place-actions");
-    deleteListPlaceAction.mockImplementation(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve({ success: "削除成功" }), 100)
-        )
+    let resolveDelete!: (value: unknown) => void;
+    deleteListPlaceActionMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveDelete = resolve;
+      })
     );
-    render(<AlertDialogOnly place={mockPlace} listId="list-1" />);
-    fireEvent.click(screen.getByText(/削除する/));
-    expect(await screen.findByText(/削除中/)).toBeInTheDocument();
-    expect(screen.getByText(/削除中/).closest("button")).toBeDisabled();
-    expect(screen.getByText(/キャンセル/).closest("button")).toBeDisabled();
+    render(<EditPlaceDialogButton place={mockPlace} listId="list-1" />);
+    clickDeleteConfirm();
+
+    expect(await screen.findByText("削除中...")).toBeInTheDocument();
+    expect(screen.getByText("削除中...").closest("button")).toBeDisabled();
+
+    resolveDelete(undefined);
     await waitFor(() => {
-      expect(screen.queryByText(/削除中/)).not.toBeInTheDocument();
+      expect(screen.queryByText("削除中...")).not.toBeInTheDocument();
     });
   });
 });

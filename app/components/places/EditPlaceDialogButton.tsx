@@ -32,6 +32,21 @@ import { Edit, MoreVertical, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+/**
+ * Server Action 内の redirect() は、クライアント側では NEXT_REDIRECT エラーとして
+ * reject される（Next.js は「resolveすべき戻り値が無い」ことを伝えるために reject する）。
+ * 遷移自体はルーター側で確定済みなので、これは削除成功のサインであり、
+ * エラーとして扱わず握り潰してよい。
+ */
+function isNextRedirectError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const digest = (error as { digest?: unknown }).digest;
+  if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT")) {
+    return true;
+  }
+  return error instanceof Error && error.message.startsWith("NEXT_REDIRECT");
+}
+
 export default function EditPlaceDialogButton({
   place,
   listId, // listId を props として受け取る (revalidatePathなどで使用する可能性を考慮)
@@ -67,16 +82,15 @@ export default function EditPlaceDialogButton({
       setIsDeleting(true);
       const formData = new FormData();
       formData.append("listPlaceId", place.listPlaceId);
+
+      // 成功時はサーバーアクションが redirect するため await 以降に到達しない
+      // ことがある。計測の取りこぼしを避けるためここで先に発火させる。
+      trackPlaceEvents.deletePlace(place.id);
+
       const result = await deleteListPlaceAction(formData);
 
-      if (result?.success) {
-        trackPlaceEvents.deletePlace(place.id);
-        toast({ title: t("common.success"), description: result.success });
-        await refreshSubscription();
-        setOpen(false);
-        router.push(`/lists/${listId}`);
-      } else if (result) {
-        const err = result as { errorKey?: string; error?: string };
+      const err = result as { errorKey?: string; error?: string } | undefined;
+      if (err?.errorKey || err?.error) {
         toast({
           title: t("common.error"),
           description: err.errorKey
@@ -84,8 +98,20 @@ export default function EditPlaceDialogButton({
             : `${t("common.deleteError")}: ${err.error}`,
           variant: "destructive",
         });
+        return;
+      }
+
+      // 削除成功。地点が消えること自体が結果として分かるため成功トーストは出さない。
+      await refreshSubscription();
+      setOpen(false);
+      // サーバー側で listId を特定できず redirect しなかった場合のフォールバック
+      if ((result as { successKey?: string } | undefined)?.successKey) {
+        router.replace(`/lists/${listId}`);
       }
     } catch (error) {
+      // 成功時の遷移。再throwしても async ハンドラ内なのでエラーバウンダリには届かず、
+      // 未処理のrejectionになるだけなのでここで握り潰す
+      if (isNextRedirectError(error)) return;
       toast({
         title: t("common.error"),
         description: `${t("common.deleting")}: ${

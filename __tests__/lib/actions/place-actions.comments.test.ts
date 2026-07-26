@@ -12,9 +12,19 @@ import {
 } from "@/lib/actions/place-actions";
 import { createClient } from "@/lib/supabase/server";
 import { revalidateListCache } from "@/lib/cloudflare/cdn-cache";
+import { redirect } from "next/navigation";
 
 jest.mock("@/lib/supabase/server", () => ({ createClient: jest.fn() }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
+// 本物の redirect() と同様、NEXT_REDIRECT を throw する挙動を再現する。
+// （try/catch の内側で呼ぶと握り潰されてしまうことを検出するため）
+jest.mock("next/navigation", () => ({
+  redirect: jest.fn((url: string) => {
+    const error = new Error("NEXT_REDIRECT") as Error & { digest?: string };
+    error.digest = `NEXT_REDIRECT;replace;${url};307;`;
+    throw error;
+  }),
+}));
 jest.mock("@/lib/cloudflare/cdn-cache", () => ({
   revalidateListCache: jest.fn().mockResolvedValue(undefined),
 }));
@@ -313,19 +323,37 @@ describe("deleteListPlaceAction", () => {
     expect(r.errorKey).toBe("errors.validation.invalidInput");
   });
 
-  it("正常系は successKey を返しキャッシュを無効化する", async () => {
+  it("正常系はリスト詳細へ redirect しキャッシュを無効化する", async () => {
     mockCreateClient.mockResolvedValue(
       makeClient({
         tables: { list_places: { single: { data: { list_id: "L1" }, error: null } } },
         rpcError: null,
       })
     );
-    const r = await deleteListPlaceAction(fd({ listPlaceId: UUID }));
-    expect(r.successKey).toBe("place.delete.success");
+    // 削除元ページ（地点詳細）を再レンダリングさせないため、サーバー側で遷移する
+    await expect(
+      deleteListPlaceAction(fd({ listPlaceId: UUID }))
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(redirect).toHaveBeenCalledWith("/lists/L1");
     expect(revalidateListCache).toHaveBeenCalledWith("L1");
   });
 
-  it("RPC エラーなら deleteFailed", async () => {
+  it("redirect が try/catch に握り潰されず deleteFailed にならない", async () => {
+    mockCreateClient.mockResolvedValue(
+      makeClient({
+        tables: { list_places: { single: { data: { list_id: "L1" }, error: null } } },
+        rpcError: null,
+      })
+    );
+    // redirect() の例外を catch すると「削除に失敗しました」を返してしまう
+    const result = await deleteListPlaceAction(fd({ listPlaceId: UUID })).catch(
+      (e: Error) => e
+    );
+    expect(result).toBeInstanceOf(Error);
+    expect((result as Error).message).toBe("NEXT_REDIRECT");
+  });
+
+  it("RPC エラーなら deleteFailed を返し redirect しない", async () => {
     mockCreateClient.mockResolvedValue(
       makeClient({
         tables: { list_places: { single: { data: { list_id: "L1" }, error: null } } },
@@ -334,5 +362,18 @@ describe("deleteListPlaceAction", () => {
     );
     const r = await deleteListPlaceAction(fd({ listPlaceId: UUID }));
     expect(r.errorKey).toBe("place.errors.deleteFailed");
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("listId が取得できない場合は redirect せず successKey を返す", async () => {
+    mockCreateClient.mockResolvedValue(
+      makeClient({
+        tables: { list_places: { single: { data: null, error: null } } },
+        rpcError: null,
+      })
+    );
+    const r = await deleteListPlaceAction(fd({ listPlaceId: UUID }));
+    expect(r.successKey).toBe("place.delete.success");
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

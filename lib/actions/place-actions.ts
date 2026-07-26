@@ -17,6 +17,7 @@ import {
 import { ListPlaceComment } from "@/types";
 import { revalidateListCache } from "@/lib/cloudflare/cdn-cache";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 export type PlaceToRegisterType = z.infer<typeof PlaceToRegisterSchema>;
@@ -531,6 +532,7 @@ export async function deleteListPlaceAction(formData: FormData) {
   }
 
   const { listPlaceId } = validatedFields.data;
+  let redirectTo: string | null = null;
 
   try {
     // 削除前にリストIDを取得
@@ -554,13 +556,9 @@ export async function deleteListPlaceAction(formData: FormData) {
       revalidatePath(`/lists/${listId}`);
       // エッジキャッシュも即座に無効化
       await revalidateListCache(listId);
+      redirectTo = `/lists/${listId}`;
     }
     revalidatePath("/settings/account");
-
-    return {
-      success: "場所を削除しました。",
-      successKey: "place.delete.success",
-    };
   } catch (error) {
     console.error("Error in deleteListPlaceAction:", error);
     const errorMessage =
@@ -570,4 +568,13 @@ export async function deleteListPlaceAction(formData: FormData) {
       error: `場所の削除に失敗しました: ${errorMessage}`,
     };
   }
+
+  // 削除元は地点詳細ページ（/lists/[listId]/place/[placeId]）なので、
+  // クライアントで遷移すると revalidate による現ルートの再レンダリングが先に走り、
+  // 「地点が見つからない」→ notFound() で一瞬404が描画されてしまう。
+  // サーバー側で遷移させることで現ルートを再レンダリングさせない。
+  // redirect() は NEXT_REDIRECT を throw するため、必ず try/catch の外で呼ぶこと。
+  if (redirectTo) redirect(redirectTo);
+
+  return { successKey: "place.delete.success" };
 }
