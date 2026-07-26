@@ -167,6 +167,67 @@ describe("SortablePlaceItem", () => {
     expect(mockPush).toHaveBeenCalledTimes(2);
   });
 
+  describe("作成者コメント", () => {
+    it("コメントがある場合は本文が表示される", () => {
+      const placeWithComment = {
+        ...mockPlace,
+        comment: "備長炭で焼く極上のうなぎ。白焼きが絶品",
+      };
+      render(
+        <DndWrapper>
+          <SortablePlaceItem {...defaultProps} place={placeWithComment} />
+        </DndWrapper>
+      );
+
+      expect(
+        screen.getByText("備長炭で焼く極上のうなぎ。白焼きが絶品")
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("place-comment")).toBeInTheDocument();
+    });
+
+    it("コメントがない場合はコメント要素を表示しない", () => {
+      render(
+        <DndWrapper>
+          <SortablePlaceItem {...defaultProps} />
+        </DndWrapper>
+      );
+
+      expect(screen.queryByTestId("place-comment")).not.toBeInTheDocument();
+    });
+
+    it("コメントが空白のみの場合は表示しない", () => {
+      const placeWithBlankComment = { ...mockPlace, comment: "   " };
+      render(
+        <DndWrapper>
+          <SortablePlaceItem {...defaultProps} place={placeWithBlankComment} />
+        </DndWrapper>
+      );
+
+      expect(screen.queryByTestId("place-comment")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("訪問ステータスの表示制御", () => {
+    it("showVisited=false（閲覧者）では訪問済/未訪問を表示しない", () => {
+      render(
+        <DndWrapper>
+          <SortablePlaceItem {...defaultProps} showVisited={false} />
+        </DndWrapper>
+      );
+      expect(screen.queryByText("訪問済み")).not.toBeInTheDocument();
+      expect(screen.queryByText("未訪問")).not.toBeInTheDocument();
+    });
+
+    it("既定（showVisited未指定）では訪問済を表示する", () => {
+      render(
+        <DndWrapper>
+          <SortablePlaceItem {...defaultProps} />
+        </DndWrapper>
+      );
+      expect(screen.getByText("訪問済み")).toBeInTheDocument();
+    });
+  });
+
   // エラーケースとエッジケースのテスト
   describe("エラーケース・エッジケース", () => {
     it("表示順序が0の場合は順序番号が表示されない", () => {

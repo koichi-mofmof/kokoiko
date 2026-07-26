@@ -176,6 +176,7 @@ const PlaceList: React.FC<PlaceListProps> = ({
                 selectedPlaceId={selectedPlaceId}
                 isSample={isSample}
                 isDragDisabled={isDragDisabled}
+                showVisited={canEdit}
               />
             );
           })}

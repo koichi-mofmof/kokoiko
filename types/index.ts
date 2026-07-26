@@ -19,6 +19,14 @@ export interface Place {
   rating?: number;
   googlePlaceId?: string;
   listPlaceId?: string;
+  // カードで主役化する「ひとこと」コメント（追加者優先、無ければコラボレーター）
+  comment?: string;
+  // コメントの実著者（追加者と異なる場合あり＝バブルのアバター帰属先）
+  commentAuthor?: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
   // 階層地域情報
   countryCode?: string;
   countryName?: string;

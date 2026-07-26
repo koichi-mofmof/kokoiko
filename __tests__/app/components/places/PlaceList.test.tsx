@@ -119,6 +119,20 @@ describe("PlaceList", () => {
       ).toBeInTheDocument();
     });
 
+    it("閲覧者(permission=view)では訪問済/未訪問を表示しない", () => {
+      render(<PlaceList {...defaultProps} permission="view" />);
+
+      expect(screen.queryByText("訪問済み")).not.toBeInTheDocument();
+      expect(screen.queryByText("未訪問")).not.toBeInTheDocument();
+    });
+
+    it("所有者(permission=owner)では訪問済/未訪問を表示する", () => {
+      render(<PlaceList {...defaultProps} permission="owner" />);
+
+      expect(screen.getAllByText("訪問済み").length).toBeGreaterThan(0);
+      expect(screen.getByText("未訪問")).toBeInTheDocument();
+    });
+
     it("表示順序がない場合でも場所は表示される", () => {
       render(<PlaceList {...defaultProps} displayOrders={[]} />);
 

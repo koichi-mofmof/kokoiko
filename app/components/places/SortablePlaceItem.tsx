@@ -24,6 +24,8 @@ interface SortablePlaceItemProps {
   selectedPlaceId?: string;
   isSample?: boolean;
   isDragDisabled?: boolean;
+  /** 訪問済/未訪問の表示可否。閲覧者(view/ゲスト)には作成者の訪問状況はノイズなので隠す。 */
+  showVisited?: boolean;
 }
 
 export function SortablePlaceItem({
@@ -33,9 +35,15 @@ export function SortablePlaceItem({
   selectedPlaceId,
   isSample,
   isDragDisabled = false,
+  showVisited = true,
 }: SortablePlaceItemProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const hasComment = Boolean(place.comment && place.comment.trim());
+  // コメント著者が追加者と異なる（＝コラボレーターの声）ときだけバブルにアバターを出す
+  const showCommentAuthorAvatar = Boolean(
+    place.commentAuthor && place.commentAuthor.id !== place.createdBy
+  );
 
   const {
     attributes,
@@ -151,23 +159,51 @@ export function SortablePlaceItem({
                 ))}
               </div>
             )}
-            <div className="mt-3 flex items-center">
-              {place.visited === "visited" ? (
-                <>
-                  <Check className="h-4 w-4 mr-1 text-primary-500" />
-                  <span className="text-xs text-primary-700">
-                    {t("place.status.visited")}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Circle className="h-4 w-4 mr-1 text-neutral-400" />
-                  <span className="text-xs text-neutral-600">
-                    {t("place.status.notVisited")}
-                  </span>
-                </>
-              )}
-            </div>
+            {hasComment && (
+              <div
+                data-testid="place-comment"
+                className="mt-3 rounded-lg rounded-l-sm border-l-[3px] border-primary-400 bg-primary-50/70 px-3 py-2.5"
+              >
+                {showCommentAuthorAvatar && place.commentAuthor && (
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <Avatar className="h-4 w-4">
+                      <AvatarImage
+                        src={place.commentAuthor.avatarUrl}
+                        alt={place.commentAuthor.name}
+                      />
+                      <AvatarFallback className="bg-primary-100 text-[9px] text-primary-700">
+                        {place.commentAuthor.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-[11px] font-medium text-primary-700">
+                      {place.commentAuthor.name}
+                    </span>
+                  </div>
+                )}
+                <p className="text-xs leading-relaxed text-neutral-700 line-clamp-2 sm:text-sm">
+                  {place.comment}
+                </p>
+              </div>
+            )}
+            {showVisited && (
+              <div className="mt-3 flex items-center">
+                {place.visited === "visited" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-1 text-primary-500" />
+                    <span className="text-xs text-primary-700">
+                      {t("place.status.visited")}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Circle className="h-4 w-4 mr-1 text-neutral-400" />
+                    <span className="text-xs text-neutral-600">
+                      {t("place.status.notVisited")}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
         <ChevronRight className="h-6 w-6 mr-3 text-neutral-400 group-hover:text-primary-500 group-active:text-primary-600 transition-colors ml-2 flex-shrink-0 self-center" />
