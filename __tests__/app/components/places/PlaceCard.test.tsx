@@ -38,11 +38,33 @@ describe("PlaceCard", () => {
     ).toBeInTheDocument();
   });
 
+  it("コメントがある場合は本文が表示される", () => {
+    render(
+      <PlaceCard
+        place={{ ...basePlace, comment: "白焼きが絶品" }}
+        listId="list-1"
+      />
+    );
+    expect(screen.getByText("白焼きが絶品")).toBeInTheDocument();
+    expect(screen.getByTestId("place-comment")).toBeInTheDocument();
+  });
+
+  it("コメントがない場合はコメント要素を表示しない", () => {
+    render(<PlaceCard place={basePlace} listId="list-1" />);
+    expect(screen.queryByTestId("place-comment")).not.toBeInTheDocument();
+  });
+
   it("訪問済みステータスが表示される", () => {
     render(
       <PlaceCard place={{ ...basePlace, visited: "visited" }} listId="list-1" />
     );
     expect(screen.getAllByText("訪問済み").length).toBeGreaterThan(0);
+  });
+
+  it("showVisited=false（閲覧者）では訪問ステータスを表示しない", () => {
+    render(<PlaceCard place={basePlace} listId="list-1" showVisited={false} />);
+    expect(screen.queryByText("未訪問")).not.toBeInTheDocument();
+    expect(screen.queryByText("訪問済み")).not.toBeInTheDocument();
   });
 
   it("onClickが呼ばれる", () => {

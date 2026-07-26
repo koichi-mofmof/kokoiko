@@ -15,6 +15,8 @@ interface PlaceCardProps {
   listId?: string;
   isSample?: boolean;
   onClose?: () => void;
+  /** 訪問済/未訪問の表示可否。閲覧者(view/ゲスト)には隠す。 */
+  showVisited?: boolean;
 }
 
 const PlaceCard: React.FC<PlaceCardProps> = ({
@@ -23,9 +25,15 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   listId,
   isSample,
   onClose,
+  showVisited = true,
 }) => {
   const router = useRouter();
   const { t } = useI18n();
+  const hasComment = Boolean(place.comment && place.comment.trim());
+  // コメント著者が追加者と異なる（＝コラボレーターの声）ときだけバブルにアバターを出す
+  const showCommentAuthorAvatar = Boolean(
+    place.commentAuthor && place.commentAuthor.id !== place.createdBy
+  );
   const visitStatusElement =
     place.visited === "visited" ? (
       <div className="flex items-center text-xs text-primary-700">
@@ -99,7 +107,33 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
               ))}
             </div>
           )}
-          {visitStatusElement}
+          {hasComment && (
+            <div
+              data-testid="place-comment"
+              className="mb-3 rounded-lg rounded-l-sm border-l-[3px] border-primary-400 bg-primary-50/70 px-3 py-2.5"
+            >
+              {showCommentAuthorAvatar && place.commentAuthor && (
+                <div className="mb-1 flex items-center gap-1.5">
+                  <Avatar className="h-4 w-4">
+                    <AvatarImage
+                      src={place.commentAuthor.avatarUrl}
+                      alt={place.commentAuthor.name}
+                    />
+                    <AvatarFallback className="bg-primary-100 text-[9px] text-primary-700">
+                      {place.commentAuthor.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-[11px] font-medium text-primary-700">
+                    {place.commentAuthor.name}
+                  </span>
+                </div>
+              )}
+              <p className="text-xs leading-relaxed text-neutral-700 line-clamp-2 sm:text-sm">
+                {place.comment}
+              </p>
+            </div>
+          )}
+          {showVisited && visitStatusElement}
           <div className="inline-flex justify-between mt-3">
             {place.createdByUser && (
               <div

@@ -2,6 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getStoragePublicUrl } from "@/lib/supabase/storage";
+import {
+  pickPlaceComment,
+  type ListPlaceCommentRow,
+  type PickedComment,
+} from "@/lib/dal/comment-utils";
 import type { Place, User } from "@/types";
 import type { Database } from "@/types/supabase";
 
@@ -403,21 +408,37 @@ async function getPlacesForList(
 
     if (!listPlaces) return [];
 
-    // ユーザー情報を別途取得
-    const userIds = [
-      ...new Set(
-        listPlaces.map((lp) => {
-          const row = lp as { user_id: string };
-          return row.user_id;
-        })
-      ),
-    ];
-    let usersData: {
-      id: string;
-      display_name: string | null;
-      avatar_url: string | null;
-    }[] = [];
+    // 各地点のコメントを一括取得（カードで主役化する声）
+    const listPlaceIds = listPlaces.map((lp) => (lp as { id: string }).id);
+    let commentsData: ListPlaceCommentRow[] = [];
+    if (listPlaceIds.length > 0) {
+      const { data: comments } = await supabase
+        .from("list_place_commnts")
+        .select("list_place_id, user_id, comment, created_at")
+        .in("list_place_id", listPlaceIds);
+      if (comments) commentsData = comments as ListPlaceCommentRow[];
+    }
 
+    // 各地点の主役コメントを選定（追加者優先→コラボレーター、著者ID付き）
+    const pickedByListPlaceId = new Map<string, PickedComment>();
+    for (const lp of listPlaces) {
+      const row = lp as { id: string; user_id: string };
+      const picked = pickPlaceComment(row.id, row.user_id, commentsData);
+      if (picked) pickedByListPlaceId.set(row.id, picked);
+    }
+
+    // 必要なプロフィール（追加者 ∪ コメント著者）をまとめて取得し、
+    // アバターURLを1回だけ解決したmapを作る
+    const userIds = [
+      ...new Set([
+        ...listPlaces.map((lp) => (lp as { user_id: string }).user_id),
+        ...Array.from(pickedByListPlaceId.values()).map((p) => p.userId),
+      ]),
+    ];
+    const profileMap = new Map<
+      string,
+      { id: string; name: string; avatarUrl?: string }
+    >();
     if (userIds.length > 0) {
       const { data: users, error: usersError } = await supabase
         .from("profiles")
@@ -425,7 +446,16 @@ async function getPlacesForList(
         .in("id", userIds);
 
       if (!usersError && users) {
-        usersData = users;
+        for (const u of users) {
+          const avatarUrl = u.avatar_url
+            ? await getStoragePublicUrl(u.avatar_url)
+            : undefined;
+          profileMap.set(u.id, {
+            id: u.id,
+            name: u.display_name || "",
+            avatarUrl,
+          });
+        }
       }
     }
 
@@ -453,21 +483,15 @@ async function getPlacesForList(
           .map((lpt) => lpt.tags)
           .filter((tag) => tag !== null) as { id: string; name: string }[];
 
-        // 登録者情報を追加
+        // 登録者（追加者）情報を追加
         place.createdBy = listPlaceRow.user_id;
-        const userProfile = usersData.find(
-          (u) => u.id === listPlaceRow.user_id
-        );
-        if (userProfile) {
-          const avatarUrl = userProfile.avatar_url
-            ? await getStoragePublicUrl(userProfile.avatar_url)
-            : undefined;
+        place.createdByUser = profileMap.get(listPlaceRow.user_id);
 
-          place.createdByUser = {
-            id: userProfile.id,
-            name: userProfile.display_name || "",
-            avatarUrl,
-          };
+        // 主役コメントと、その実著者（＝バブルのアバター帰属先）を付与
+        const picked = pickedByListPlaceId.get(listPlaceRow.id);
+        if (picked) {
+          place.comment = picked.comment;
+          place.commentAuthor = profileMap.get(picked.userId);
         }
 
         places.push(place);

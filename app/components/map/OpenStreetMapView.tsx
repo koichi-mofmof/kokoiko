@@ -19,6 +19,8 @@ interface OpenStreetMapViewProps {
   initialZoom?: number;
   listId?: string;
   isSample?: boolean;
+  /** 訪問済/未訪問の表示可否（ポップアップカードへ伝播）。閲覧者には隠す。 */
+  showVisited?: boolean;
 }
 
 const DEFAULT_CENTER: L.LatLngTuple = [35.681236, 139.767125]; // 東京駅
@@ -173,6 +175,7 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   initialZoom,
   listId,
   isSample,
+  showVisited = true,
 }) => {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -317,6 +320,7 @@ const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
               place={selectedPlace}
               listId={listId}
               isSample={isSample}
+              showVisited={showVisited}
             />
           </div>
         </div>

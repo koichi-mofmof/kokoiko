@@ -336,6 +336,9 @@ export default function ListDetailView({
                 onPlaceSelect={handlePlaceSelect}
                 listId={listId}
                 isSample={listId.startsWith("sample-")}
+                showVisited={
+                  permission === "owner" || permission === "edit"
+                }
               />
             )}
           {(hasMapBeenViewed || viewMode === "map") &&
