@@ -78,8 +78,24 @@ export default function ListDetailView({
     }
   }, [listId]);
 
+  // 地点の集合が変わったか（追加・削除）を判定するキー。
+  // 参照ではなくID集合の文字列で比較することで、コメント編集などの
+  // revalidatePath で places の参照だけが変わったときの無駄な再取得を防ぐ。
+  const placeIdsKey = useMemo(
+    () =>
+      places
+        .map((place) => place.id)
+        .sort()
+        .join(","),
+    [places]
+  );
+
   // 表示順序データの取得
+  // 地点追加/削除時はDBトリガーで list_place_display_order が更新されるため、
+  // places の集合が変わったら再取得しないと順序が古いまま（要F5）になる。
   useEffect(() => {
+    let cancelled = false;
+
     const fetchDisplayOrders = async () => {
       if (listId.startsWith("sample-")) {
         // サンプルリストの場合は順序なしでスキップ
@@ -90,22 +106,29 @@ export default function ListDetailView({
 
       try {
         const result = await getDisplayOrdersForList(listId);
+        // 追い越し対策：古いリクエストの結果で新しい結果を上書きしない
+        if (cancelled) return;
         if (result.success) {
           setDisplayOrders(result.displayOrders);
         } else {
+          // 取得失敗時は既存の順序を維持する（空配列で上書きすると
+          // 表示済みの順序バッジと並び順が一斉に消えてしまうため）
           console.error("Failed to fetch display orders:", result.error);
-          setDisplayOrders([]);
         }
       } catch (error) {
+        if (cancelled) return;
         console.error("Error fetching display orders:", error);
-        setDisplayOrders([]);
       } finally {
-        setIsLoadingDisplayOrders(false);
+        if (!cancelled) setIsLoadingDisplayOrders(false);
       }
     };
 
     fetchDisplayOrders();
-  }, [listId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [listId, placeIdsKey]);
 
   // 表示順序更新のコールバック
   const handleDisplayOrderUpdate = (
