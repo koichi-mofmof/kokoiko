@@ -1,3 +1,4 @@
+import { getRequestLocale } from "@/lib/i18n/server";
 import { ErrorMessageToast } from "@/app/components/lists/ErrorMessageToast";
 import { MyLists } from "@/app/components/lists/MyLists";
 import { MyPageDataLoader } from "@/app/components/lists/MyPageDataLoader";
@@ -11,8 +12,7 @@ import {
 import { cookies } from "next/headers";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return {

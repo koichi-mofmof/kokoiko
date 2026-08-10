@@ -1,10 +1,9 @@
+import { getRequestLocale } from "@/lib/i18n/server";
 import { SignupForm } from "@/app/components/auth/signup-form";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
-import { cookies } from "next/headers";
+import { createServerT, loadMessages } from "@/lib/i18n";
 
 export default async function SignupPage() {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return (

@@ -1,12 +1,11 @@
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/server";
+import { createServerT, loadMessages } from "@/lib/i18n";
 import { Metadata } from "next";
-import { cookies } from "next/headers";
 import { ReactNode } from "react";
 import { Tabs } from "./_components/tabs";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return {
@@ -20,8 +19,7 @@ export default async function SettingsLayout({
 }: {
   children: ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return (

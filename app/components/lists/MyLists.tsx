@@ -24,7 +24,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useI18n } from "@/hooks/use-i18n";
 import { ListForClient as MyListClientData } from "@/lib/dal/lists";
 import { ArrowDown, ArrowUp, ListFilter, Map, Search } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/ui/LocaleLink";
 import { useEffect, useMemo, useState } from "react";
 import { CreateListModal } from "./CreateListModal";
 

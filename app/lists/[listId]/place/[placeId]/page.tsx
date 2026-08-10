@@ -1,3 +1,4 @@
+import { buildAlternates, getRequestLocale } from "@/lib/i18n/server";
 import AddCommentForm from "@/app/components/lists/AddCommentForm";
 import CommentItem from "@/app/components/lists/CommentItem";
 import EditPlaceDialogButton from "@/app/components/places/EditPlaceDialogButton";
@@ -11,7 +12,6 @@ import { fetchAuthenticatedUserWithProfile } from "@/lib/dal/users";
 import {
   createServerT,
   loadMessages,
-  normalizeLocale,
   toOpenGraphLocale,
 } from "@/lib/i18n";
 import {
@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PlaceMapClient from "./PlaceMapClient";
@@ -60,8 +59,7 @@ export async function generateMetadata({
   }
 
   if (!list?.places) {
-    const cookieStore = await cookies();
-    const locale = normalizeLocale(cookieStore.get("lang")?.value);
+    const locale = await getRequestLocale();
     const msgs = await loadMessages(locale);
     const t = createServerT(msgs as Record<string, string>);
     return { title: "ClippyMap", description: t("meta.root.description") };
@@ -75,8 +73,7 @@ export async function generateMetadata({
     };
   }
 
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   const statusText =
@@ -96,9 +93,7 @@ export async function generateMetadata({
   return {
     title: `${place.name} | ${list.name} | ClippyMap`,
     description,
-    alternates: {
-      canonical: `/lists/${listId}/place/${placeId}`,
-    },
+    alternates: await buildAlternates(`/lists/${listId}/place/${placeId}`),
     openGraph: {
       title: `${place.name} | ${list.name} | ClippyMap`,
       description,
@@ -159,8 +154,7 @@ export default async function PlaceDetailPage({
   if (!place) notFound();
 
   // i18n for page content
-  const cookieStoreForPage = await cookies();
-  const localeForPage = normalizeLocale(cookieStoreForPage.get("lang")?.value);
+  const localeForPage = await getRequestLocale();
   const msgsForPage = await loadMessages(localeForPage);
   const t = createServerT(msgsForPage as Record<string, string>);
 

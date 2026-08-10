@@ -2,7 +2,7 @@
 
 import { PublicListForHome } from "@/lib/dal/public-lists";
 import { motion } from "framer-motion";
-import Link from "next/link";
+import Link from "@/components/ui/LocaleLink";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { PublicListCard } from "./public-list-card";

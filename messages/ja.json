@@ -1,7 +1,6 @@
 {
   "app.name": "ClippyMap",
   "meta.description": "行きたい場所を共有できるサービス",
-
   "header.myLists": "マイリスト一覧",
   "header.settings": "設定",
   "header.login": "ログイン",
@@ -11,13 +10,11 @@
   "header.plan.premium": "プレミアムプラン",
   "header.stat.totalPlaces": "累計地点登録数",
   "header.stat.sharedLists": "共有リスト数",
-
   "lang.japanese": "日本語",
   "lang.english": "English",
   "lang.spanish": "Español",
   "lang.french": "Français",
   "lang.german": "Deutsch",
-
   "upgrade.open": "アップグレード",
   "upgrade.viewDetails": "詳細を見る",
   "upgrade.title": "プレミアムプランにアップグレード",
@@ -177,7 +174,6 @@
   "lists.create.cta": "リストを作成",
   "lists.create.title": "新しいリストを作成",
   "lists.create.submit": "リストを作成",
-
   "templateCopy.button": "このリストをコピーして編集",
   "templateCopy.loginRequired": "コピーするにはログインが必要です",
   "templateCopy.modal.title": "地点をコピー",
@@ -215,7 +211,6 @@
   "templateCopy.guest.saveButton": "無料登録してコピー",
   "templateCopy.resume.restored": "登録前に選んだ内容を復元しました",
   "templateCopy.resume.hint": "内容を確認して「コピーする」を押してください。",
-
   "lists.edit.successTitle": "更新完了",
   "lists.edit.successDesc": "リストが更新されました。",
   "lists.edit.failed": "リストの更新中にエラーが発生しました。",
@@ -359,7 +354,6 @@
   "ranking.edit.comment.write": "コメントを書く",
   "ranking.edit.comment.placeholder": "コメント（任意）",
   "ranking.edit.dragReorder": "ドラッグで並び替え",
-
   "place.search.title": "場所を検索",
   "place.search.desc": "キーワード入力後、検索ボタンを押してください。",
   "place.search.placeholder": "例: 東京タワー",
@@ -425,9 +419,7 @@
   "places.source.one_time_small": "10件パック",
   "places.source.one_time_regular": "50件パック",
   "places.source.subscription": "プレミアムプラン",
-
   "ga.consent": "このサイトは分析のためにCookieを使用します。",
-
   "footer.brand.line1": "デートや旅行の計画に。",
   "footer.brand.line2": "\"行きたい場所\"をリスト化・共有できるサービスです。",
   "footer.section.services": "サービス",
@@ -763,7 +755,8 @@
   "lists.private": "非公開リスト",
   "lists.placeCount": "{n}件",
   "lists.empty": "リストは見つかりませんでした。",
-  "meta.root.description": "行きたい場所を共有できるサービス",
+  "meta.root.title": "ClippyMap｜行きたい場所を地図にまとめて共有できる旅行プランナー",
+  "meta.root.description": "行きたいお店や観光スポットを地図に保存。ひとことメモを添えてリストにまとめ、友だちと共有できます。旅行の計画づくりもお気に入りの記録も無料ではじめられます。",
   "meta.root.ogAlt": "ClippyMap - 行きたい場所を共有できるサービス",
   "place.add.memoLabel": "コメント (任意)",
   "place.add.memoPlaceholder": "この場所に関するコメント...",
@@ -1159,12 +1152,15 @@
   "purchase.error.nextSteps.backToBilling": "設定に戻る",
   "purchase.error.nextSteps.contactSupport": "サポートに連絡",
   "purchase.error.nextSteps.description": "問題が解決しない場合は、お気軽にサポートまでお問い合わせください",
-
   "join.guest.invitedBy": "{name}さんがリストに招待しています",
   "join.guest.placeCount": "{count}件の場所",
   "join.guest.remaining": "ほか{count}件",
   "join.guest.cta": "参加してこのリストを編集する",
   "join.guest.ctaNote": "登録は無料です。登録後すぐにこのリストへ参加できます。",
-
-  "auth.confirm.failed": "メールの確認に失敗しました。リンクの有効期限が切れているか、既に使用された可能性があります。お手数ですが、もう一度ログインをお試しください。"
+  "auth.confirm.failed": "メールの確認に失敗しました。リンクの有効期限が切れているか、既に使用された可能性があります。お手数ですが、もう一度ログインをお試しください。",
+  "meta.list.separator": "、",
+  "meta.list.desc.withRegion": "{places}など、{region}の{n}スポットを地図にまとめた公開リスト。コピーして自分の旅の計画にも使えます。",
+  "meta.list.desc.noRegion": "{places}など全{n}スポットを地図にまとめた公開リスト。コピーして自分の旅の計画にも使えます。",
+  "meta.list.desc.withRegionExact": "{places}。{region}の{n}スポットを地図にまとめた公開リスト。コピーして自分の旅の計画にも使えます。",
+  "meta.list.desc.noRegionExact": "{places}。全{n}スポットを地図にまとめた公開リスト。コピーして自分の旅の計画にも使えます。"
 }

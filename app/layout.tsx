@@ -11,12 +11,8 @@ import { SubscriptionProvider } from "@/contexts/SubscriptionProvider";
 import { logoutUser } from "@/lib/actions/auth";
 import { getActiveSubscription } from "@/lib/dal/subscriptions";
 import type { ProfileSettingsData } from "@/lib/dal/users";
-import {
-  createServerT,
-  loadMessages,
-  normalizeLocale,
-  toOpenGraphLocale,
-} from "@/lib/i18n";
+import { loadMessages, toOpenGraphLocale } from "@/lib/i18n";
+import { buildAlternates, getRequestLocale, getServerI18n } from "@/lib/i18n/server";
 import {
   generateOrganizationSchema,
   generateWebSiteSchema,
@@ -25,7 +21,7 @@ import { createClient } from "@/lib/supabase/server";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP, Quicksand } from "next/font/google";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 
@@ -53,26 +49,29 @@ const quicksand = Quicksand({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
-  const msgs = (await loadMessages(locale)) as Record<string, string>;
-  const t = createServerT(msgs);
+  const { locale, t } = await getServerI18n();
 
   const metadataBase = new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   );
 
+  // 検索意図に合わせたタイトル・説明文（ブランド名だけでは検索で拾われないため）
+  const title = t("meta.root.title");
+  const description = t("meta.root.description");
+  const alternates = await buildAlternates("/");
+
   return {
-    title: "ClippyMap",
-    description: t("meta.root.description"),
+    title,
+    description,
     metadataBase,
-    alternates: { canonical: "/" },
+    alternates,
     openGraph: {
-      title: "ClippyMap",
-      description: t("meta.root.description"),
+      title,
+      description,
       type: "website",
       locale: toOpenGraphLocale(locale),
-      url: "/",
+      // 言語版ごとに自分自身を指す（"/"固定だと英語版をシェアしても日本語版が展開される）
+      url: alternates.canonical,
       siteName: "ClippyMap",
       images: [
         {
@@ -86,8 +85,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: "ClippyMap",
-      description: t("meta.root.description"),
+      title,
+      description,
       images: [
         {
           url: "/ogp-image.webp",
@@ -121,10 +120,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Read locale from cookie; fallback to ja
-  const cookieStore = await cookies();
-  const raw = cookieStore.get("lang")?.value;
-  const locale = normalizeLocale(raw);
+  // ロケールはURL（middlewareが x-locale ヘッダに載せる）が最優先。
+  // クッキーはプレフィックス無しURLでのフォールバックにすぎない。
+  const locale = await getRequestLocale();
   const messages = (await loadMessages(locale)) as Record<string, string>;
 
   const supabase = await createClient();

@@ -1,9 +1,13 @@
-import { getBaseUrl, getPublicListsPaged } from "@/lib/seo/sitemap";
+import {
+  buildLocalizedUrlEntries,
+  getBaseUrl,
+  getPublicListsPaged,
+  LISTS_SITEMAP_PAGE_SIZE as LISTS_PAGE_SIZE,
+  SITEMAP_URLSET_ATTRS,
+} from "@/lib/seo/sitemap";
 
 export const revalidate = 3600; // 1h
 export const dynamic = "force-dynamic";
-
-const LISTS_PAGE_SIZE = 5000;
 
 export async function GET(
   _req: Request,
@@ -25,21 +29,21 @@ export async function GET(
     const urlset: string[] = [];
     for (const list of lists) {
       urlset.push(
-        `<url>` +
-          `<loc>${baseUrl}/lists/${list.id}</loc>` +
-          `<lastmod>${(list.updated_at
+        ...buildLocalizedUrlEntries({
+          baseUrl,
+          path: `/lists/${list.id}`,
+          lastModified: list.updated_at
             ? new Date(list.updated_at)
-            : new Date()
-          ).toISOString()}</lastmod>` +
-          `<changefreq>weekly</changefreq>` +
-          `<priority>0.7</priority>` +
-          `</url>`
+            : new Date(),
+          changeFrequency: "weekly",
+          priority: 0.7,
+        })
       );
     }
 
     const xml =
       `<?xml version="1.0" encoding="UTF-8"?>` +
-      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">` +
+      `<urlset ${SITEMAP_URLSET_ATTRS}>` +
       urlset.join("") +
       `</urlset>`;
 

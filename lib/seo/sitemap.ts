@@ -1,5 +1,67 @@
 import { createClient } from "@supabase/supabase-js";
 
+import { supportedLocales } from "@/lib/i18n";
+import { localizePath } from "@/lib/i18n/routing";
+
+/**
+ * sitemap 1ファイルあたりのリスト件数。
+ * 1リストにつき supportedLocales.length 本のURLを出力するため、
+ * sitemapの上限(50,000 URL)に対して余裕を持たせている。
+ * index側と各ページで値がずれると取りこぼすので、必ずここを唯一の定義とする。
+ */
+export const LISTS_SITEMAP_PAGE_SIZE = 2000;
+
+/** sitemapのurlsetに必要な名前空間（hreflang出力にxhtmlが要る） */
+export const SITEMAP_URLSET_ATTRS =
+  `xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ` +
+  `xmlns:xhtml="http://www.w3.org/1999/xhtml"`;
+
+/**
+ * 1つのパスに対して、全言語版の <url> エントリを生成する。
+ *
+ * 各言語版が自分のURLをlocに持ち、xhtml:linkで全言語を相互参照する。
+ * これがGoogleに「同じページの言語違い」を伝える正式な手段。
+ */
+export function buildLocalizedUrlEntries({
+  baseUrl,
+  path,
+  lastModified,
+  changeFrequency,
+  priority,
+}: {
+  baseUrl: string;
+  path: string;
+  lastModified: Date;
+  changeFrequency: string;
+  priority: number;
+}): string[] {
+  const alternateLinks = supportedLocales
+    .map(
+      (l) =>
+        `<xhtml:link rel="alternate" hreflang="${l}" href="${baseUrl}${localizePath(
+          path,
+          l
+        )}"/>`
+    )
+    .join("");
+  const xDefault = `<xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}${localizePath(
+    path,
+    "ja"
+  )}"/>`;
+
+  return supportedLocales.map(
+    (locale) =>
+      `<url>` +
+      `<loc>${baseUrl}${localizePath(path, locale)}</loc>` +
+      `<lastmod>${lastModified.toISOString()}</lastmod>` +
+      `<changefreq>${changeFrequency}</changefreq>` +
+      `<priority>${priority}</priority>` +
+      alternateLinks +
+      xDefault +
+      `</url>`
+  );
+}
+
 // CloudFlare Workers + OpenNext環境での環境変数取得ヘルパー関数
 export function getBaseUrl(env?: Record<string, string>): string {
   // 本番環境の確実な判定（最優先）

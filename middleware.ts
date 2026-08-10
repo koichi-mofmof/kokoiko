@@ -15,6 +15,8 @@ import {
   SECURITY_CONFIG,
   WorkersRateLimit,
 } from "@/lib/cloudflare/security";
+import { defaultLocale, normalizeLocale, type Locale } from "@/lib/i18n";
+import { LOCALE_HEADER, splitLocaleFromPath } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
 import { recordRateLimitExceeded } from "@/lib/utils/security-monitor";
 import type { NextRequest } from "next/server";
@@ -77,8 +79,49 @@ function getContentSecurityPolicyHeaderValue(nonce: string): string {
 // Development mode configuration
 const isDevelopment = process.env.NODE_ENV === "development";
 
+// Accept-Language ヘッダからロケールを推定（q値考慮）
+function detectLocaleFromAcceptLanguage(header: string | null): Locale | null {
+  const al = header || "";
+  if (!al.trim()) return null;
+
+  const parsed = al
+    .split(",")
+    .map((p, idx) => {
+      const [tagRaw, qPart] = p.trim().split(";");
+      const tag = tagRaw.toLowerCase();
+      const qm = /q=([0-9.]+)/i.exec(qPart || "");
+      const q = qm ? parseFloat(qm[1]) : 1;
+      return { tag, q: isNaN(q) ? 0 : q, idx };
+    })
+    .filter((t) => t.tag);
+
+  if (parsed.length === 0) return null;
+  parsed.sort((a, b) => (b.q !== a.q ? b.q - a.q : a.idx - b.idx));
+  return normalizeLocale(parsed[0]?.tag);
+}
+
+// ロケールプレフィックスへのリダイレクト対象外パス
+// （APIとOAuthコールバックはリダイレクトすると壊れる。拡張子付きは静的ファイル）
+function isLocaleRedirectExempt(pathname: string): boolean {
+  return (
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/sitemaps/") ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/robots.txt" ||
+    pathname.includes(".")
+  );
+}
+
 export async function middleware(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl;
+  const { pathname: rawPathname, searchParams } = request.nextUrl;
+
+  // URLプレフィックスからロケールを分離し、以降のルート判定は
+  // プレフィックスを剥がしたパス(pathname)で行う。
+  // これにより既存の pathname 判定ロジックを一切変更せずに済む。
+  const { locale: pathLocale, pathname } = splitLocaleFromPath(rawPathname);
+  const cookieLocaleRaw = request.cookies.get("lang")?.value;
+  const cookieLocale = cookieLocaleRaw ? normalizeLocale(cookieLocaleRaw) : null;
 
   // パフォーマンス監視開始
   const performanceMonitor = new CPUTimeMonitor();
@@ -92,6 +135,69 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
+
+  // 🌐 配信する言語は「URLだけ」で決まる。
+  // クッキーやAccept-Languageは「どのURLへ送るか」の判断にのみ使う。
+  // こうすることで
+  //   - クローラーが必ずURLどおりの言語を受け取る（旧実装ではjaに落ちていた）
+  //   - 同一URLが常に同一言語 = CDNキャッシュが言語混線を起こさない
+  // の2つが同時に成立する。
+  const effectiveLocale: Locale = pathLocale ?? defaultLocale;
+
+  const internalUrl = request.nextUrl.clone();
+  internalUrl.pathname = pathname;
+
+  // 内部リダイレクト先にロケールプレフィックスを保つ
+  // （/en/settings → /en/login。無いと余計なリダイレクトが1回増える）
+  const toLocalizedUrl = (path: string) =>
+    new URL(pathLocale ? `/${pathLocale}${path}` : path, request.url);
+
+  /**
+   * プレフィックス無しURLに非既定ロケールの利用者が来たら、言語付きURLへ送る。
+   *
+   * 呼び出しはDoS対策・レート制限を通過した後にすること。
+   * リダイレクトも1リクエストである以上、無制限に返してよい理由がない。
+   *
+   * クローラーはこの関数に到達する前にreturn済み
+   * （＝Accept-Languageを見たクローラーの自動転送は起きない。Googleが非推奨としている）。
+   */
+  const maybeLocaleRedirect = (): NextResponse | null => {
+    if (pathLocale) return null;
+    if (request.method !== "GET") return null;
+    if (isLocaleRedirectExempt(pathname)) return null;
+
+    const preferred =
+      cookieLocale ??
+      detectLocaleFromAcceptLanguage(request.headers.get("accept-language"));
+    if (!preferred || preferred === defaultLocale) return null;
+
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname =
+      pathname === "/" ? `/${preferred}` : `/${preferred}${pathname}`;
+
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    if (cookieLocale !== preferred) {
+      // Accept-Languageから判定したときだけ記録し、次回以降の判定を省く
+      redirectResponse.cookies.set("lang", preferred, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 365,
+        path: "/",
+      });
+    }
+    return redirectResponse;
+  };
+
+  // ロケール付きURLは内部パスへrewriteし、解決済みロケールをヘッダでRSCへ渡す
+  const createLocalizedResponse = (requestHeaders: Headers) => {
+    requestHeaders.set(LOCALE_HEADER, effectiveLocale);
+    return pathLocale
+      ? NextResponse.rewrite(internalUrl, {
+          request: { headers: requestHeaders },
+        })
+      : NextResponse.next({ request: { headers: requestHeaders } });
+  };
 
   // 🔍 検索エンジンクローラーの検出と特別処理
   const userAgent = request.headers.get("user-agent") || "";
@@ -107,11 +213,9 @@ export async function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-crawler", "true");
 
-    let response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    // クローラーはクッキーを持たないため、ロケールヘッダを載せないと
+    // 既定ロケールに落ちてしまう。必ずcreateLocalizedResponseを経由する。
+    const response = createLocalizedResponse(requestHeaders);
 
     // 検索ボット向けの最小限ヘッダー設定
     response.headers.set("X-Robots-Tag", "index, follow");
@@ -147,11 +251,7 @@ export async function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-nonce", nonce);
 
-    let response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    const response = createLocalizedResponse(requestHeaders);
 
     // 基本的なヘッダーのみ設定
     response.headers.set("X-Request-ID", crypto.randomUUID());
@@ -185,44 +285,6 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // 初回アクセスでlangクッキーが無い場合、Accept-Languageから自動判定（q値考慮）
-    const hasLangCookie = request.cookies.get("lang");
-    if (!hasLangCookie) {
-      const al = request.headers.get("accept-language") || "";
-      const parsed = al
-        .split(",")
-        .map((p, idx) => {
-          const [tagRaw, qPart] = p.trim().split(";");
-          const tag = tagRaw.toLowerCase();
-          const qm = /q=([0-9.]+)/i.exec(qPart || "");
-          const q = qm ? parseFloat(qm[1]) : 1;
-          return { tag, q: isNaN(q) ? 0 : q, idx };
-        })
-        .filter((t) => t.tag);
-      parsed.sort((a, b) => (b.q !== a.q ? b.q - a.q : a.idx - b.idx));
-      const top = parsed[0]?.tag || "";
-      const detected = top.startsWith("ja")
-        ? "ja"
-        : top.startsWith("en")
-        ? "en"
-        : top.startsWith("es")
-        ? "es"
-        : top.startsWith("fr")
-        ? "fr"
-        : top.startsWith("de")
-        ? "de"
-        : "ja";
-      const response = NextResponse.next();
-      response.cookies.set("lang", detected, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 365,
-        path: "/",
-      });
-      return response;
-    }
-
     // DoS攻撃対策
     const dosCheck = WorkersRateLimit.checkDoSProtection(request, clientIp);
     if (dosCheck.blocked) {
@@ -308,15 +370,20 @@ export async function middleware(request: NextRequest) {
       });
     }
 
+    // 🔀 言語付きURLへの誘導。DoS対策・レート制限を通過した後に判定する。
+    const localeRedirect = maybeLocaleRedirect();
+    if (localeRedirect) return localeRedirect;
+
     // リクエストヘッダーにnonceを追加
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-nonce", nonce);
 
-    let response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    const response = createLocalizedResponse(requestHeaders);
+
+    // ⚠️ ここでURLのロケールをクッキーへ同期してはいけない。
+    // 共有された /en/... を日本語利用者が踏んだだけで、以降のプレフィックス無しURLが
+    // 全て英語版へリダイレクトされるようになってしまう。
+    // 言語の永続化は利用者が明示的に切り替えたときだけ（I18nProvider.setLocale）。
 
     // セキュリティヘッダーを設定
     response.headers.set("X-Request-ID", crypto.randomUUID());
@@ -402,7 +469,7 @@ export async function middleware(request: NextRequest) {
     // Admin routes protection
     if (adminRoutes.some((route) => pathname.startsWith(route))) {
       if (!session) {
-        return NextResponse.redirect(new URL("/login", request.url));
+        return NextResponse.redirect(toLocalizedUrl("/login"));
       }
 
       // Additional admin role check could be added here
@@ -430,7 +497,7 @@ export async function middleware(request: NextRequest) {
       }
 
       // Sanitize redirect URL to prevent open redirects
-      const redirectUrl = new URL("/login", request.url);
+      const redirectUrl = toLocalizedUrl("/login");
       const sanitizedRedirect =
         pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/";
       redirectUrl.searchParams.set("redirect_url", sanitizedRedirect);
@@ -445,7 +512,7 @@ export async function middleware(request: NextRequest) {
       }
 
       // Sanitize redirect URL to prevent open redirects
-      const redirectUrl = new URL("/login", request.url);
+      const redirectUrl = toLocalizedUrl("/login");
       const sanitizedRedirect =
         pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/";
       redirectUrl.searchParams.set("redirect_url", sanitizedRedirect);
@@ -460,7 +527,7 @@ export async function middleware(request: NextRequest) {
         redirectTarget.startsWith("/") && !redirectTarget.startsWith("//")
           ? redirectTarget
           : "/lists";
-      return NextResponse.redirect(new URL(sanitizedTarget, request.url));
+      return NextResponse.redirect(toLocalizedUrl(sanitizedTarget));
     }
 
     // Additional security for list access

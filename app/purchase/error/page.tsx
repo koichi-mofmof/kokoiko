@@ -1,9 +1,9 @@
+import { getRequestLocale } from "@/lib/i18n/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
-import { cookies } from "next/headers";
+import { createServerT, loadMessages } from "@/lib/i18n";
 
 interface PurchaseErrorPageProps {
   searchParams: Promise<{
@@ -17,8 +17,7 @@ export default async function PurchaseErrorPage({
 }: PurchaseErrorPageProps) {
   const { error_type, plan_type } = await searchParams;
 
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
 

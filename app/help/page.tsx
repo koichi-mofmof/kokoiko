@@ -1,3 +1,4 @@
+import { buildAlternates, getRequestLocale } from "@/lib/i18n/server";
 import { Button } from "@/components/ui";
 import {
   Accordion,
@@ -6,25 +7,23 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { createServerT, loadMessages } from "@/lib/i18n";
 import { HelpCircle } from "lucide-react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return {
     title: t("help.meta.title"),
     description: t("help.meta.description"),
+    alternates: await buildAlternates("/help"),
   };
 }
 
 export default async function HelpPage() {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
 

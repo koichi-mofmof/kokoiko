@@ -1,3 +1,4 @@
+import { getRequestLocale } from "@/lib/i18n/server";
 import { Button } from "@/components/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -6,10 +7,9 @@ import {
   inferCurrencyFromLocale,
   type SupportedCurrency,
 } from "@/lib/constants/config/subscription";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { createServerT, loadMessages } from "@/lib/i18n";
 import { FileText } from "lucide-react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 
 const Row = ({
   label,
@@ -29,8 +29,7 @@ const Row = ({
 );
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return {
@@ -40,8 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TokushohoPage() {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   const currency: SupportedCurrency = inferCurrencyFromLocale(locale);

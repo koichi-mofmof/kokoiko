@@ -1,7 +1,7 @@
+import { buildAlternates, getRequestLocale } from "@/lib/i18n/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
-import { cookies } from "next/headers";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { createServerT, loadMessages } from "@/lib/i18n";
 import type { Metadata } from "next";
 
 const Section = ({
@@ -18,19 +18,18 @@ const Section = ({
 );
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return {
     title: t("terms.meta.title"),
     description: t("terms.meta.description"),
+    alternates: await buildAlternates("/terms"),
   };
 }
 
 export default async function TermsPage() {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return (

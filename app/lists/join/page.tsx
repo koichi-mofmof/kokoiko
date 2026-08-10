@@ -1,8 +1,8 @@
 import { getSharedListPreview } from "@/lib/actions/share-preview";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { createServerT, loadMessages } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import AutoJoinRunner from "./AutoJoinRunner";
 import GuestJoinPreview from "./GuestJoinPreview";
@@ -37,9 +37,7 @@ export default async function JoinListPage({
   searchParams: Promise<{ token?: string; auto?: string }>;
 }) {
   const { token, auto } = await searchParams;
-  const cookieStore = await cookies();
-  const lang = cookieStore.get("lang")?.value || "ja";
-  const locale = normalizeLocale(lang);
+  const locale = await getRequestLocale();
   const messages = await loadMessages(locale);
   const t = createServerT(messages);
   const supabase = await createClient();

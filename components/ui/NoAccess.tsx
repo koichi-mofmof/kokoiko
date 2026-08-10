@@ -1,8 +1,8 @@
+import { getRequestLocale } from "@/lib/i18n/server";
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { createServerT, loadMessages } from "@/lib/i18n";
 
 export default async function NoAccess() {
   const supabase = await createClient();
@@ -10,8 +10,7 @@ export default async function NoAccess() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
 
