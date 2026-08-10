@@ -1,12 +1,11 @@
-import { cookies } from "next/headers";
+import { getRequestLocale } from "@/lib/i18n/server";
 import { redirect } from "next/navigation"; // 未認証時のリダイレクト用
 import { ProfileSettings } from "./_components/profile-settings";
 import { SettingsPageDataLoader } from "./_components/SettingsPageDataLoader";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { createServerT, loadMessages } from "@/lib/i18n";
 
 export default async function SettingsPage() {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   const { initialData, error, userUnauthenticated } =

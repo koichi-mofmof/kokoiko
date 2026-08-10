@@ -1,3 +1,5 @@
+import { buildAlternates, getRequestLocale } from "@/lib/i18n/server";
+import { buildListMetaDescription } from "@/lib/seo/list-description";
 import { CreatorInfoCard } from "@/app/components/lists/CreatorInfoCard";
 import { ListCardActions } from "@/app/components/lists/ListCardActions";
 import ListDetailView from "@/app/components/lists/ListDetailView";
@@ -17,7 +19,6 @@ import { canInviteToList } from "@/lib/utils/subscription-utils";
 import {
   createServerT,
   loadMessages,
-  normalizeLocale,
   toOpenGraphLocale,
 } from "@/lib/i18n";
 import {
@@ -28,7 +29,6 @@ import { createClient } from "@/lib/supabase/server";
 import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -44,8 +44,7 @@ export async function generateMetadata({
   const lite = await getListMetadataLite(listId);
 
   if (!lite) {
-    const cookieStore = await cookies();
-    const locale = normalizeLocale(cookieStore.get("lang")?.value);
+    const locale = await getRequestLocale();
     const msgs = await loadMessages(locale);
     const t = createServerT(msgs as Record<string, string>);
     return { title: "ClippyMap", description: t("meta.root.description") };
@@ -53,22 +52,21 @@ export async function generateMetadata({
 
   const placesCount = lite.placesCount;
 
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
-  const description = lite.description
-    ? `${lite.description} - ${t("listsDetail.placesCount", {
-        n: placesCount,
-      })}`
-    : `${t("listsDetail.placesCount", { n: placesCount })}`;
+  const description = buildListMetaDescription({
+    t,
+    listDescription: lite.description,
+    placesCount,
+    samplePlaceNames: lite.samplePlaceNames,
+    primaryRegion: lite.primaryRegion,
+  });
 
   return {
     title: `${lite.name} | ClippyMap`,
     description,
-    alternates: {
-      canonical: `/lists/${listId}`,
-    },
+    alternates: await buildAlternates(`/lists/${listId}`),
     openGraph: {
       title: `${lite.name} | ClippyMap`,
       description,
@@ -155,8 +153,7 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
     listDetails.created_by !== user?.id && !!listDetails.is_public;
 
   // i18n
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
 

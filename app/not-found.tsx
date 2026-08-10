@@ -1,11 +1,9 @@
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
-import { cookies } from "next/headers";
+import { createServerT, loadMessages } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/server";
 import Link from "next/link";
 
 export default async function NotFound() {
-  const cookieStore = await cookies();
-  const rawLocale = cookieStore.get("lang")?.value;
-  const locale = normalizeLocale(rawLocale);
+  const locale = await getRequestLocale();
   const messages = await loadMessages(locale);
   const t = createServerT(messages);
 

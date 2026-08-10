@@ -1,4 +1,9 @@
-import { getBaseUrl, staticPages } from "@/lib/seo/sitemap";
+import {
+  buildLocalizedUrlEntries,
+  getBaseUrl,
+  SITEMAP_URLSET_ATTRS,
+  staticPages,
+} from "@/lib/seo/sitemap";
 
 export const revalidate = 3600; // 1h
 export const dynamic = "force-dynamic";
@@ -15,13 +20,15 @@ export async function GET() {
     const urlset: string[] = [];
 
     for (const page of staticPages) {
+      // 5言語分のURLを、相互のhreflang付きで出力する
       urlset.push(
-        `<url>` +
-          `<loc>${baseUrl}${page.url}</loc>` +
-          `<lastmod>${new Date(page.lastModified).toISOString()}</lastmod>` +
-          `<changefreq>${page.changeFrequency}</changefreq>` +
-          `<priority>${page.priority}</priority>` +
-          `</url>`
+        ...buildLocalizedUrlEntries({
+          baseUrl,
+          path: page.url || "/",
+          lastModified: new Date(page.lastModified),
+          changeFrequency: page.changeFrequency,
+          priority: page.priority,
+        })
       );
     }
 
@@ -29,7 +36,7 @@ export async function GET() {
 
     const xml =
       `<?xml version="1.0" encoding="UTF-8"?>` +
-      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">` +
+      `<urlset ${SITEMAP_URLSET_ATTRS}>` +
       urlset.join("") +
       `</urlset>`;
 

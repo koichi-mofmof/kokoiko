@@ -1,9 +1,11 @@
-import { countPublicListsTotal, getBaseUrl } from "@/lib/seo/sitemap";
+import {
+  countPublicListsTotal,
+  getBaseUrl,
+  LISTS_SITEMAP_PAGE_SIZE as LISTS_PAGE_SIZE,
+} from "@/lib/seo/sitemap";
 
 export const revalidate = 3600; // 1h
 export const dynamic = "force-dynamic";
-
-const LISTS_PAGE_SIZE = 5000; // sitemap 1ファイルの上限に余裕を持たせる
 
 export async function GET() {
   try {

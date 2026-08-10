@@ -19,7 +19,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { createClient } from "@/lib/supabase/client";
 import { List, LogIn, LogOut, Settings, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/LocaleLink";
 import { useCallback, useEffect, useState } from "react";
 
 interface HeaderProps {

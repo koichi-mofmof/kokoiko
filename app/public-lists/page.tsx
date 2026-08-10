@@ -1,13 +1,12 @@
+import { buildAlternates, getRequestLocale } from "@/lib/i18n/server";
 import JsonLd from "@/components/seo/JsonLd";
 import { getPublicListsPaginated } from "@/lib/dal/public-lists";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { PublicListsPageClient } from "./PublicListsPageClient";
 import {
   createServerT,
   loadMessages,
-  normalizeLocale,
   toOpenGraphLocale,
 } from "@/lib/i18n";
 
@@ -21,8 +20,7 @@ interface PublicListsPageProps {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   const title = `${t("publicLists.meta.title")} | ${t("app.name")}`;
@@ -30,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: "/public-lists" },
+    alternates: await buildAlternates("/public-lists"),
     openGraph: {
       title,
       description,
@@ -58,8 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PublicListsPage({
   searchParams,
 }: PublicListsPageProps) {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   const params = await searchParams;

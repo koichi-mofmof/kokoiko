@@ -431,7 +431,8 @@
   "lists.private": "Private Liste",
   "lists.placeCount": "{n} Orte",
   "lists.empty": "Keine Listen gefunden.",
-  "meta.root.description": "Ein Service zum Teilen von Orten, die Sie besuchen möchten",
+  "meta.root.title": "ClippyMap — Reiseplaner-Karte: Orte speichern & Route planen",
+  "meta.root.description": "Planen Sie Ihre Reise auf einer Karte. Speichern Sie Orte, die Sie besuchen möchten, ergänzen Sie Notizen, erstellen Sie Listen und teilen Sie Ihre Route. Kostenlos.",
   "meta.root.ogAlt": "ClippyMap – Teile Orte, die Sie besuchen möchten",
   "place.add.memoLabel": "Kommentar (optional)",
   "place.add.memoPlaceholder": "Kommentare zu diesem Ort...",
@@ -1151,12 +1152,15 @@
   "conversion.copy.preview.more": "…und {count} weitere",
   "conversion.bookmark.preview.title": "Inhalt der Liste",
   "conversion.bookmark.preview.more": "…und {count} weitere",
-
   "join.guest.invitedBy": "{name} hat dich zu dieser Liste eingeladen",
   "join.guest.placeCount": "{count} Orte",
   "join.guest.remaining": "und {count} weitere",
   "join.guest.cta": "Beitreten und diese Liste bearbeiten",
   "join.guest.ctaNote": "Die Registrierung ist kostenlos. Direkt danach trittst du dieser Liste bei.",
-
-  "auth.confirm.failed": "Wir konnten deine E-Mail nicht bestätigen. Der Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Bitte versuche dich erneut anzumelden."
+  "auth.confirm.failed": "Wir konnten deine E-Mail nicht bestätigen. Der Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Bitte versuche dich erneut anzumelden.",
+  "meta.list.separator": ", ",
+  "meta.list.desc.withRegion": "{places} und mehr — {n} Orte in {region} auf einer Karte. Kopieren Sie diese Liste für Ihre eigene Reiseplanung.",
+  "meta.list.desc.noRegion": "{places} und mehr — {n} Orte auf einer Karte. Kopieren Sie diese Liste für Ihre eigene Reiseplanung.",
+  "meta.list.desc.withRegionExact": "{places} — {n} Orte in {region} auf einer Karte. Kopieren Sie diese Liste für Ihre eigene Reiseplanung.",
+  "meta.list.desc.noRegionExact": "{places} — {n} Orte auf einer Karte. Kopieren Sie diese Liste für Ihre eigene Reiseplanung."
 }

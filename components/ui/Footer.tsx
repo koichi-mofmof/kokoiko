@@ -2,7 +2,7 @@
 
 import { useI18n } from "@/hooks/use-i18n";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/LocaleLink";
 
 interface FooterProps {
   currentUser?: { id: string } | null;

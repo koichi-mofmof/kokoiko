@@ -1,4 +1,13 @@
 // CloudFlare CDN キャッシュ設定
+//
+// ⚠️ 言語とキャッシュの前提:
+//   ページの表示言語は「URL」だけで決まる（既定ロケールはプレフィックス無し、
+//   それ以外は /en/... のようにプレフィックス付き。middleware.ts を参照）。
+//   したがって言語はキャッシュキーに含まれており、Vary: Cookie は不要。
+//
+//   逆に、クッキーやAccept-Languageで表示言語を切り替える実装に戻すと、
+//   下の public キャッシュに載ったHTMLが別言語の利用者へ配信される。
+//   ロケール解決は必ず lib/i18n/server.ts の getRequestLocale を経由させること。
 import { createClient } from "@/lib/supabase/server";
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";

@@ -1,3 +1,4 @@
+import { getRequestLocale } from "@/lib/i18n/server";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -11,7 +12,6 @@ import {
   createServerT,
   getDateFnsLocale,
   loadMessages,
-  normalizeLocale,
 } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -21,13 +21,11 @@ import {
 } from "@/lib/utils/subscription-utils";
 import { format } from "date-fns";
 // date-fns locale は i18nユーティリティ経由で取得するため直接のimportは不要
-import { cookies } from "next/headers";
 import { ManagePlanButton } from "./_components/ManagePlanButton";
 import { PlaceUsageCard } from "./_components/PlaceUsageCard";
 
 export default async function BillingSettingsPage() {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   const supabase = await createClient();

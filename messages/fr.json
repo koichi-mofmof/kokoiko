@@ -443,7 +443,8 @@
   "lists.private": "Liste privée",
   "lists.placeCount": "{n} lieux",
   "lists.empty": "Aucune liste trouvée.",
-  "meta.root.description": "Un service pour partager les lieux où vous souhaitez aller",
+  "meta.root.title": "ClippyMap — Carte de voyage : enregistrez des lieux et planifiez votre itinéraire",
+  "meta.root.description": "Planifiez votre voyage sur une carte. Enregistrez les lieux à visiter, ajoutez vos notes, organisez-les en listes et partagez votre itinéraire avec vos amis. Gratuit.",
   "meta.root.ogAlt": "ClippyMap - Partagez les lieux où vous souhaitez aller",
   "place.add.memoLabel": "Commentaire (facultatif)",
   "place.add.memoPlaceholder": "Commentaires sur ce lieu...",
@@ -1151,12 +1152,15 @@
   "conversion.copy.preview.more": "…et {count} de plus",
   "conversion.bookmark.preview.title": "Contenu de la liste",
   "conversion.bookmark.preview.more": "…et {count} de plus",
-
   "join.guest.invitedBy": "{name} vous a invité à cette liste",
   "join.guest.placeCount": "{count} lieux",
   "join.guest.remaining": "et {count} de plus",
   "join.guest.cta": "Rejoindre et modifier cette liste",
   "join.guest.ctaNote": "L'inscription est gratuite. Vous rejoindrez cette liste juste après.",
-
-  "auth.confirm.failed": "Nous n'avons pas pu confirmer votre e-mail. Le lien a peut-être expiré ou déjà été utilisé. Veuillez réessayer de vous connecter."
+  "auth.confirm.failed": "Nous n'avons pas pu confirmer votre e-mail. Le lien a peut-être expiré ou déjà été utilisé. Veuillez réessayer de vous connecter.",
+  "meta.list.separator": ", ",
+  "meta.list.desc.withRegion": "{places} et plus — {n} lieux à {region} réunis sur une carte. Copiez cette liste pour préparer votre propre voyage.",
+  "meta.list.desc.noRegion": "{places} et plus — {n} lieux réunis sur une carte. Copiez cette liste pour préparer votre propre voyage.",
+  "meta.list.desc.withRegionExact": "{places} — {n} lieux à {region} réunis sur une carte. Copiez cette liste pour préparer votre propre voyage.",
+  "meta.list.desc.noRegionExact": "{places} — {n} lieux réunis sur une carte. Copiez cette liste pour préparer votre propre voyage."
 }

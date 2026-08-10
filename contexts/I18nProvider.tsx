@@ -9,6 +9,10 @@ import React, {
 } from "react";
 
 import type { Locale } from "@/lib/i18n";
+import { localizePath, splitLocaleFromPath } from "@/lib/i18n/routing";
+
+const stripLocaleFromPathname = (pathname: string) =>
+  splitLocaleFromPath(pathname).pathname;
 
 type Messages = Record<string, string>;
 
@@ -33,11 +37,18 @@ export function I18nProvider({
   const [msgs, setMsgs] = useState<Messages>(messages);
 
   const setLocale = useCallback((next: Locale) => {
-    // persist for 1 year
+    // persist for 1 year（プレフィックス無しURLへ来たときのリダイレクト判断に使う）
     document.cookie = `lang=${next}; path=/; max-age=31536000`;
     setLocaleState(next);
-    // ページによりSSRでメッセージを注入しているため、リロードで確実に反映
-    window.location.reload();
+
+    // 言語はURLで決まるので、同じページの対象言語版URLへ遷移する。
+    // （クッキーだけ書き換えてreloadすると、URLと表示言語が食い違う）
+    const { pathname, search, hash } = window.location;
+    const currentPath = stripLocaleFromPathname(pathname);
+    window.location.href = `${localizePath(
+      currentPath,
+      next
+    )}${search}${hash}`;
   }, []);
 
   const t = useCallback(

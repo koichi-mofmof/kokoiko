@@ -257,6 +257,10 @@ export async function getListMetadataLite(listId: string): Promise<{
   is_public: boolean | null;
   created_by: string;
   placesCount: number;
+  /** meta descriptionに使う代表的な地点名（先頭3件） */
+  samplePlaceNames: string[];
+  /** meta descriptionに使う代表的な地域名（最頻の都道府県/州） */
+  primaryRegion: string | null;
 } | null> {
   const supabase = await createClient();
 
@@ -286,13 +290,59 @@ export async function getListMetadataLite(listId: string): Promise<{
     return {
       ...list,
       placesCount: 0,
-    } as typeof list & { placesCount: number };
+      samplePlaceNames: [],
+      primaryRegion: null,
+    };
   }
+
+  // meta description の素材。検索結果で中身が伝わるよう実際の地点名と地域を使う。
+  // 件数は絞る（メタデータ生成は全ページビューで走るため）
+  const { data: sampleRows } = await supabase
+    .from("list_places")
+    .select("places!inner (name, admin_area_level_1, country_name)")
+    .eq("list_id", listId)
+    .order("created_at", { ascending: true })
+    .limit(10);
+
+  const samples = (sampleRows ?? []).flatMap((row) => {
+    const place = (
+      row as unknown as {
+        places:
+          | {
+              name: string | null;
+              admin_area_level_1: string | null;
+              country_name: string | null;
+            }
+          | Array<{
+              name: string | null;
+              admin_area_level_1: string | null;
+              country_name: string | null;
+            }>;
+      }
+    ).places;
+    return Array.isArray(place) ? place : [place];
+  });
+
+  const samplePlaceNames = samples
+    .map((p) => p?.name)
+    .filter((n): n is string => Boolean(n && n.trim()))
+    .slice(0, 3);
+
+  // 最頻の地域を代表地域とする（都道府県・州が無ければ国名）
+  const regionCounts = new Map<string, number>();
+  for (const p of samples) {
+    const region = p?.admin_area_level_1 || p?.country_name;
+    if (region) regionCounts.set(region, (regionCounts.get(region) ?? 0) + 1);
+  }
+  const primaryRegion =
+    [...regionCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
   return {
     ...list,
     placesCount: count || 0,
-  } as typeof list & { placesCount: number };
+    samplePlaceNames,
+    primaryRegion,
+  };
 }
 
 /**

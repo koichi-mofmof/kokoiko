@@ -1,3 +1,4 @@
+import { buildAlternates, getRequestLocale } from "@/lib/i18n/server";
 import { UserProfileView } from "@/app/components/users/UserProfileView";
 import {
   getUserProfile,
@@ -7,11 +8,9 @@ import {
 import {
   createServerT,
   loadMessages,
-  normalizeLocale,
   toOpenGraphLocale,
 } from "@/lib/i18n";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 type PageProps = {
@@ -26,8 +25,7 @@ export async function generateMetadata({
   const displayName = userProfile?.display_name || userProfile?.username;
 
   if (!displayName) {
-    const cookieStore = await cookies();
-    const locale = normalizeLocale(cookieStore.get("lang")?.value);
+    const locale = await getRequestLocale();
     const msgs = await loadMessages(locale);
     const t = createServerT(msgs as Record<string, string>);
     return {
@@ -36,13 +34,13 @@ export async function generateMetadata({
     };
   }
 
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return {
     title: t("user.publicLists.title", { name: displayName }),
     description: t("user.publicLists.desc", { name: displayName }),
+    alternates: await buildAlternates(`/users/${userId}`),
     openGraph: {
       title: t("user.publicLists.title", { name: displayName }),
       description: t("user.publicLists.desc", { name: displayName }),

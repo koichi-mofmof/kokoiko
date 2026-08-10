@@ -1,9 +1,9 @@
+import { buildAlternates, getRequestLocale } from "@/lib/i18n/server";
 import { Button } from "@/components/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createServerT, loadMessages, normalizeLocale } from "@/lib/i18n";
+import { createServerT, loadMessages } from "@/lib/i18n";
 import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 
 const Section = ({
   title,
@@ -19,19 +19,18 @@ const Section = ({
 );
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return {
     title: t("privacy.meta.title"),
     description: t("privacy.meta.description"),
+    alternates: await buildAlternates("/privacy"),
   };
 }
 
 export default async function PrivacyPage() {
-  const cookieStore = await cookies();
-  const locale = normalizeLocale(cookieStore.get("lang")?.value);
+  const locale = await getRequestLocale();
   const msgs = await loadMessages(locale);
   const t = createServerT(msgs as Record<string, string>);
   return (
