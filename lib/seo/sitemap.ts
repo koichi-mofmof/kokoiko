@@ -11,6 +11,15 @@ import { localizePath } from "@/lib/i18n/routing";
  */
 export const LISTS_SITEMAP_PAGE_SIZE = 2000;
 
+/**
+ * 地点詳細ページ(/lists/{listId}/place/{placeId})の1ファイルあたり件数。
+ * 公開リスト配下の地点は本番で3,600件規模あり、検索流入も実際に発生している。
+ */
+export const PLACES_SITEMAP_PAGE_SIZE = 1000;
+
+/** 公開プロフィール(/users/{id})の1ファイルあたり件数 */
+export const USERS_SITEMAP_PAGE_SIZE = 1000;
+
 /** sitemapのurlsetに必要な名前空間（hreflang出力にxhtmlが要る） */
 export const SITEMAP_URLSET_ATTRS =
   `xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ` +
@@ -106,6 +115,13 @@ export const staticPages = [
     priority: 1,
   },
   {
+    // 公開リストの発見ハブ。サイト内で最も重要な回遊ページなので優先度を高くする
+    url: "/public-lists",
+    lastModified: new Date(),
+    changeFrequency: "daily" as const,
+    priority: 0.9,
+  },
+  {
     url: "/help",
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
@@ -197,6 +213,137 @@ export async function getPublicListsPaged(
     return (data as { id: string; updated_at: string | null }[]) || [];
   } catch (error) {
     console.error("❌ getPublicListsPaged実行エラー:", error);
+    return [];
+  }
+}
+
+/**
+ * 公開リスト配下の地点詳細ページ(/lists/{listId}/place/{placeId})の総数
+ *
+ * 地点詳細ページは実際に検索流入が発生しているにもかかわらず、
+ * 従来sitemapに1件も申告していなかった。
+ */
+export async function countPublicPlacePagesTotal(): Promise<number> {
+  try {
+    const supabase = createAnonymousClient();
+    const { count, error } = await supabase
+      .from("list_places")
+      .select("id, place_lists!inner(is_public)", {
+        count: "exact",
+        head: true,
+      })
+      .eq("place_lists.is_public", true);
+
+    if (error) {
+      console.error("❌ 公開地点ページ総数取得エラー:", error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error("❌ countPublicPlacePagesTotal実行エラー:", error);
+    return 0;
+  }
+}
+
+/**
+ * 地点詳細ページのページング取得
+ *
+ * RLS(list_places_unified_select)により、匿名クライアントでも
+ * 公開リスト配下の行だけが返る。`place_lists!inner` はその明示。
+ */
+export async function getPublicPlacePagesPaged(
+  page: number,
+  pageSize: number
+): Promise<{ list_id: string; place_id: string; updated_at: string | null }[]> {
+  try {
+    const supabase = createAnonymousClient();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error } = await supabase
+      .from("list_places")
+      .select("list_id, place_id, updated_at, place_lists!inner(is_public)")
+      .eq("place_lists.is_public", true)
+      .order("updated_at", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.error("❌ 地点ページ取得エラー:", error);
+      return [];
+    }
+
+    return (
+      (data as unknown as {
+        list_id: string;
+        place_id: string;
+        updated_at: string | null;
+      }[]) || []
+    );
+  } catch (error) {
+    console.error("❌ getPublicPlacePagesPaged実行エラー:", error);
+    return [];
+  }
+}
+
+/**
+ * 公開リストを1つ以上持つユーザー(=公開プロフィールが意味を持つユーザー)の総数
+ */
+export async function countPublicProfilesTotal(): Promise<number> {
+  try {
+    const supabase = createAnonymousClient();
+    const { count, error } = await supabase
+      .from("profiles")
+      .select("id, place_lists!inner(is_public)", {
+        count: "exact",
+        head: true,
+      })
+      .eq("place_lists.is_public", true);
+
+    if (error) {
+      console.error("❌ 公開プロフィール総数取得エラー:", error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error("❌ countPublicProfilesTotal実行エラー:", error);
+    return 0;
+  }
+}
+
+/**
+ * 公開プロフィールのページング取得
+ *
+ * profiles を基点に place_lists を inner join することで、
+ * 「公開リストを持つユーザー」だけが重複なく1行ずつ返る。
+ */
+export async function getPublicProfilesPaged(
+  page: number,
+  pageSize: number
+): Promise<{ id: string; updated_at: string | null }[]> {
+  try {
+    const supabase = createAnonymousClient();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, updated_at, place_lists!inner(is_public)")
+      .eq("place_lists.is_public", true)
+      .order("updated_at", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.error("❌ 公開プロフィール取得エラー:", error);
+      return [];
+    }
+
+    return (
+      (data as unknown as { id: string; updated_at: string | null }[]) || []
+    );
+  } catch (error) {
+    console.error("❌ getPublicProfilesPaged実行エラー:", error);
     return [];
   }
 }
