@@ -1,7 +1,11 @@
 import {
   countPublicListsTotal,
+  countPublicPlacePagesTotal,
+  countPublicProfilesTotal,
   getBaseUrl,
   LISTS_SITEMAP_PAGE_SIZE as LISTS_PAGE_SIZE,
+  PLACES_SITEMAP_PAGE_SIZE as PLACES_PAGE_SIZE,
+  USERS_SITEMAP_PAGE_SIZE as USERS_PAGE_SIZE,
 } from "@/lib/seo/sitemap";
 
 export const revalidate = 3600; // 1h
@@ -16,22 +20,36 @@ export async function GET() {
         : undefined;
 
     const baseUrl = getBaseUrl(env);
-    const total = await countPublicListsTotal();
-    const totalPages = Math.max(1, Math.ceil(total / LISTS_PAGE_SIZE));
+
+    // 各種別の件数を並列取得
+    const [listsTotal, placesTotal, profilesTotal] = await Promise.all([
+      countPublicListsTotal(),
+      countPublicPlacePagesTotal(),
+      countPublicProfilesTotal(),
+    ]);
 
     const now = new Date().toISOString();
 
     const sitemaps: string[] = [];
-    // 静的 + サンプル
+    const pushPaged = (segment: string, total: number, pageSize: number) => {
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      for (let page = 1; page <= totalPages; page++) {
+        sitemaps.push(
+          `<sitemap><loc>${baseUrl}/sitemaps/${segment}/${page}</loc><lastmod>${now}</lastmod></sitemap>`
+        );
+      }
+    };
+
+    // 静的ページ
     sitemaps.push(
       `<sitemap><loc>${baseUrl}/sitemaps/static.xml</loc><lastmod>${now}</lastmod></sitemap>`
     );
-    // リスト（ページング）
-    for (let page = 1; page <= totalPages; page++) {
-      sitemaps.push(
-        `<sitemap><loc>${baseUrl}/sitemaps/lists/${page}</loc><lastmod>${now}</lastmod></sitemap>`
-      );
-    }
+    // 公開リスト
+    pushPaged("lists", listsTotal, LISTS_PAGE_SIZE);
+    // 地点詳細（公開リスト配下）
+    pushPaged("places", placesTotal, PLACES_PAGE_SIZE);
+    // 公開プロフィール
+    pushPaged("users", profilesTotal, USERS_PAGE_SIZE);
 
     const xml =
       `<?xml version="1.0" encoding="UTF-8"?>` +
