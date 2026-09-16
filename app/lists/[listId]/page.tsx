@@ -28,9 +28,14 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+
+const CLIPPYMAP_SUPPORT_URL = "https://buymeacoffee.com/clippymap";
+// username/display_nameはユーザーが変更しうるため、固定のuser_idで判定する
+const CLIPPYMAP_USER_ID = "af12b0fd-3812-4b8a-ab89-53b09d084037";
 
 interface ListDetailPageProps {
   params: Promise<{ listId: string }>;
@@ -211,6 +216,22 @@ export default async function ListDetailPage({ params }: ListDetailPageProps) {
 
         <div className="mt-1 mb-3">
           <CreatorInfoCard creator={creatorProfile} />
+          {listDetails.created_by === CLIPPYMAP_USER_ID && (
+            <a
+              href={CLIPPYMAP_SUPPORT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block transition-opacity hover:opacity-90"
+            >
+              <Image
+                src="/bmc-button-yellow.png"
+                alt={t("lists.creator.support")}
+                width={145}
+                height={40}
+                className="h-10 w-auto"
+              />
+            </a>
+          )}
         </div>
 
         {/* 本文（リスト/マップ）は全幅。CTAはスマホ=追従バー、
